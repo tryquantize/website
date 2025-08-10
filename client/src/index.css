@@ -4,39 +4,39 @@
 @tailwind utilities;
 
 :root {
-  /* Perplexity-style dark theme as default */
-  --background: hsl(210 15% 7%);
+  /* Cosmic/Universe dark theme */
+  --background: hsl(240 15% 3%);
   --foreground: hsl(0 0% 95%);
-  --card: hsl(210 15% 9%);
+  --card: hsl(240 20% 6%);
   --card-foreground: hsl(0 0% 95%);
-  --popover: hsl(210 15% 8%);
+  --popover: hsl(240 15% 5%);
   --popover-foreground: hsl(0 0% 95%);
-  --primary: hsl(200 100% 65%);
-  --primary-foreground: hsl(210 15% 7%);
-  --secondary: hsl(210 15% 15%);
+  --primary: hsl(270 100% 70%);
+  --primary-foreground: hsl(240 15% 3%);
+  --secondary: hsl(240 15% 12%);
   --secondary-foreground: hsl(0 0% 85%);
-  --muted: hsl(210 15% 12%);
+  --muted: hsl(240 15% 8%);
   --muted-foreground: hsl(0 0% 60%);
-  --accent: hsl(210 15% 15%);
+  --accent: hsl(270 50% 15%);
   --accent-foreground: hsl(0 0% 90%);
   --destructive: hsl(0 65% 55%);
   --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(210 15% 18%);
-  --input: hsl(210 15% 12%);
-  --ring: hsl(200 100% 65%);
-  --chart-1: hsl(200 100% 65%);
-  --chart-2: hsl(160 60% 45%);
-  --chart-3: hsl(30 80% 55%);
-  --chart-4: hsl(280 65% 60%);
+  --border: hsl(240 15% 15%);
+  --input: hsl(240 15% 8%);
+  --ring: hsl(270 100% 70%);
+  --chart-1: hsl(270 100% 70%);
+  --chart-2: hsl(200 80% 60%);
+  --chart-3: hsl(320 70% 60%);
+  --chart-4: hsl(45 80% 65%);
   --chart-5: hsl(340 75% 55%);
-  --sidebar: hsl(210 15% 8%);
+  --sidebar: hsl(240 15% 5%);
   --sidebar-foreground: hsl(0 0% 95%);
-  --sidebar-primary: hsl(200 100% 65%);
-  --sidebar-primary-foreground: hsl(210 15% 7%);
-  --sidebar-accent: hsl(210 15% 15%);
+  --sidebar-primary: hsl(270 100% 70%);
+  --sidebar-primary-foreground: hsl(240 15% 3%);
+  --sidebar-accent: hsl(240 15% 12%);
   --sidebar-accent-foreground: hsl(0 0% 85%);
-  --sidebar-border: hsl(210 15% 18%);
-  --sidebar-ring: hsl(200 100% 65%);
+  --sidebar-border: hsl(240 15% 15%);
+  --sidebar-ring: hsl(270 100% 70%);
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   --font-serif: 'Georgia', serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -94,13 +94,53 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    /* Perplexity-style grid background */
+    /* Cosmic universe background */
+    background: 
+      radial-gradient(ellipse at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%),
+      linear-gradient(135deg, 
+        hsl(240, 15%, 3%) 0%, 
+        hsl(250, 20%, 4%) 25%, 
+        hsl(260, 25%, 2%) 50%, 
+        hsl(240, 15%, 3%) 75%, 
+        hsl(245, 20%, 1%) 100%
+      );
+    background-attachment: fixed;
+    background-size: 100% 100%;
+    position: relative;
+  }
+
+  /* Animated stars */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background-image: 
-      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 60px 60px;
+      radial-gradient(2px 2px at 20% 30%, #fff, transparent),
+      radial-gradient(2px 2px at 40% 70%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 50% 80%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(2px 2px at 70% 10%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1px 1px at 10% 60%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 80% 90%, rgba(255,255,255,0.3), transparent),
+      radial-gradient(2px 2px at 30% 20%, rgba(255,255,255,0.9), transparent);
+    background-repeat: repeat;
+    background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px, 450px 450px, 200px 200px, 300px 300px, 400px 400px;
+    animation: twinkle 10s infinite;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* Twinkling animation */
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0.3; }
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -111,5 +151,25 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Cosmic glow effect */
+  .cosmic-glow {
+    box-shadow: 
+      0 0 20px rgba(168, 85, 247, 0.4),
+      0 0 40px rgba(168, 85, 247, 0.2),
+      0 0 60px rgba(168, 85, 247, 0.1);
+  }
+
+  /* Floating animation for cosmic elements */
+  .float-cosmic {
+    animation: float-cosmic 6s ease-in-out infinite;
+  }
+
+  @keyframes float-cosmic {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-10px) rotate(1deg); }
+    50% { transform: translateY(-5px) rotate(-1deg); }
+    75% { transform: translateY(-15px) rotate(0.5deg); }
   }
 }

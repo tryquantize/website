@@ -57,7 +57,7 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
 
   return (
     <Card 
-      className="h-full hover:shadow-xl hover:border-primary/30 transition-all duration-300 group bg-card/50 backdrop-blur-sm border-border/50"
+      className="h-full hover:shadow-xl hover:shadow-purple-500/20 hover:border-purple-400/50 transition-all duration-300 group bg-card/60 backdrop-blur-sm border-purple-500/20"
       data-testid={`tool-card-${tool.id}`}
     >
       <CardHeader className="pb-3">
