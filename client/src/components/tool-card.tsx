@@ -77,10 +77,10 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-lg truncate" data-testid="tool-name">
+              <h3 className="font-semibold text-lg truncate text-white" data-testid="tool-name">
                 {tool.name}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/70">
                 {tool.industries?.[0] || "AI Tool"}
               </p>
             </div>
@@ -94,7 +94,7 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <p className="text-muted-foreground text-sm line-clamp-3" data-testid="tool-description">
+        <p className="text-white/80 text-sm line-clamp-3" data-testid="tool-description">
           {tool.oneLiner || tool.description}
         </p>
 
@@ -115,7 +115,7 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
         )}
 
         {/* Rating placeholder - would be calculated from user reviews */}
-        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+        <div className="flex items-center space-x-4 text-sm text-white/70">
           <div className="flex items-center space-x-1">
             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
             <span>4.8</span>

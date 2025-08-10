@@ -71,19 +71,19 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         <div className="w-16 h-16 mx-auto mb-8 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-purple-500/30 shadow-lg">
           <Bot className="w-8 h-8 text-purple-400" />
         </div>
-        <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-          <span className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+        <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={{ fontFamily: 'Instrument Serif, serif' }}>
+          <span className="text-white">
             Ask, Discover.
           </span>
           <br />
-          <span className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+          <span className="text-white">
             Find the right{" "}
           </span>
-          <span className="flicker-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+          <span className="flicker-text text-white">
             {flickerWord}
           </span>
         </h1>
-        <p className="text-xl text-gray-200 mb-12 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-xl text-white mb-12 max-w-2xl mx-auto leading-relaxed">
           Discover AI tools that transform your business. Ask anything about AI solutions.
         </p>
       </div>
@@ -120,7 +120,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
           </div>
           
           {/* Input hint */}
-          <div className="flex items-center justify-center mt-4 text-sm text-gray-300">
+          <div className="flex items-center justify-center mt-4 text-sm text-white">
             <span>Try: "AI content creation tools for social media" or "Customer service automation"</span>
           </div>
         </div>

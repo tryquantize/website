@@ -123,7 +123,7 @@ export default function Home() {
                 <h3 className="text-2xl font-bold text-white" data-testid="results-title">
                   {searchResults ? "Search Results" : "Featured AI Tools"}
                 </h3>
-                <p className="text-gray-300 mt-1" data-testid="results-count">
+                <p className="text-white mt-1" data-testid="results-count">
                   {searchResults 
                     ? `Found ${searchResults.count} tools matching your search`
                     : `Discover ${tools?.length || 0} innovative AI tools`
@@ -185,7 +185,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="text-center py-12" data-testid="no-results">
-                <p className="text-gray-300">No AI tools found matching your criteria.</p>
+                <p className="text-white">No AI tools found matching your criteria.</p>
               </div>
             )}
 
