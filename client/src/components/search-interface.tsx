@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot, Search, Lightbulb, Sparkles } from "lucide-react";
@@ -12,7 +12,22 @@ interface SearchInterfaceProps {
 
 export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
   const [query, setQuery] = useState("");
+  const [flickerWord, setFlickerWord] = useState("Startup");
   const { user } = useAuth();
+
+  const flickerWords = ["Startup", "Solution", "Product", "Service", "Company"];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFlickerWord(prev => {
+        const currentIndex = flickerWords.indexOf(prev);
+        const nextIndex = (currentIndex + 1) % flickerWords.length;
+        return flickerWords[nextIndex];
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const searchMutation = useMutation({
     mutationFn: async (searchQuery: string) => {
@@ -56,12 +71,19 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         <div className="w-16 h-16 mx-auto mb-8 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-purple-500/30 shadow-lg">
           <Bot className="w-8 h-8 text-purple-400" />
         </div>
-        <h1 className="text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-purple-300 to-blue-300 bg-clip-text text-transparent leading-tight">
-          Where AI meets
+        <h1 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+          <span className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+            Ask, Discover.
+          </span>
           <br />
-          your ambition
+          <span className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+            Find the right{" "}
+          </span>
+          <span className="flicker-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+            {flickerWord}
+          </span>
         </h1>
-        <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-xl text-gray-200 mb-12 max-w-2xl mx-auto leading-relaxed">
           Discover AI tools that transform your business. Ask anything about AI solutions.
         </p>
       </div>
@@ -76,7 +98,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="border-0 bg-transparent resize-none focus:ring-0 text-lg p-6 min-h-[80px] placeholder:text-purple-300/60"
+                className="border-0 bg-transparent resize-none focus:ring-0 text-lg p-6 min-h-[80px] placeholder:text-purple-300/60 text-white"
                 data-testid="search-input"
               />
             </div>
@@ -98,7 +120,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
           </div>
           
           {/* Input hint */}
-          <div className="flex items-center justify-center mt-4 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center mt-4 text-sm text-gray-300">
             <span>Try: "AI content creation tools for social media" or "Customer service automation"</span>
           </div>
         </div>

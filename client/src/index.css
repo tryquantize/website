@@ -143,6 +143,16 @@
     50% { opacity: 0.3; }
   }
 
+  /* Flickering text animation */
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .flicker-text {
+    animation: flicker 2s infinite;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold;
   }
