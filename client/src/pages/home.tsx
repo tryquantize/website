@@ -108,8 +108,8 @@ export default function Home() {
   const searchQuery = searchResults?.query;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-16">
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4">
         {/* Hero Section with Search */}
         <div className="mb-16">
           <SearchInterface onSearchResults={handleSearchResults} />
