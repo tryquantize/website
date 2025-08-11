@@ -1,5 +1,5 @@
 // React hooks
-import { useState } from "react";                                 // State management
+import { useEffect, useRef, useState } from "react";                                 // State management
 
 // Data fetching
 import { useQuery, useMutation } from "@tanstack/react-query";     // API data fetching and mutations
@@ -18,9 +18,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"; // Popover components
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"; // Command palette
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // Modal dialogs
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel"; // Carousel for FAQs
 
 // Icons
-import { ChevronsUpDown, Check, Loader2 } from "lucide-react";      // UI icons
+import { ChevronsUpDown, Check, Loader2, Star, Clock, MapPin } from "lucide-react";      // UI icons
 
 // Form handling
 import { useForm } from "react-hook-form";                        // Form state management
@@ -32,6 +33,7 @@ import { cn } from "@/lib/utils";                                 // Utility for
 import { useToast } from "@/hooks/use-toast";                     // Toast notifications
 import { useAuth } from "@/lib/auth";                              // Authentication state
 import { useNavigation } from "@/hooks/use-navigation";            // Navigation with loading transitions
+import { useMistScroll } from "@/hooks/use-mist-scroll";           // Mist fade on scroll
 
 // Types and schemas
 import { insertContactRequestSchema } from "@shared/schema";        // Contact form schema
@@ -122,6 +124,137 @@ export default function Home() {
       message: ""                                                 // Empty message field
     }
   });
+
+  // FAQ CONTENT (10 items)
+  const faqs: { question: string; answer: string }[] = [
+    {
+      question: "What makes AI Discovery different from other AI directories?",
+      answer:
+        "We curate, not crawl. Listings are verified by humans and organized for real buyer workflows — compare, shortlist, and take action fast.",
+    },
+    {
+      question: "Does AI Discovery support unique use cases or custom needs?",
+      answer:
+        "Yes. Filter by industry, team size, pricing model, and integrations. You can also contact vendors directly from the platform.",
+    },
+    {
+      question: "How do you keep listings accurate and up to date?",
+      answer:
+        "Vendors maintain their profiles and our team audits changes weekly. Popular tools are refreshed more frequently.",
+    },
+    {
+      question: "Is there a cost to use AI Discovery?",
+      answer:
+        "Browsing is free. We may offer premium research packs and expert consultations for power users.",
+    },
+    {
+      question: "Can teams collaborate inside AI Discovery?",
+      answer:
+        "Saved lists and shared notes are coming with early access. Join the waitlist to try it first.",
+    },
+    {
+      question: "How do I contact a vendor through AI Discovery?",
+      answer:
+        "Open a tool card and use the contact form to send a message directly to the vendor’s team.",
+    },
+    {
+      question: "Do you cover both free and paid tools?",
+      answer:
+        "Absolutely. Filter by pricing model to explore free, freemium, or paid options across categories.",
+    },
+    {
+      question: "Can I save and share shortlists with my team?",
+      answer:
+        "Team lists and shared notes are in early access. Join the waitlist to get it first.",
+    },
+    {
+      question: "Which industries are best represented?",
+      answer:
+        "We’re strong in marketing, sales, productivity, data, and customer support — with new industries added weekly.",
+    },
+    {
+      question: "How often are new tools added?",
+      answer:
+        "We review and add tools every week, prioritizing quality and demand from our community.",
+    },
+  ];
+
+  // Auto-scrolling FAQ carousel
+  const [faqApi, setFaqApi] = useState<CarouselApi | null>(null);
+  useEffect(() => {
+    if (!faqApi) return;
+    let stop = false;
+    const cycle = () => {
+      if (stop) return;
+      faqApi.scrollNext();
+      // if at end, jump to start seamlessly
+      if (!faqApi.canScrollNext()) {
+        faqApi.scrollTo(0);
+      }
+    };
+    const id = setInterval(cycle, 3000); // 3s per card
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
+  }, [faqApi]);
+
+  // TESTIMONIALS CONTENT
+  const testimonials: { quote: string; name: string; role: string; initials: string }[] = [
+    {
+      quote:
+        "We found the perfect AI CRM for our startup in under 10 minutes. Saved us weeks of research.",
+      name: "Sarah Lee",
+      role: "Startup Founder",
+      initials: "SL",
+    },
+    {
+      quote:
+        "The filters and comparisons made it so easy to pick the right automation tool for our workflows.",
+      name: "James Reed",
+      role: "Digital Marketer",
+      initials: "JR",
+    },
+    {
+      quote:
+        "Exactly what my team needed: verified listings, clean comparisons, and quick vendor contact.",
+      name: "Priya Kapoor",
+      role: "Head of Product",
+      initials: "PK",
+    },
+    {
+      quote:
+        "I cut vendor discovery time by 90%. It's now part of our standard evaluation process.",
+      name: "Daniel Chen",
+      role: "Operations Lead",
+      initials: "DC",
+    },
+    {
+      quote:
+        "Fantastic curation. I trust the results and love how fast it is to shortlist options.",
+      name: "Aisha Khan",
+      role: "Growth Manager",
+      initials: "AK",
+    },
+    {
+      quote:
+        "The upcoming team lists will be a game changer for us. Can't wait to try early access.",
+      name: "Marco Ruiz",
+      role: "CTO",
+      initials: "MR",
+    },
+  ];
+
+  // Testimonials carousel state
+  const [tApi, setTApi] = useState<CarouselApi | null>(null);
+  useEffect(() => {
+    if (!tApi) return;
+    const id = setInterval(() => {
+      tApi.scrollNext();
+      if (!tApi.canScrollNext()) tApi.scrollTo(0);
+    }, 4000);
+    return () => clearInterval(id);
+  }, [tApi]);
 
   /**
    * TOOLS DATA FETCHING
@@ -415,6 +548,9 @@ export default function Home() {
     );
   }
 
+  const pageRef = useRef<HTMLDivElement | null>(null);
+  useMistScroll(pageRef, { selector: ".mist-target", intensityViewportFactor: 0.8 });
+
   return (
     /**
      * MAIN PAGE CONTAINER
@@ -422,7 +558,7 @@ export default function Home() {
      * Full-height container with responsive padding
      * Uses container class for consistent max-width and centering
      */
-    <div className="min-h-screen">
+    <div ref={pageRef} className="min-h-screen">
       <div className="container mx-auto px-4">
         {/* 
          * HERO SECTION WITH SEARCH
@@ -432,7 +568,7 @@ export default function Home() {
          * - Quick access button to browse all solutions
          * - Cosmic theme styling with purple accents
          */}
-        <div className="mb-16">
+        <div className="mb-16 mist-target mist-lift">
           {/* Main search interface component */}
           <SearchInterface onSearchResults={handleSearchResults} />
           
@@ -459,7 +595,7 @@ export default function Home() {
          * Large, bold typography for maximum impact
          * Centered layout with generous spacing
          */}
-        <div className="text-center mb-24">
+        <div className="text-center mb-24 mist-target mist-lift">
           {/* 
            * MAIN HEADLINE
            * Large, responsive text that scales from 5xl to 6xl
@@ -479,177 +615,97 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Value Proposition Cards */}
-        <div className="grid md:grid-cols-2 gap-12 mb-24">
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-12 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-            <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center text-4xl mb-8">🔍</div>
-            <h3 className="text-2xl font-semibold text-white mb-4">Comprehensive Directory</h3>
-            <p className="text-white/70 text-lg leading-relaxed">From AI content creation tools to full-scale automation platforms. Discover thousands of verified solutions.</p>
-          </div>
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-12 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-            <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center text-4xl mb-8">✅</div>
-            <h3 className="text-2xl font-semibold text-white mb-4">Verified Listings</h3>
-            <p className="text-white/70 text-lg leading-relaxed">We handpick and review each product for quality and reliability. Only the best make it to our platform.</p>
-          </div>
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-12 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-            <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center text-4xl mb-8">⚡</div>
-            <h3 className="text-2xl font-semibold text-white mb-4">Fast Comparisons</h3>
-            <p className="text-white/70 text-lg leading-relaxed">Side-by-side feature and pricing breakdowns. Make informed decisions in minutes, not hours.</p>
-          </div>
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-12 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-            <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center text-4xl mb-8">🎯</div>
-            <h3 className="text-2xl font-semibold text-white mb-4">For Every Use Case</h3>
-            <p className="text-white/70 text-lg leading-relaxed">Whether you're running a startup, managing a business, or freelancing. Solutions for every need.</p>
-          </div>
-        </div>
+        {/* Value Proposition Cards - removed as requested */}
 
-        {/* Trust Signals */}
-        <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-3xl p-16 mb-24 border border-purple-500/20">
-          <div className="grid md:grid-cols-4 gap-12 text-center">
+        {/* Trust Signals - removed as requested */}
+
+        {/* Popular Categories - removed as requested */}
+
+        {/* How It Works - removed as requested */}
+
+        {/* Why Choose section - removed as requested */}
+
+        {/* Testimonials - removed as requested */}
+
+        {/* Stay Updated - removed as requested */}
+
+        {/* FAQs Section */}
+        <div className="mb-24 mist-target">
+          <div className="flex items-end justify-between mb-8">
             <div>
-              <div className="text-6xl font-bold text-purple-400 mb-4">2,000+</div>
-              <p className="text-white/70 text-xl">AI tools listed</p>
+              <h3 className="text-4xl md:text-5xl font-bold text-white mb-2">Frequently Asked <span className="text-blue-400">Questions</span></h3>
+              <p className="text-white/70 max-w-xl">Find answers to common questions about our platform, how we curate tools, and what’s coming next.</p>
             </div>
-            <div>
-              <div className="text-6xl font-bold text-purple-400 mb-4">100+</div>
-              <p className="text-white/70 text-xl">Categories</p>
-            </div>
-            <div>
-              <div className="text-6xl font-bold text-purple-400 mb-4">50,000+</div>
-              <p className="text-white/70 text-xl">Trusted users</p>
-            </div>
-            <div>
-              <div className="text-6xl font-bold text-purple-400 mb-4">Weekly</div>
-              <p className="text-white/70 text-xl">New products added</p>
-            </div>
+          </div>
+          <div className="relative">
+            <Carousel className="px-2" opts={{ align: "start", loop: true, dragFree: true }} setApi={setFaqApi}>
+              <CarouselContent>
+                {faqs.map((item, idx) => (
+                  <CarouselItem key={idx} className="md:basis-1/3 lg:basis-1/4">
+                    <div
+                      className="rounded-2xl p-6 md:p-6 h-full bg-white/10 backdrop-blur-md border border-white/10 text-white/90"
+                      style={{ minHeight: 180 }}
+                    >
+                      <h4 className="text-lg font-semibold mb-3 leading-snug text-white">{item.question}</h4>
+                      <p className="text-sm leading-relaxed text-white/80">{item.answer}</p>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="-top-12 left-auto right-12 md:right-14 bg-white/10 border-white/20 text-white hover:bg-white/20" />
+              <CarouselNext className="-top-12 right-3 md:right-5 bg-white text-black hover:bg-white/90" />
+            </Carousel>
           </div>
         </div>
 
-        {/* Popular Categories */}
-        <div className="mb-24">
-          <h3 className="text-4xl font-bold text-white text-center mb-16">Popular Categories</h3>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-10 border border-purple-500/20 hover:border-purple-500/40 transition-all cursor-pointer">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center text-3xl mb-6">✍️</div>
-              <h4 className="text-xl font-semibold text-white mb-4">AI Content Creation</h4>
-              <p className="text-white/70 text-base leading-relaxed">Turn ideas into posts, videos, and campaigns in minutes.</p>
-            </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-10 border border-purple-500/20 hover:border-purple-500/40 transition-all cursor-pointer">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-500 rounded-2xl flex items-center justify-center text-3xl mb-6">🤖</div>
-              <h4 className="text-xl font-semibold text-white mb-4">Customer Service Automation</h4>
-              <p className="text-white/70 text-base leading-relaxed">AI agents to handle chats, calls, and emails 24/7.</p>
-            </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-10 border border-purple-500/20 hover:border-purple-500/40 transition-all cursor-pointer">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center text-3xl mb-6">📊</div>
-              <h4 className="text-xl font-semibold text-white mb-4">Data & Analytics</h4>
-              <p className="text-white/70 text-base leading-relaxed">AI-powered insights for smarter business decisions.</p>
-            </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-10 border border-purple-500/20 hover:border-purple-500/40 transition-all cursor-pointer">
-              <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center text-3xl mb-6">💼</div>
-              <h4 className="text-xl font-semibold text-white mb-4">Sales & Lead Generation</h4>
-              <p className="text-white/70 text-base leading-relaxed">Never miss a lead with automated outreach.</p>
-            </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-10 border border-purple-500/20 hover:border-purple-500/40 transition-all cursor-pointer">
-              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center text-3xl mb-6">📱</div>
-              <h4 className="text-xl font-semibold text-white mb-4">Marketing & Ads</h4>
-              <p className="text-white/70 text-base leading-relaxed">Create, optimize, and track high-performing campaigns.</p>
-            </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-10 border border-purple-500/20 hover:border-purple-500/40 transition-all cursor-pointer">
-              <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-2xl flex items-center justify-center text-3xl mb-6">👥</div>
-              <h4 className="text-xl font-semibold text-white mb-4">Freelancers & Experts</h4>
-              <p className="text-white/70 text-base leading-relaxed">Hire vetted professionals who specialize in AI solutions.</p>
-            </div>
+        {/* Testimonials Section */}
+        <div className="mb-24 mist-target">
+          <div className="text-center mb-12">
+            <h3 className="text-4xl md:text-5xl font-bold text-white mb-3">What Our Users Are Saying</h3>
+            <p className="text-white/70">Trusted by teams worldwide for speed, curation, and clarity.</p>
           </div>
-        </div>
 
-        {/* How It Works */}
-        <div className="mb-24">
-          <h3 className="text-4xl font-bold text-white text-center mb-16">How It Works</h3>
-          <div className="grid md:grid-cols-3 gap-12">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-8">1</div>
-              <h4 className="text-2xl font-semibold text-white mb-6">Browse the Catalog</h4>
-              <p className="text-white/70 text-lg leading-relaxed">Search by name, category, or problem you want to solve. Discover thousands of AI solutions.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-8">2</div>
-              <h4 className="text-2xl font-semibold text-white mb-6">Compare Options</h4>
-              <p className="text-white/70 text-lg leading-relaxed">See pricing, features, reviews, and integrations side-by-side. Make informed decisions.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-8">3</div>
-              <h4 className="text-2xl font-semibold text-white mb-6">Connect & Get Started</h4>
-              <p className="text-white/70 text-lg leading-relaxed">Click through to purchase, try, or hire instantly. Start using AI today.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Benefits Section */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-16 mb-24 border border-purple-500/20">
-          <h3 className="text-4xl font-bold text-white text-center mb-16">Why Choose AI Discovery?</h3>
-          <div className="grid md:grid-cols-2 gap-12">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-8">⏰</div>
-              <h4 className="text-2xl font-semibold text-white mb-4">Save Hours</h4>
-              <p className="text-white/70 text-lg leading-relaxed">No more aimless Googling — everything is in one place. Find what you need instantly.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-teal-500 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-8">🧠</div>
-              <h4 className="text-2xl font-semibold text-white mb-4">Smarter Choices</h4>
-              <p className="text-white/70 text-lg leading-relaxed">Compare features and reviews before committing. Make decisions with confidence.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-8">🚀</div>
-              <h4 className="text-2xl font-semibold text-white mb-4">Future-Proof</h4>
-              <p className="text-white/70 text-lg leading-relaxed">Stay ahead with the newest AI tech releases. Always be on the cutting edge.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-8">💰</div>
-              <h4 className="text-2xl font-semibold text-white mb-4">Budget Friendly</h4>
-              <p className="text-white/70 text-lg leading-relaxed">Find options for every price point, from free to enterprise-grade solutions.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Testimonials */}
-        <div className="mb-24">
-          <h3 className="text-4xl font-bold text-white text-center mb-16">What Our Users Say</h3>
-          <div className="grid md:grid-cols-2 gap-12">
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-12 border border-purple-500/20">
-              <p className="text-white/80 mb-8 italic text-xl leading-relaxed">"We found the perfect AI CRM for our startup in under 10 minutes. Saved us weeks of research."</p>
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl">S</div>
-                <div>
-                  <p className="text-white font-semibold text-lg">Sarah L.</p>
-                  <p className="text-white/60">Startup Founder</p>
+          {/* 2 rows x 3 columns responsive grid with a tilted featured card */}
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.slice(0, 6).map((t, idx) => (
+              <div
+                key={idx}
+                className={
+                  idx === 1
+                    ? "md:col-span-1 relative" // middle of first row gets the featured card next
+                    : ""
+                }
+              >
+                <div
+                  className={
+                    idx === 1
+                      ? "rounded-3xl p-6 md:p-8 bg-white/12 backdrop-blur-lg border border-white/20 shadow-xl transform md:rotate-[-4deg]"
+                      : "rounded-2xl p-6 bg-white/8 backdrop-blur-md border border-white/10"
+                  }
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-xs">
+                        {t.initials}
+                      </div>
+                      <div>
+                        <div className="text-white font-semibold text-sm">{t.name}</div>
+                        <div className="text-white/60 text-xs">{t.role}</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 text-yellow-400">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-yellow-400" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-white/90 leading-relaxed text-sm md:text-base">“{t.quote}”</p>
+                  <div className="mt-5 inline-flex items-center gap-2 text-white/60 text-xs bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                    <Clock className="w-3.5 h-3.5" /> Using for 6–12 months
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-12 border border-purple-500/20">
-              <p className="text-white/80 mb-8 italic text-xl leading-relaxed">"The filters and comparisons made it so easy to pick the right automation tool."</p>
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-xl">J</div>
-                <div>
-                  <p className="text-white font-semibold text-lg">James R.</p>
-                  <p className="text-white/60">Digital Marketer</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Newsletter Section */}
-        <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-3xl p-16 mb-24 border border-purple-500/30 text-center">
-          <h3 className="text-3xl font-bold text-white mb-6">Stay Updated</h3>
-          <p className="text-white/80 mb-12 text-xl">Get the latest AI tools and startup news delivered to your inbox weekly — free.</p>
-          <div className="flex max-w-lg mx-auto">
-            <Input 
-              placeholder="Enter your email" 
-              className="rounded-r-none bg-white/10 border-purple-400/40 text-white placeholder-white/60 text-lg py-4"
-            />
-            <Button className="rounded-l-none bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 px-8 py-4 text-lg">
-              Subscribe
-            </Button>
+            ))}
           </div>
         </div>
 

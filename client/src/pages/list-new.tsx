@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Star, Bot, Briefcase, Building2, Package, Wrench, User, Check } from "lucide-react";
+import { useMistScroll } from "@/hooks/use-mist-scroll";
 
 const getTypeIcon = (type: string) => {
   switch (type) {
@@ -128,6 +129,9 @@ export default function ListPage() {
   const [visibleCount, setVisibleCount] = useState(8);
   const cardsPerLoad = 8;
 
+  const pageRef = useRef<HTMLDivElement | null>(null);
+  useMistScroll(pageRef, { selector: ".mist-row", intensityViewportFactor: 0.9, groupByRow: true });
+
   // Filter companies based on selected filters
   const filteredCompanies = mockCompanies.filter(company => {
     if (filters.category !== "all" && company.category !== filters.category) return false;
@@ -153,7 +157,7 @@ export default function ListPage() {
   };
 
   return (
-    <div className="min-h-screen py-8">
+    <div ref={pageRef} className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -211,10 +215,10 @@ export default function ListPage() {
 
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {currentCompanies.map((company) => (
+            {currentCompanies.map((company, i) => (
               <div
                 key={company.id}
-                className="bg-white/5 backdrop-blur-sm rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border border-white/10 hover:border-white/20 overflow-hidden relative aspect-square"
+                className="mist-row mist-lift bg-white/5 backdrop-blur-sm rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border border-white/10 hover:border-white/20 overflow-hidden relative aspect-square"
               >
                 {/* Card Content */}
                 <div className="p-4 h-full flex flex-col justify-between">
