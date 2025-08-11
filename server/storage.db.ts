@@ -12,75 +12,12 @@ import {
   type InsertContactRequest,
   type SearchQuery,
   type InsertSearchQuery,
-  type ToolAnalytics
+  type ToolAnalytics,
 } from "@shared/schema";
-import { drizzle } from "drizzle-orm/neon-serverless";
+import { db } from "./db";
 import { eq, desc, and, sql, count } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-
-// Import memory storage as fallback
-import { MemoryStorage } from "./storage.memory";
-
-// Check if we have database connection
-let db: any = null;
-let pool: any = null;
-
-async function initializeDatabase() {
-  try {
-    if (process.env.DATABASE_URL) {
-      const { Pool, neonConfig } = await import('@neondatabase/serverless');
-      const ws = await import("ws");
-      neonConfig.webSocketConstructor = ws.default;
-      
-      pool = new Pool({ connectionString: process.env.DATABASE_URL });
-      db = drizzle({ client: pool, schema: await import("@shared/schema") });
-      return true;
-    }
-  } catch (error) {
-    console.log("Database connection failed, using memory storage");
-  }
-  return false;
-}
-
-// Initialize database connection
-initializeDatabase();
-
-export interface IStorage {
-  // User management
-  getUser(id: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  validateUser(email: string, password: string): Promise<User | null>;
-
-  // Tool management
-  getTools(filters?: {
-    status?: string;
-    search?: string;
-    industries?: string[];
-    pricingModel?: string;
-  }): Promise<AiTool[]>;
-  getTool(id: string): Promise<AiTool | undefined>;
-  getToolsByStartup(startupId: string): Promise<AiTool[]>;
-  createTool(tool: InsertAiTool): Promise<AiTool>;
-  updateTool(id: string, updates: Partial<AiTool>): Promise<AiTool>;
-  deleteTool(id: string): Promise<void>;
-
-  // Admin functions
-  getPendingTools(): Promise<AiTool[]>;
-  approveTool(id: string): Promise<void>;
-  rejectTool(id: string): Promise<void>;
-
-  // Contact requests
-  createContactRequest(request: InsertContactRequest): Promise<ContactRequest>;
-  getContactRequestsForStartup(startupId: string): Promise<ContactRequest[]>;
-
-  // Search and analytics
-  recordSearch(search: InsertSearchQuery): Promise<SearchQuery>;
-  getSearchAnalytics(startupId?: string): Promise<any>;
-  recordToolView(toolId: string): Promise<void>;
-  recordToolClick(toolId: string): Promise<void>;
-  getToolAnalytics(toolId: string): Promise<ToolAnalytics[]>;
-}
+import type { IStorage } from "./storage";
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
@@ -99,7 +36,7 @@ export class DatabaseStorage implements IStorage {
       .insert(users)
       .values({
         ...insertUser,
-        password: hashedPassword
+        password: hashedPassword,
       })
       .returning();
     return user;
@@ -120,9 +57,9 @@ export class DatabaseStorage implements IStorage {
     pricingModel?: string;
   }): Promise<AiTool[]> {
     let query = db.select().from(aiTools);
-    
-    const conditions = [];
-    
+
+    const conditions = [] as any[];
+
     if (filters?.status) {
       conditions.push(eq(aiTools.status, filters.status as any));
     } else {
@@ -131,7 +68,7 @@ export class DatabaseStorage implements IStorage {
 
     if (filters?.search) {
       conditions.push(
-        sql`${aiTools.name} ILIKE ${`%${filters.search}%`} OR ${aiTools.description} ILIKE ${`%${filters.search}%`}`
+        sql`${aiTools.name} ILIKE ${`%${filters.search}%`} OR ${aiTools.description} ILIKE ${`%${filters.search}%`}`,
       );
     }
 
@@ -153,16 +90,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getToolsByStartup(startupId: string): Promise<AiTool[]> {
-    return await db.select().from(aiTools)
+    return await db
+      .select()
+      .from(aiTools)
       .where(eq(aiTools.startupId, startupId))
       .orderBy(desc(aiTools.createdAt));
   }
 
   async createTool(tool: InsertAiTool): Promise<AiTool> {
-    const [createdTool] = await db
-      .insert(aiTools)
-      .values(tool)
-      .returning();
+    const [createdTool] = await db.insert(aiTools).values(tool).returning();
     return createdTool;
   }
 
@@ -180,7 +116,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPendingTools(): Promise<AiTool[]> {
-    return await db.select().from(aiTools)
+    return await db
+      .select()
+      .from(aiTools)
       .where(eq(aiTools.status, "pending"))
       .orderBy(desc(aiTools.createdAt));
   }
@@ -199,7 +137,9 @@ export class DatabaseStorage implements IStorage {
       .where(eq(aiTools.id, id));
   }
 
-  async createContactRequest(request: InsertContactRequest): Promise<ContactRequest> {
+  async createContactRequest(
+    request: InsertContactRequest,
+  ): Promise<ContactRequest> {
     const [contactRequest] = await db
       .insert(contactRequests)
       .values(request)
@@ -207,7 +147,9 @@ export class DatabaseStorage implements IStorage {
     return contactRequest;
   }
 
-  async getContactRequestsForStartup(startupId: string): Promise<ContactRequest[]> {
+  async getContactRequestsForStartup(
+    startupId: string,
+  ): Promise<ContactRequest[]> {
     return await db
       .select({
         id: contactRequests.id,
@@ -218,7 +160,7 @@ export class DatabaseStorage implements IStorage {
         clientName: contactRequests.clientName,
         status: contactRequests.status,
         createdAt: contactRequests.createdAt,
-        toolName: aiTools.name
+        toolName: aiTools.name,
       })
       .from(contactRequests)
       .innerJoin(aiTools, eq(contactRequests.toolId, aiTools.id))
@@ -234,15 +176,13 @@ export class DatabaseStorage implements IStorage {
     return searchQuery;
   }
 
-  async getSearchAnalytics(startupId?: string): Promise<any> {
-    // Basic analytics implementation
+  async getSearchAnalytics(_startupId?: string): Promise<any> {
     const totalSearches = await db
       .select({ count: count() })
       .from(searchQueries);
 
     return {
       totalSearches: totalSearches[0].count,
-      // Add more analytics as needed
     };
   }
 
@@ -253,12 +193,7 @@ export class DatabaseStorage implements IStorage {
     const [existing] = await db
       .select()
       .from(toolAnalytics)
-      .where(
-        and(
-          eq(toolAnalytics.toolId, toolId),
-          eq(toolAnalytics.date, today)
-        )
-      );
+      .where(and(eq(toolAnalytics.toolId, toolId), eq(toolAnalytics.date, today)));
 
     if (existing) {
       await db
@@ -266,15 +201,13 @@ export class DatabaseStorage implements IStorage {
         .set({ impressions: existing.impressions + 1 })
         .where(eq(toolAnalytics.id, existing.id));
     } else {
-      await db
-        .insert(toolAnalytics)
-        .values({
-          toolId,
-          date: today,
-          impressions: 1,
-          clicks: 0,
-          contactRequests: 0
-        });
+      await db.insert(toolAnalytics).values({
+        toolId,
+        date: today,
+        impressions: 1,
+        clicks: 0,
+        contactRequests: 0,
+      });
     }
   }
 
@@ -285,12 +218,7 @@ export class DatabaseStorage implements IStorage {
     const [existing] = await db
       .select()
       .from(toolAnalytics)
-      .where(
-        and(
-          eq(toolAnalytics.toolId, toolId),
-          eq(toolAnalytics.date, today)
-        )
-      );
+      .where(and(eq(toolAnalytics.toolId, toolId), eq(toolAnalytics.date, today)));
 
     if (existing) {
       await db
@@ -298,15 +226,13 @@ export class DatabaseStorage implements IStorage {
         .set({ clicks: existing.clicks + 1 })
         .where(eq(toolAnalytics.id, existing.id));
     } else {
-      await db
-        .insert(toolAnalytics)
-        .values({
-          toolId,
-          date: today,
-          impressions: 0,
-          clicks: 1,
-          contactRequests: 0
-        });
+      await db.insert(toolAnalytics).values({
+        toolId,
+        date: today,
+        impressions: 0,
+        clicks: 1,
+        contactRequests: 0,
+      });
     }
   }
 
@@ -319,5 +245,3 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use memory storage if no database connection
-export const storage = db ? new DatabaseStorage() : new MemoryStorage();
