@@ -176,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Search routes
   app.post("/api/search", async (req, res) => {
     try {
-      const { query, userId, context, selectedModel } = req.body;
+      const { query, userId, context, selectedModel, selectedTypes } = req.body;
       
       // Record the search
       const searchData = {
@@ -197,7 +197,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           body: JSON.stringify({
             query,
             context: context || {},
-            selectedModel
+            selectedModel,
+            selectedTypes: selectedTypes || []
           })
         });
 
@@ -213,9 +214,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           res.json({
             query,
-            aiResponse: aiResult.response,
+            aiResponse: aiResult.aiResponse,
             suggestions: aiResult.suggestions,
             companies: aiResult.companies || [],
+            citations: aiResult.citations || [],
             traditionalResults: tools,
             count: tools.length,
             aiPowered: true,

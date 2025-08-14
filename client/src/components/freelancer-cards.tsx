@@ -163,7 +163,7 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
                   <Button
                     onClick={() => handleChatClick(index)}
                     size="sm"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2"
+                    className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-medium shadow-lg shadow-yellow-400/30 text-xs px-2"
                   >
                     <MessageCircle className="w-3 h-3 mr-1" />
                     Chat
@@ -171,7 +171,7 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
                   <Button
                     onClick={() => alert(`Hiring ${freelancer.name}...`)}
                     size="sm"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs px-2"
+                    className="flex-1 bg-gradient-to-r from-gray-300 to-gray-500 hover:from-gray-400 hover:to-gray-600 text-black font-medium shadow-lg shadow-gray-400/30 text-xs px-2"
                   >
                     💼 Hire
                   </Button>

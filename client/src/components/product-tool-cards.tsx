@@ -69,7 +69,7 @@ export function ProductToolCards({ products }: ProductToolCardsProps) {
               <Button
                 onClick={() => handleTryProduct(product.website)}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1"
+                className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-medium shadow-lg shadow-yellow-400/30 text-xs px-3 py-1"
               >
                 <ExternalLink className="w-3 h-3 mr-1" />
                 Try This
