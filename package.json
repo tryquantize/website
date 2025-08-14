@@ -4,14 +4,17 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "node cleanup.js && NODE_ENV=development tsx server/index.ts",
+    "dev": "node cleanup.js && NODE_ENV=development yarn tsx server/index.ts",
     "build": "node cleanup.js && vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "clean": "node cleanup.js",
     "ai:start": "cd ai_service && ./start.sh",
     "ai:install": "cd ai_service && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
-    "dev:full": "node cleanup.js && concurrently \"npm run dev\" \"npm run ai:start\""
+    "dev:full": "node cleanup.js && concurrently \"yarn run dev\" \"yarn run ai:start\"",
+    "launch": "./launch.sh",
+    "start-all": "node start-services.js",
+    "setup": "yarn install && cd ai_service && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
