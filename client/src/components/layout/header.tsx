@@ -14,7 +14,7 @@ import { useAuth } from "@/lib/auth";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
-import { Moon, Sun, Search } from "lucide-react";
+import { Moon, Sun, Search, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
@@ -67,6 +67,17 @@ export function Header() {
 
             <div className="flex items-center space-x-4 ml-auto">
               <span className="text-white/80">Welcome, {currentUser?.displayName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'User'}</span>
+              {currentUser && (
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white whitespace-nowrap"
+                  onClick={() => setLocation('/favorites')}
+                >
+                  <Heart className="w-4 h-4 mr-1" />
+                  Favorites
+                </Button>
+              )}
               <Button 
                 size="sm" 
                 variant="outline"
@@ -125,6 +136,15 @@ export function Header() {
                   <span className="hidden sm:block text-sm font-medium">
                     {currentUser.displayName || currentUser.email}
                   </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setLocation('/favorites')}
+                    className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white"
+                  >
+                    <Heart className="w-4 h-4 mr-1" />
+                    Favorites
+                  </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 

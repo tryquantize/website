@@ -19,6 +19,8 @@ import { BackgroundParticles } from "@/components/background-particles";
 import { LoadingProvider, useLoading } from "@/contexts/loading-context";
 import { LoadingTransition } from "@/components/loading-transition";
 import { FirebaseAuthProvider, useFirebaseAuth } from "@/contexts/firebase-auth-context";
+import { FavoritesProvider } from "@/contexts/favorites-context";
+import { ConversationProvider } from "@/contexts/conversation-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import NotFound from "@/pages/not-found";
@@ -34,6 +36,7 @@ import WaitlistAdminPage from "@/pages/waitlist-admin";
 import OnboardingPage from "@/pages/onboarding";
 import LoggedInHome from "@/pages/loggedinhome";
 import WelcomeTransition from "@/pages/welcome-transition";
+import FavoritesPage from "@/pages/favorites";
 
 function Router() {
   const { isLoading, fromPage, toPage } = useLoading();
@@ -64,6 +67,7 @@ function Router() {
             <Route path="/onboarding" component={OnboardingPage} />
             <Route path="/list" component={ListPage} />
             <Route path="/results" component={ResultsPage} />
+            <Route path="/favorites" component={FavoritesPage} />
             <Route component={NotFound} />
           </Switch>
         </main>
@@ -78,13 +82,17 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="ai-discovery-theme">
         <FirebaseAuthProvider>
-          <LoadingProvider>
-            <TooltipProvider>
-              <Toaster />
-              <BackgroundParticles />
-              <Router />
-            </TooltipProvider>
-          </LoadingProvider>
+          <FavoritesProvider>
+            <ConversationProvider>
+              <LoadingProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <BackgroundParticles />
+                  <Router />
+                </TooltipProvider>
+              </LoadingProvider>
+            </ConversationProvider>
+          </FavoritesProvider>
         </FirebaseAuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Package, Building, UserCheck, Lightbulb as Solution, Sparkles, Clock, ArrowRight, Lightbulb, Copy, Edit, Wrench, Building2, User, Brain, ChevronDown, LogOut } from "lucide-react";
+import { Search, Star, Package, Building, UserCheck, Lightbulb as Solution, Sparkles, Clock, ArrowRight, Lightbulb, Copy, Edit, Wrench, Building2, User, Brain, ChevronDown, LogOut, Mic, MicOff, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { QuantizeLogo } from "@/components/quantize-logo";
 import { UserLogo } from "@/components/user-logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,9 +19,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CompanyCards } from "@/components/company-cards";
 import { FreelancerCards } from "@/components/freelancer-cards";
 import { ProductCards } from "@/components/product-cards";
+import { ProductToolCards } from "@/components/product-tool-cards";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
+import { useFavorites } from "@/contexts/favorites-context";
+import { useConversations } from "@/contexts/conversation-context";
+import { useVoiceInput } from "@/hooks/use-voice-input";
+import { ConversationSidebar } from "@/components/conversation-sidebar";
+import { NewConversationState } from "@/components/new-conversation-state";
+import { FavoritesNotification } from "@/components/favorites-notification";
+import { NotificationProvider } from "@/contexts/notification-context";
 
 // Mock search results - in real app this would come from API
 const mockSearchResults = [
@@ -132,6 +140,22 @@ export default function ResultsPage() {
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
+  const { pinnedCards } = useFavorites();
+  const { createNewConversation, addMessageToConversation, loadConversation, currentConversation } = useConversations();
+  const { isListening, transcript, startListening, stopListening, resetTranscript } = useVoiceInput();
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [sidebarMinimized, setSidebarMinimized] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [showNewConversation, setShowNewConversation] = useState(false);
+  const [favoritesNotification, setFavoritesNotification] = useState({ show: false, itemName: '' });
+  
+  // Update search query when voice transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setSearchQuery(transcript);
+      resetTranscript();
+    }
+  }, [transcript, resetTranscript]);
 
   const llmModels = [
     "GPT-4o Mini",
@@ -221,9 +245,14 @@ export default function ResultsPage() {
     }
     
     if (query) {
+      // Create new conversation for initial search
+      const conversationId = createNewConversation(query);
+      setCurrentConversationId(conversationId);
+      setShowNewConversation(false);
+      
       // Small delay to ensure selectedTypes is set before search
       setTimeout(() => {
-        performInitialSearch(query);
+        performInitialSearch(query, conversationId);
       }, 100);
     }
   }, [location]);
@@ -240,7 +269,7 @@ export default function ResultsPage() {
     }
   }, [showModelDropdown]);
 
-  const performInitialSearch = async (query: string) => {
+  const performInitialSearch = async (query: string, conversationId?: string) => {
     setIsInitialLoading(true);
     setContentItems([]);
 
@@ -269,10 +298,8 @@ export default function ResultsPage() {
       const data = await response.json();
       
       const newCompanies = data.companies || [];
-      const uniqueNewCompanies = newCompanies.filter((newCompany: Company) => 
-        !allCompanies.some(existingCompany => existingCompany.name === newCompany.name)
-      );
-      const updatedAllCompanies = [...allCompanies, ...uniqueNewCompanies];
+      // For initial search, show all companies
+      const updatedAllCompanies = newCompanies;
       setAllCompanies(updatedAllCompanies);
 
       const result: SearchResult = {
@@ -285,19 +312,30 @@ export default function ResultsPage() {
         timestamp: Date.now()
       };
 
-      // Replace loading with result and suggestions
+      // Replace loading with result only (suggestions are now inside the result box)
       setContentItems([
         {
           id: `result-${Date.now()}`,
           type: 'result',
           data: result
-        },
-        {
-          id: `suggestions-${Date.now()}`,
-          type: 'suggestions',
-          data: { questions: result.suggestions || [] }
         }
       ]);
+      
+      // Add to conversation history
+      if (conversationId || currentConversationId) {
+        const msgId = conversationId || currentConversationId;
+        if (msgId) {
+          addMessageToConversation(msgId, {
+            id: `msg-${Date.now()}`,
+            type: 'response',
+            content: data.aiResponse,
+            timestamp: Date.now(),
+            aiResponse: data.aiResponse,
+            suggestions: data.suggestions,
+            companies: updatedAllCompanies
+          });
+        }
+      }
     } catch (error) {
       console.error('Search failed:', error);
       // Fallback to mock data
@@ -328,13 +366,24 @@ export default function ResultsPage() {
           id: `result-${Date.now()}`,
           type: 'result',
           data: fallbackResult
-        },
-        {
-          id: `suggestions-${Date.now()}`,
-          type: 'suggestions',
-          data: { questions: fallbackResult.suggestions || [] }
         }
       ]);
+      
+      // Add to conversation history
+      if (conversationId || currentConversationId) {
+        const msgId = conversationId || currentConversationId;
+        if (msgId) {
+          addMessageToConversation(msgId, {
+            id: `msg-${Date.now()}`,
+            type: 'response',
+            content: fallbackResult.aiResponse,
+            timestamp: Date.now(),
+            aiResponse: fallbackResult.aiResponse,
+            suggestions: fallbackResult.suggestions,
+            companies: []
+          });
+        }
+      }
     } finally {
       setIsInitialLoading(false);
     }
@@ -373,10 +422,11 @@ export default function ResultsPage() {
       const data = await response.json();
       
       const newCompanies = data.companies || [];
-      const uniqueNewCompanies = newCompanies.filter((newCompany: Company) => 
-        !allCompanies.some(existingCompany => existingCompany.name === newCompany.name)
+      // For subsequent searches, show pinned cards + new results
+      const pinnedCompanies = pinnedCards.filter(pin => 
+        !newCompanies.some((newCompany: Company) => newCompany.name === pin.name)
       );
-      const updatedAllCompanies = [...allCompanies, ...uniqueNewCompanies];
+      const updatedAllCompanies = [...pinnedCompanies, ...newCompanies];
       setAllCompanies(updatedAllCompanies);
 
       const result: SearchResult = {
@@ -389,7 +439,7 @@ export default function ResultsPage() {
         timestamp: Date.now()
       };
 
-      // Replace loading with result and add new suggestions
+      // Replace loading with result only
       setContentItems(prev => {
         const newItems = [...prev];
         const lastIndex = newItems.length - 1;
@@ -400,11 +450,6 @@ export default function ResultsPage() {
             data: result
           };
         }
-        newItems.push({
-          id: `suggestions-${Date.now()}`,
-          type: 'suggestions',
-          data: { questions: result.suggestions || [] }
-        });
         return newItems;
       });
 
@@ -453,6 +498,11 @@ export default function ResultsPage() {
     const query = searchQuery;
     setSearchQuery("");
 
+    // Create new conversation for new search
+    const conversationId = createNewConversation(query);
+    setCurrentConversationId(conversationId);
+    setShowNewConversation(false);
+
     // Replace current suggestions with selected question (if exists)
     setContentItems(prev => {
       const newItems = [...prev];
@@ -473,6 +523,14 @@ export default function ResultsPage() {
       type: 'loading',
       data: { query }
     }]);
+    
+    // Add query to conversation
+    addMessageToConversation(conversationId, {
+      id: `msg-${Date.now()}`,
+      type: 'query',
+      content: query,
+      timestamp: Date.now()
+    });
 
     try {
       const response = await apiRequest("POST", "/api/search", {
@@ -485,10 +543,11 @@ export default function ResultsPage() {
       const data = await response.json();
       
       const newCompanies = data.companies || [];
-      const uniqueNewCompanies = newCompanies.filter((newCompany: Company) => 
-        !allCompanies.some(existingCompany => existingCompany.name === newCompany.name)
+      // For new searches, show pinned cards + new results
+      const pinnedCompanies = pinnedCards.filter(pin => 
+        !newCompanies.some((newCompany: Company) => newCompany.name === pin.name)
       );
-      const updatedAllCompanies = [...allCompanies, ...uniqueNewCompanies];
+      const updatedAllCompanies = [...pinnedCompanies, ...newCompanies];
       setAllCompanies(updatedAllCompanies);
 
       const result: SearchResult = {
@@ -501,7 +560,7 @@ export default function ResultsPage() {
         timestamp: Date.now()
       };
 
-      // Replace loading with result and add new suggestions
+      // Replace loading with result only
       setContentItems(prev => {
         const newItems = [...prev];
         const lastIndex = newItems.length - 1;
@@ -512,13 +571,21 @@ export default function ResultsPage() {
             data: result
           };
         }
-        newItems.push({
-          id: `suggestions-${Date.now()}`,
-          type: 'suggestions',
-          data: { questions: result.suggestions || [] }
-        });
         return newItems;
       });
+      
+      // Add response to conversation
+      if (currentConversationId) {
+        addMessageToConversation(currentConversationId, {
+          id: `msg-${Date.now()}`,
+          type: 'response',
+          content: data.aiResponse,
+          timestamp: Date.now(),
+          aiResponse: data.aiResponse,
+          suggestions: data.suggestions,
+          companies: updatedAllCompanies
+        });
+      }
 
     } catch (error) {
       console.error('Search failed:', error);
@@ -550,6 +617,19 @@ export default function ResultsPage() {
         });
         return newItems;
       });
+      
+      // Add error response to conversation
+      if (currentConversationId) {
+        addMessageToConversation(currentConversationId, {
+          id: `msg-${Date.now()}`,
+          type: 'response',
+          content: fallbackResult.aiResponse,
+          timestamp: Date.now(),
+          aiResponse: fallbackResult.aiResponse,
+          suggestions: [],
+          companies: []
+        });
+      }
     }
   };
 
@@ -599,11 +679,64 @@ export default function ResultsPage() {
     }
   };
 
+  const handleNewConversation = () => {
+    setShowNewConversation(true);
+    setContentItems([]);
+    setCurrentConversationId(null);
+  };
+
+  const showFavoritesNotification = (itemName: string) => {
+    setFavoritesNotification({ show: true, itemName });
+  };
+
+  const hideFavoritesNotification = () => {
+    setFavoritesNotification({ show: false, itemName: '' });
+  };
+
+  const handleSelectConversation = (conversationId: string) => {
+    loadConversation(conversationId);
+    setCurrentConversationId(conversationId);
+    
+    // Load conversation messages into content items
+    const conversation = currentConversation;
+    if (conversation) {
+      const items = conversation.messages.map((msg, index) => {
+        if (msg.type === 'response') {
+          return {
+            id: `result-${msg.id}`,
+            type: 'result' as const,
+            data: {
+              query: conversation.messages[index - 1]?.content || conversation.query,
+              aiResponse: msg.aiResponse,
+              suggestions: msg.suggestions || [],
+              companies: msg.companies || [],
+              traditionalResults: [],
+              aiPowered: true,
+              timestamp: msg.timestamp
+            }
+          };
+        }
+        return null;
+      }).filter(Boolean);
+      
+      setContentItems(items as any[]);
+    }
+  };
+
   return (
     <div className="min-h-screen pb-32">
+      {/* Fixed Sidebar */}
+      {showSidebar && (
+        <ConversationSidebar 
+          onNewConversation={handleNewConversation}
+          onSelectConversation={handleSelectConversation}
+          isMinimized={sidebarMinimized}
+        />
+      )}
 
       {/* Main Content */}
-      <div className="px-8 py-1">
+      <div className={`px-8 py-1 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'}`}>
+        <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
         <div className="space-y-4">
           {contentItems.map((item) => (
             <div key={item.id}>
@@ -628,14 +761,31 @@ export default function ResultsPage() {
                         )}
                       </div>
                       <p className="text-sm text-white/60 mb-3 font-medium">Q: "{item.data.query}"</p>
-                      <div className="prose prose-invert max-w-none" style={{
-                        maxHeight: `${Math.min(item.data.aiResponse.split('\n').length, 5) * 1.5}rem`,
-                        height: 'auto',
-                        overflowY: item.data.aiResponse.split('\n').length > 5 ? 'auto' : 'visible'
-                      }}>
-                        <div className="text-white/90 leading-relaxed whitespace-pre-wrap">
+                      <div className="prose prose-invert max-w-none">
+                        <div className="text-white/90 leading-relaxed whitespace-pre-wrap mb-6">
                           {item.data.aiResponse}
                         </div>
+                        
+                        {/* Related Questions inside the same box */}
+                        {item.data.suggestions && item.data.suggestions.length > 0 && (
+                          <div className="border-t border-white/10 pt-4">
+                            <h4 className="text-white/80 text-sm font-medium mb-3">Related Questions:</h4>
+                            <div className="space-y-2">
+                              {item.data.suggestions.map((question, qIndex) => (
+                                <button
+                                  key={qIndex}
+                                  onClick={() => handleSuggestionClick(question)}
+                                  className="w-full text-left p-2 rounded hover:bg-white/5 transition-all group flex items-center justify-between"
+                                >
+                                  <span className="text-white/70 text-sm group-hover:text-white transition-colors">
+                                    {question}
+                                  </span>
+                                  <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Copy Button for Answer */}
@@ -648,6 +798,37 @@ export default function ResultsPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Cards - Show for each result */}
+                  {item.data.companies && item.data.companies.length > 0 && (() => {
+                    // Show appropriate cards based on selected types
+                    const params = new URLSearchParams(window.location.search);
+                    const urlTypes = params.get('types');
+                    const currentTypes = urlTypes ? new Set(urlTypes.split(',').filter(t => t.trim())) : selectedTypes;
+                    
+                    if (currentTypes.has('product') && currentTypes.size === 1) {
+                      return <ProductCards products={item.data.companies} />;
+                    } else if (currentTypes.has('company') && currentTypes.size === 1) {
+                      return <CompanyCards companies={item.data.companies} />;
+                    } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
+                      return <FreelancerCards freelancers={item.data.companies} />;
+                    } else {
+                      // Show company cards + product tool cards when no specific type is selected
+                      const companies = item.data.companies.slice(0, 5);
+                      const products = item.data.companies.slice(5, 15).map(companyItem => ({
+                        name: companyItem.name,
+                        description: companyItem.description,
+                        pricing: companyItem.pricing,
+                        website: companyItem.website
+                      }));
+                      return (
+                        <>
+                          <CompanyCards companies={companies} />
+                          <ProductToolCards products={products} />
+                        </>
+                      );
+                    }
+                  })()}
 
 
 
@@ -742,38 +923,7 @@ export default function ResultsPage() {
                     ))}
                   </div>
                   
-                  {/* Cards - Show only for the last suggestions */}
-                  {contentItems.indexOf(item) === contentItems.length - 1 && (() => {
-                    // Find the most recent result with companies data
-                    const lastResultWithCompanies = [...contentItems].reverse().find(contentItem => 
-                      contentItem.type === 'result' && contentItem.data.companies && contentItem.data.companies.length > 0
-                    );
-                    
-                    if (!lastResultWithCompanies) return null;
-                    
-                    // Show appropriate cards based on selected types
-                    // Get types from URL as fallback
-                    const params = new URLSearchParams(window.location.search);
-                    const urlTypes = params.get('types');
-                    const currentTypes = urlTypes ? new Set(urlTypes.split(',').filter(t => t.trim())) : selectedTypes;
-                    
-                    console.log('Card selection - URL types:', urlTypes, 'Current types:', Array.from(currentTypes));
-                    
-                    if (currentTypes.has('product') && currentTypes.size === 1) {
-                      console.log('Showing ProductCards for products');
-                      return <ProductCards products={lastResultWithCompanies.data.companies} />;
-                    } else if (currentTypes.has('company') && currentTypes.size === 1) {
-                      console.log('Showing CompanyCards for companies');
-                      return <CompanyCards companies={lastResultWithCompanies.data.companies} />;
-                    } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
-                      console.log('Showing FreelancerCards for freelancers');
-                      return <FreelancerCards freelancers={lastResultWithCompanies.data.companies} />;
-                    } else {
-                      console.log('Showing default CompanyCards');
-                      // Show company cards by default or when multiple are selected
-                      return <CompanyCards companies={lastResultWithCompanies.data.companies} />;
-                    }
-                  })()}
+
                 </div>
               )}
 
@@ -806,40 +956,49 @@ export default function ResultsPage() {
             </div>
           ))}
 
-          {/* No Results */}
-          {contentItems.length === 0 && !isInitialLoading && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto bg-white/10 rounded-full flex items-center justify-center mb-4">
-                <Search className="w-8 h-8 text-white/60" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">No results found</h3>
-              <p className="text-white/70 mb-6">Try adjusting your search terms</p>
-              <Button
-                onClick={() => setLocation('/')}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Back to Search
-              </Button>
-            </div>
+          {/* No Results - Show welcome message when no content */}
+          {contentItems.length === 0 && !isInitialLoading && !showNewConversation && (
+            <NewConversationState firstName={firstName} />
           )}
         </div>
+        </NotificationProvider>
       </div>
+      
+      {/* Favorites Notification */}
+      <FavoritesNotification 
+        show={favoritesNotification.show}
+        itemName={favoritesNotification.itemName}
+        onClose={hideFavoritesNotification}
+      />
 
       {/* Fixed Search Bar at Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-white/20 p-4 z-50">
+      <div className={`fixed bottom-0 right-0 bg-background/95 backdrop-blur-md border-t border-white/20 p-4 z-50 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'left-12' : 'left-80') : 'left-0'}`}>
         <div className="max-w-4xl mx-auto">
           <div className="relative rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible" style={{height: '85px'}}>
             {/* Search input area - increased for better centering */}
             <div className="relative px-4 flex items-center" style={{height: '45px'}}>
-              {/* Search button */}
-              <button
-                aria-label="Search"
-                onClick={() => handleNewSearch({ preventDefault: () => {} } as React.FormEvent)}
-                disabled={!searchQuery.trim()}
-                className="absolute right-4 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
-              >
-                <Search className="h-4 w-4" />
-              </button>
+              {/* Voice and Search buttons */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2">
+                <button
+                  aria-label={isListening ? "Stop listening" : "Start voice input"}
+                  onClick={isListening ? stopListening : startListening}
+                  className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
+                    isListening 
+                      ? 'bg-red-500/20 border-red-400/40 text-red-400' 
+                      : 'bg-white/5 border-white/20 text-white/90 hover:bg-white/10'
+                  }`}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </button>
+                <button
+                  aria-label="Search"
+                  onClick={() => handleNewSearch({ preventDefault: () => {} } as React.FormEvent)}
+                  disabled={!searchQuery.trim()}
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </div>
 
               {/* Input */}
               <Input
@@ -853,7 +1012,7 @@ export default function ResultsPage() {
                     handleNewSearch(e);
                   }
                 }}
-                className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-14 flex items-center"
+                className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-20 flex items-center"
               />
             </div>
 
@@ -967,8 +1126,27 @@ export default function ResultsPage() {
         </div>
       </div>
 
+      {/* Sidebar Toggle Button - Top Left */}
+      <button
+        onClick={() => {
+          if (showSidebar && !sidebarMinimized) {
+            setSidebarMinimized(true);
+          } else if (showSidebar && sidebarMinimized) {
+            setShowSidebar(false);
+            setSidebarMinimized(false);
+          } else {
+            setShowSidebar(true);
+            setSidebarMinimized(false);
+          }
+        }}
+        className={`fixed top-20 z-50 bg-black/40 backdrop-blur-xl border border-white/10 text-white p-2 rounded-lg hover:bg-white/10 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'left-16' : 'left-4') : 'left-4'}`}
+        title={showSidebar ? (sidebarMinimized ? "Hide sidebar" : "Minimize sidebar") : "Show sidebar"}
+      >
+        {showSidebar ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+      </button>
+
       {/* 4 Toggle Buttons - Right Edge */}
-      <div className="fixed right-0 top-1/2 transform -translate-y-1/2 z-50 flex flex-col space-y-2">
+      <div className="fixed right-0 top-1/2 transform -translate-y-1/2 z-40 flex flex-col space-y-2">
         {/* Products Button */}
         <button
           onClick={() => setActiveSection(activeSection === 'products' ? null : 'products')}
@@ -1004,7 +1182,7 @@ export default function ResultsPage() {
 
       {/* Expandable Sections */}
       {activeSection && (
-        <div className="fixed right-0 top-0 h-full w-80 bg-background/95 backdrop-blur-md border-l border-purple-500/30 transform transition-transform duration-300 z-40">
+        <div className="fixed right-0 top-0 h-full w-80 bg-background/95 backdrop-blur-md border-l border-purple-500/30 transform transition-transform duration-300 z-35">
           <div className="p-6 pt-20 h-full overflow-y-auto">
             {activeSection === 'products' && (
               <div>

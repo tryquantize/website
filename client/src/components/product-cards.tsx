@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Package } from "lucide-react";
+import { ExternalLink, Package, Heart } from "lucide-react";
+import { useFavorites } from "@/contexts/favorites-context";
+import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
+import { useNotification } from "@/contexts/notification-context";
 
 interface Product {
   name: string;
@@ -16,6 +19,10 @@ interface ProductCardsProps {
 }
 
 export function ProductCards({ products }: ProductCardsProps) {
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { currentUser } = useFirebaseAuth();
+  const { showFavoritesNotification } = useNotification();
+  
   const handleTryProduct = (website: string) => {
     if (website && website !== "#") {
       window.open(website, "_blank", "noopener,noreferrer");
@@ -28,14 +35,42 @@ export function ProductCards({ products }: ProductCardsProps) {
         {products.map((product, index) => (
           <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all rounded-lg p-4 min-w-[168px] h-[320px] flex-shrink-0">
             <div className="space-y-3 h-full flex flex-col">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <Package className="w-4 h-4 text-white" />
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <Package className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="text-white text-base font-medium">{product.name}</h5>
+                    <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{product.category}</span>
+                  </div>
                 </div>
-                <div>
-                  <h5 className="text-white text-base font-medium">{product.name}</h5>
-                  <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{product.category}</span>
-                </div>
+                {currentUser && (
+                  <Button
+                    onClick={() => {
+                      const productId = `product_${index}_${product.name}`;
+                      if (isFavorite(productId)) {
+                        removeFromFavorites(productId);
+                      } else {
+                        addToFavorites({
+                          id: productId,
+                          type: 'product',
+                          name: product.name,
+                          description: product.description,
+                          features: product.features,
+                          pricing: product.pricing,
+                          website: product.website,
+                          category: product.category
+                        }, showFavoritesNotification);
+                      }
+                    }}
+                    size="sm"
+                    variant="ghost"
+                    className="p-1 h-auto"
+                  >
+                    <Heart className={`w-4 h-4 ${isFavorite(`product_${index}_${product.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+                  </Button>
+                )}
               </div>
               
               <p className="text-white/70 text-sm">{product.description}</p>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Brain, Sparkles, Building2, User, Package, Clock } from "lucide-react";
+import { Search, Brain, Sparkles, Building2, User, Package, Clock, Mic, MicOff } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
@@ -34,6 +34,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     }
     return "";
   });
+  
+  // Voice input temporarily disabled
   const { user } = useAuth();
   const { currentUser } = useFirebaseAuth();
   const [, setLocation] = useLocation();
@@ -47,6 +49,13 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
+  
+  // Temporary disable voice input
+  const isListening = false;
+  const transcript = '';
+  const startListening = () => {};
+  const stopListening = () => {};
+  const resetTranscript = () => {};
 
   // Get user's first name
   const firstName = currentUser?.displayName?.split(' ')[0] || 
@@ -339,18 +348,31 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
           isSearching ? 'transform scale-95' : 'transform scale-100'
         }`} style={{height: '85px'}}>
           <div className="relative px-4 flex items-center" style={{height: '45px'}}>
-            <button
-              aria-label="Search"
-              onClick={handleSearch}
-              disabled={!query.trim() || searchMutation.isPending}
-              className="absolute right-4 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
-            >
-              {searchMutation.isPending ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Search className="h-4 w-4" />
-              )}
-            </button>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2">
+              <button
+                aria-label={isListening ? "Stop listening" : "Start voice input"}
+                onClick={isListening ? stopListening : startListening}
+                className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
+                  isListening 
+                    ? 'bg-red-500/20 border-red-400/40 text-red-400' 
+                    : 'bg-white/5 border-white/20 text-white/90 hover:bg-white/10'
+                }`}
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </button>
+              <button
+                aria-label="Search"
+                onClick={handleSearch}
+                disabled={!query.trim() || searchMutation.isPending}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
+              >
+                {searchMutation.isPending ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+              </button>
+            </div>
 
             <Input
               type="text"
@@ -360,7 +382,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
               onKeyDown={handleKeyDown}
               onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-14 flex items-center"
+              className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-20 flex items-center"
             />
           </div>
 

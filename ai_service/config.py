@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # OpenRouter API Configuration
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 # AI Model Configuration
@@ -31,8 +31,9 @@ INSTRUCTIONS:
 	2.	IMPORTANT: Check if specific result types are requested:
 		- If "company" filter is active: Focus ONLY on AI companies and startups
 		- If "freelancer" filter is active: Focus ONLY on freelancers and individual professionals
-		- If both or neither are selected: Provide mixed results as appropriate
-	3.	Provide 3–5 specific recommendations that match the needs and selected filters.
+		- If "product" filter is active: Focus ONLY on AI products and tools
+		- If no filters are selected: Provide 15 mixed results (5 companies + 10 products/tools)
+	3.	Provide specific recommendations that match the needs and selected filters.
 	4.	For each recommendation, include:
 		•	Name and direct link
 		•	Pricing details (exact or range)

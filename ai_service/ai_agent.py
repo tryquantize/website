@@ -289,20 +289,29 @@ Example format:
   }}
 ]"""
             else:
-                extraction_prompt = f"""Extract company information from the following search result and format it as a JSON array of company objects.
+                # Mixed results - companies + products when no filter is selected
+                extraction_prompt = f"""Extract mixed information from the following search result and format it as a JSON array with 15 objects (5 companies + 10 products/tools).
 
 Search Result:
 {search_result}
 
-For each company mentioned, extract:
+For the first 5 items (companies), extract:
 - name: Company name
-- description: Brief description of their service/product (max 100 characters)
+- description: Brief description of their service (max 100 characters)
 - features: Array of 2-3 key features
 - pricing: Pricing information if mentioned
 - website: Website URL if mentioned
 - category: Type of service (e.g., "AI Writing", "Image Generation", etc.)
 
-Return ONLY a valid JSON array with 3-5 company objects. If fewer than 3 companies are found, create similar companies based on the context.
+For the next 10 items (products/tools), extract:
+- name: Product/tool name
+- description: Brief one-liner description (max 80 characters)
+- features: Array of 2-3 key features
+- pricing: Pricing information (e.g., "Free", "$10/month")
+- website: Website URL if mentioned
+- category: Type of product (e.g., "AI Tool", "Writing Assistant", etc.)
+
+Return ONLY a valid JSON array with exactly 15 objects. Create realistic examples based on the search context if needed.
 
 Example format:
 [
@@ -349,20 +358,37 @@ Example format:
                 
                 try:
                     companies = json.loads(companies_text)
-                    # Ensure we have 3-5 companies
-                    if len(companies) > 5:
-                        companies = companies[:5]
-                    elif len(companies) < 3:
-                        # Add default companies if needed
-                        while len(companies) < 3:
-                            companies.append({
-                                "name": f"AI Solution {len(companies) + 1}",
-                                "description": "Advanced AI-powered solution for your needs",
-                                "features": ["AI-Powered", "Easy Integration", "24/7 Support"],
-                                "pricing": "Contact for pricing",
-                                "website": "#",
-                                "category": "AI Tools"
-                            })
+                    # Ensure we have the right number of items based on filter
+                    if selected_types and len(selected_types) == 1:
+                        # Single filter selected - ensure 3-5 items
+                        if len(companies) > 5:
+                            companies = companies[:5]
+                        elif len(companies) < 3:
+                            # Add default items if needed
+                            while len(companies) < 3:
+                                companies.append({
+                                    "name": f"AI Solution {len(companies) + 1}",
+                                    "description": "Advanced AI-powered solution for your needs",
+                                    "features": ["AI-Powered", "Easy Integration", "24/7 Support"],
+                                    "pricing": "Contact for pricing",
+                                    "website": "#",
+                                    "category": "AI Tools"
+                                })
+                    else:
+                        # No filter or multiple filters - ensure 15 items
+                        if len(companies) > 15:
+                            companies = companies[:15]
+                        elif len(companies) < 15:
+                            # Add default items if needed
+                            while len(companies) < 15:
+                                companies.append({
+                                    "name": f"AI Tool {len(companies) + 1}",
+                                    "description": "Powerful AI tool for your workflow",
+                                    "features": ["Easy to Use", "Fast Results", "Reliable"],
+                                    "pricing": "Free",
+                                    "website": "#",
+                                    "category": "AI Tools"
+                                })
                     
                     return companies
                 except json.JSONDecodeError:
