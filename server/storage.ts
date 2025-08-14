@@ -1,3 +1,14 @@
+/* File Overview
+  Path: server/storage.ts
+  Purpose: Provides a unified storage interface (IStorage) and chooses an implementation at runtime:
+  - If DATABASE_URL is set, attempts to connect to a Neon Postgres database and uses Drizzle ORM
+  - Otherwise, falls back to a simple in-memory storage ideal for local development
+
+  Reading tip for newcomers:
+  - Focus on the IStorage interface to understand available data operations
+  - At the bottom, the exported `storage` picks a concrete implementation based on environment
+*/
+
 import {
   users,
   aiTools,

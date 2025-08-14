@@ -1,3 +1,4 @@
+import { IStorage } from "./storage";
 import {
   type User,
   type InsertUser,
@@ -7,49 +8,42 @@ import {
   type InsertContactRequest,
   type SearchQuery,
   type InsertSearchQuery,
-  type ToolAnalytics,
+  type ToolAnalytics
 } from "@shared/schema";
-import type { IStorage } from "./storage";
 import bcrypt from "bcryptjs";
-import { randomUUID } from "crypto";
-
-type PartialWithId<T extends { id: string }> = Partial<T> & { id: string };
 
 export class MemoryStorage implements IStorage {
-  private users: Record<string, User> = {};
-  private aiTools: Record<string, AiTool> = {};
-  private contactRequests: Record<string, ContactRequest> = {};
-  private searchQueries: Record<string, SearchQuery> = {};
-  private analytics: Record<string, ToolAnalytics[]> = {};
+  private users: User[] = [];
+  private tools: AiTool[] = [];
+  private contactRequests: ContactRequest[] = [];
+  private searchQueries: SearchQuery[] = [];
+  private toolAnalytics: ToolAnalytics[] = [];
 
   async getUser(id: string): Promise<User | undefined> {
-    return this.users[id];
+    return this.users.find(u => u.id === id);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Object.values(this.users).find((u) => u.email === email);
+    return this.users.find(u => u.email === email);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const now = new Date();
     const hashedPassword = await bcrypt.hash(insertUser.password, 10);
     const user: User = {
-      id,
-      email: insertUser.email,
+      id: Math.random().toString(36).substr(2, 9),
+      ...insertUser,
       password: hashedPassword,
-      name: insertUser.name ?? null,
-      role: (insertUser as any).role ?? "client",
-      createdAt: now,
-      updatedAt: now,
-    } as User;
-    this.users[id] = user;
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.users.push(user);
     return user;
   }
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.getUserByEmail(email);
     if (!user) return null;
+
     const isValid = await bcrypt.compare(password, user.password);
     return isValid ? user : null;
   }
@@ -60,174 +54,165 @@ export class MemoryStorage implements IStorage {
     industries?: string[];
     pricingModel?: string;
   }): Promise<AiTool[]> {
-    let tools = Object.values(this.aiTools);
+    let results = this.tools;
 
-    tools = tools.filter((t) => (filters?.status ? t.status === (filters.status as any) : t.status === "approved"));
+    if (filters?.status) {
+      results = results.filter(t => t.status === filters.status);
+    } else {
+      results = results.filter(t => t.status === "approved");
+    }
 
     if (filters?.search) {
-      const q = filters.search.toLowerCase();
-      tools = tools.filter(
-        (t) => t.name.toLowerCase().includes(q) || (t.description ?? "").toLowerCase().includes(q),
+      const search = filters.search.toLowerCase();
+      results = results.filter(t => 
+        t.name.toLowerCase().includes(search) || 
+        t.description.toLowerCase().includes(search)
       );
     }
 
     if (filters?.pricingModel) {
-      tools = tools.filter((t) => (t.pricingModel as any) === filters.pricingModel);
+      results = results.filter(t => t.pricingModel === filters.pricingModel);
     }
 
-    return tools.sort(
-      (a, b) => new Date(b.createdAt as any).getTime() - new Date(a.createdAt as any).getTime(),
-    );
+    return results.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async getTool(id: string): Promise<AiTool | undefined> {
-    return this.aiTools[id];
+    return this.tools.find(t => t.id === id);
   }
 
   async getToolsByStartup(startupId: string): Promise<AiTool[]> {
-    return Object.values(this.aiTools)
-      .filter((t) => t.startupId === startupId)
-      .sort((a, b) => new Date(b.createdAt as any).getTime() - new Date(a.createdAt as any).getTime());
+    return this.tools
+      .filter(t => t.startupId === startupId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async createTool(tool: InsertAiTool): Promise<AiTool> {
-    const id = randomUUID();
-    const now = new Date();
-    const created: AiTool = {
-      id,
-      name: tool.name,
-      description: tool.description ?? null,
-      oneLiner: (tool as any).oneLiner ?? null,
-      websiteUrl: (tool as any).websiteUrl ?? null,
-      pricingModel: (tool as any).pricingModel ?? null,
-      pricingDetails: (tool as any).pricingDetails ?? null,
-      features: (tool as any).features ?? null,
-      industries: (tool as any).industries ?? null,
-      integrations: (tool as any).integrations ?? null,
-      techStack: (tool as any).techStack ?? null,
-      demoVideoUrl: (tool as any).demoVideoUrl ?? null,
-      logoUrl: (tool as any).logoUrl ?? null,
-      startupId: (tool as any).startupId,
-      status: "pending" as any,
-      createdAt: now,
-      updatedAt: now,
-    } as AiTool;
-    this.aiTools[id] = created;
-    return created;
+    const newTool: AiTool = {
+      id: Math.random().toString(36).substr(2, 9),
+      ...tool,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.tools.push(newTool);
+    return newTool;
   }
 
   async updateTool(id: string, updates: Partial<AiTool>): Promise<AiTool> {
-    const existing = this.aiTools[id];
-    const updated: AiTool = { ...(existing as AiTool), ...(updates as PartialWithId<AiTool>), updatedAt: new Date() } as AiTool;
-    this.aiTools[id] = updated;
-    return updated;
+    const index = this.tools.findIndex(t => t.id === id);
+    if (index === -1) throw new Error("Tool not found");
+    
+    this.tools[index] = {
+      ...this.tools[index],
+      ...updates,
+      updatedAt: new Date()
+    };
+    return this.tools[index];
   }
 
   async deleteTool(id: string): Promise<void> {
-    delete this.aiTools[id];
+    const index = this.tools.findIndex(t => t.id === id);
+    if (index !== -1) {
+      this.tools.splice(index, 1);
+    }
   }
 
   async getPendingTools(): Promise<AiTool[]> {
-    return Object.values(this.aiTools).filter((t) => t.status === ("pending" as any));
+    return this.tools
+      .filter(t => t.status === "pending")
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async approveTool(id: string): Promise<void> {
-    if (this.aiTools[id]) {
-      this.aiTools[id].status = "approved" as any;
-      this.aiTools[id].updatedAt = new Date() as any;
-    }
+    await this.updateTool(id, { status: "approved" });
   }
 
   async rejectTool(id: string): Promise<void> {
-    if (this.aiTools[id]) {
-      this.aiTools[id].status = "rejected" as any;
-      this.aiTools[id].updatedAt = new Date() as any;
-    }
+    await this.updateTool(id, { status: "rejected" });
   }
 
   async createContactRequest(request: InsertContactRequest): Promise<ContactRequest> {
-    const id = randomUUID();
-    const now = new Date();
-    const created: ContactRequest = {
-      id,
-      toolId: (request as any).toolId,
-      clientId: (request as any).clientId,
-      message: (request as any).message ?? null,
-      clientEmail: (request as any).clientEmail ?? null,
-      clientName: (request as any).clientName ?? null,
-      status: "pending",
-      createdAt: now,
-    } as any;
-    this.contactRequests[id] = created;
-    return created;
+    const contactRequest: ContactRequest = {
+      id: Math.random().toString(36).substr(2, 9),
+      ...request,
+      createdAt: new Date()
+    };
+    this.contactRequests.push(contactRequest);
+    return contactRequest;
   }
 
   async getContactRequestsForStartup(startupId: string): Promise<ContactRequest[]> {
-    const toolIds = Object.values(this.aiTools)
-      .filter((t) => t.startupId === startupId)
-      .map((t) => t.id);
-    return Object.values(this.contactRequests).filter((cr) => toolIds.includes(cr.toolId as any));
+    return this.contactRequests
+      .filter(cr => {
+        const tool = this.tools.find(t => t.id === cr.toolId);
+        return tool?.startupId === startupId;
+      })
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async recordSearch(search: InsertSearchQuery): Promise<SearchQuery> {
-    const id = randomUUID();
-    const now = new Date();
-    const created: SearchQuery = {
-      id,
-      userId: (search as any).userId ?? null,
-      query: search.query,
-      resultsShown: (search as any).resultsShown ?? 0,
-      clickedTools: (search as any).clickedTools ?? null,
-      createdAt: now,
-    } as any;
-    this.searchQueries[id] = created;
-    return created;
+    const searchQuery: SearchQuery = {
+      id: Math.random().toString(36).substr(2, 9),
+      ...search,
+      createdAt: new Date()
+    };
+    this.searchQueries.push(searchQuery);
+    return searchQuery;
   }
 
-  async getSearchAnalytics(_startupId?: string): Promise<any> {
-    return { totalSearches: Object.keys(this.searchQueries).length };
+  async getSearchAnalytics(startupId?: string): Promise<any> {
+    return {
+      totalSearches: this.searchQueries.length
+    };
   }
 
   async recordToolView(toolId: string): Promise<void> {
-    const todayKey = new Date().toDateString();
-    const list = this.analytics[toolId] || [];
-    let record = list.find((r) => new Date(r.date as any).toDateString() === todayKey);
-    if (!record) {
-      record = {
-        id: randomUUID(),
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const existing = this.toolAnalytics.find(ta => 
+      ta.toolId === toolId && ta.date.getTime() === today.getTime()
+    );
+
+    if (existing) {
+      existing.impressions += 1;
+    } else {
+      this.toolAnalytics.push({
+        id: Math.random().toString(36).substr(2, 9),
         toolId,
-        date: new Date() as any,
-        impressions: 0,
+        date: today,
+        impressions: 1,
         clicks: 0,
-        contactRequests: 0,
-      } as any;
-      list.push(record);
-      this.analytics[toolId] = list;
+        contactRequests: 0
+      });
     }
-    record.impressions = (record.impressions as any) + 1;
   }
 
   async recordToolClick(toolId: string): Promise<void> {
-    const todayKey = new Date().toDateString();
-    const list = this.analytics[toolId] || [];
-    let record = list.find((r) => new Date(r.date as any).toDateString() === todayKey);
-    if (!record) {
-      record = {
-        id: randomUUID(),
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const existing = this.toolAnalytics.find(ta => 
+      ta.toolId === toolId && ta.date.getTime() === today.getTime()
+    );
+
+    if (existing) {
+      existing.clicks += 1;
+    } else {
+      this.toolAnalytics.push({
+        id: Math.random().toString(36).substr(2, 9),
         toolId,
-        date: new Date() as any,
+        date: today,
         impressions: 0,
-        clicks: 0,
-        contactRequests: 0,
-      } as any;
-      list.push(record);
-      this.analytics[toolId] = list;
+        clicks: 1,
+        contactRequests: 0
+      });
     }
-    record.clicks = (record.clicks as any) + 1;
   }
 
   async getToolAnalytics(toolId: string): Promise<ToolAnalytics[]> {
-    return this.analytics[toolId] || [];
+    return this.toolAnalytics
+      .filter(ta => ta.toolId === toolId)
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
   }
 }
-

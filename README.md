@@ -1,4 +1,4 @@
-# AiSAAS-Marketplace
+# Quantize
 The Perplexity of AI tools — find the perfect AI startup for your needs, just by describing what you’re looking for.
 
 In today’s rapidly expanding AI landscape, users are overwhelmed with the sheer volume of startups, tools, and services claiming to solve everything from sales automation to content generation. Yet, the biggest friction lies not in building AI tools — but in discovering the right one. This product solves that pain point by becoming the Perplexity for AI startups — a natural language-driven platform that lets users describe what they need in plain English and instantly get matched with the most relevant, high-quality AI tools tailored to their use case, budget, and preferences. Whether you’re a solopreneur looking for an AI content writer under $15/month or a CTO searching for enterprise-grade voice agents with CRM integrations, the platform provides a personalized, intelligent discovery experience that feels like having your own AI advisor.

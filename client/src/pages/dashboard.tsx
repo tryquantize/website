@@ -1,13 +1,35 @@
+/* File Overview
+  Path: client/src/pages/dashboard.tsx
+  Purpose: A top-level page component rendered based on the current route.
+
+  Reading tip for newcomers:
+  - Scan the exports at the bottom to see what the rest of the app imports from here
+  - Follow the data flow via function parameters and return values
+*/
+
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ToolForm } from "@/components/tool-form";
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+  SidebarTrigger,
+  SidebarSeparator,
+} from "@/components/ui/sidebar";
+import { OnboardingForm } from "@/components/onboarding-form";
 import { useAuth } from "@/lib/auth";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Eye, 
@@ -20,82 +42,72 @@ import {
   Users,
   BarChart3,
   Edit,
-  Trash2
+  Trash2,
+  Building2,
+  Zap,
+  Target,
+  Settings,
+  HelpCircle,
+  LogOut
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { AiTool } from "@shared/schema";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [showToolForm, setShowToolForm] = useState(false);
-  const [editingTool, setEditingTool] = useState<AiTool | null>(null);
+  const [editingTool, setEditingTool] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
-  // Redirect non-startup users
-  if (user?.role !== "startup") {
+  // Redirect non-authenticated users
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-muted-foreground">This dashboard is only available for startup accounts.</p>
+        <p className="text-muted-foreground">Please log in to access your dashboard.</p>
       </div>
     );
   }
 
-  const { data: tools, isLoading: toolsLoading } = useQuery({
-    queryKey: ["/api/startup", user.id, "tools"],
-    queryFn: async () => {
-      const response = await fetch(`/api/startup/${user.id}/tools`);
-      return response.json();
-    },
-    enabled: !!user?.id
-  });
+  // Get tools from localStorage for now (simulating persistence)
+  const getTools = () => {
+    try {
+      const tools = JSON.parse(localStorage.getItem('userTools') || '[]');
+      return tools.filter((tool: any) => tool.userId === user.id);
+    } catch {
+      return [];
+    }
+  };
 
-  const { data: contactRequests, isLoading: contactsLoading } = useQuery({
-    queryKey: ["/api/startup", user.id, "contact-requests"],
-    queryFn: async () => {
-      const response = await fetch(`/api/startup/${user.id}/contact-requests`);
-      return response.json();
-    },
-    enabled: !!user?.id
-  });
+  const tools = getTools();
+  const toolsLoading = false;
 
-  const { data: analytics } = useQuery({
-    queryKey: ["/api/startup", user.id, "analytics"],
-    queryFn: async () => {
-      const response = await fetch(`/api/startup/${user.id}/analytics`);
-      return response.json();
-    },
-    enabled: !!user?.id
-  });
+  // Mock data for now
+  const contactRequests: any[] = [];
+  const contactsLoading = false;
+  const analytics = null;
 
-  const deleteToolMutation = useMutation({
-    mutationFn: async (toolId: string) => {
-      await apiRequest("DELETE", `/api/tools/${toolId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/startup", user.id, "tools"] });
+  const handleDeleteTool = (toolId: string) => {
+    if (confirm("Are you sure you want to delete this tool?")) {
+      // Remove from localStorage for now
+      const existingTools = JSON.parse(localStorage.getItem('userTools') || '[]');
+      const updatedTools = existingTools.filter((tool: any) => tool.id !== toolId);
+      localStorage.setItem('userTools', JSON.stringify(updatedTools));
+      
       toast({
         title: "Success",
         description: "Tool deleted successfully."
       });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete tool.",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const handleDeleteTool = (toolId: string) => {
-    if (confirm("Are you sure you want to delete this tool?")) {
-      deleteToolMutation.mutate(toolId);
+      
+      // Refresh the page to show updated tools
+      window.location.reload();
     }
   };
 
-  const handleEditTool = (tool: AiTool) => {
+
+
+  const handleEditTool = (tool: any) => {
     setEditingTool(tool);
     setShowToolForm(true);
   };
@@ -103,46 +115,157 @@ export default function Dashboard() {
   const handleFormSuccess = () => {
     setShowToolForm(false);
     setEditingTool(null);
-    queryClient.invalidateQueries({ queryKey: ["/api/startup", user.id, "tools"] });
+    // Refresh the page to show new tools
+    window.location.reload();
   };
 
   // Calculate metrics
-  const totalViews = tools?.reduce((sum: number, tool: AiTool) => sum + (tool.analytics?.views || 0), 0) || 0;
+  const totalViews = tools?.reduce((sum: number, tool: any) => sum + (tool.analytics?.views || 0), 0) || 0;
   const totalContacts = contactRequests?.length || 0;
-  const activeTools = tools?.filter((tool: AiTool) => tool.status === "approved").length || 0;
-  const pendingTools = tools?.filter((tool: AiTool) => tool.status === "pending").length || 0;
+  const activeTools = tools?.filter((tool: any) => tool.status === "approved").length || 0;
+  const pendingTools = tools?.filter((tool: any) => tool.status === "pending").length || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold" data-testid="dashboard-title">
-              Startup Dashboard
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Manage your AI tool listings and view performance analytics
-            </p>
+    <div className="dashboard-layout" style={{ ['--dashboard-header-h' as any]: '64px' }}>
+    <SidebarProvider defaultOpen={false}>
+      <Sidebar variant="sidebar" collapsible="icon" className="bg-white/10 backdrop-blur-md text-white border-r border-white/20">
+        <SidebarHeader>
+          <div className="flex items-center justify-between px-2">
+              <span className="text-base font-semibold text-firequest">Quantize</span>
+            <SidebarTrigger className="md:hidden" />
           </div>
-          <Button 
-            onClick={() => setShowToolForm(true)}
-            className="mt-4 sm:mt-0"
-            data-testid="add-tool-button"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Tool
-          </Button>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => setActiveTab("overview")}>
+                  <BarChart3 />
+                  <span>Overview</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={activeTab === "tools"} onClick={() => setActiveTab("tools")}>
+                  <Bolt />
+                  <span>My Tools</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={activeTab === "products"} onClick={() => setActiveTab("products")}>
+                  <Building2 />
+                  <span>Products</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={activeTab === "services"} onClick={() => setActiveTab("services")}>
+                  <Zap />
+                  <span>Services</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={activeTab === "solutions"} onClick={() => setActiveTab("solutions")}>
+                  <Target />
+                  <span>Solutions</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={activeTab === "contacts"} onClick={() => setActiveTab("contacts")}>
+                  <MessageSquare />
+                  <span>Inquiries</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarSeparator />
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
+                <Settings />
+                <span>Settings</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton isActive={activeTab === "help"} onClick={() => setActiveTab("help")}>
+                <HelpCircle />
+                <span>Help</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => logout()}>
+                <LogOut />
+                <span>Logout</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+
+      <SidebarInset>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+          {/* Header row inside inset */}
+          <div className="border-b border-white/10 bg-white/5 backdrop-blur-md">
+            <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                <h2 className="text-xl font-semibold text-white">
+                  {activeTab === "overview" && "Dashboard Overview"}
+                  {activeTab === "tools" && "My AI Tools"}
+                  {activeTab === "products" && "AI Products"}
+                  {activeTab === "services" && "AI Services"}
+                  {activeTab === "solutions" && "AI Solutions"}
+                  {activeTab === "contacts" && "Contact Inquiries"}
+                  {activeTab === "settings" && "Settings"}
+                  {activeTab === "help" && "Help & Support"}
+                </h2>
+                <p className="text-white/70 text-sm">
+                  {activeTab === "overview" && "Manage your AI tool listings and view performance analytics"}
+                  {activeTab === "tools" && "Manage and monitor your AI tools"}
+                  {activeTab === "products" && "Manage and monitor your AI products"}
+                  {activeTab === "services" && "Manage and monitor your AI services"}
+                  {activeTab === "solutions" && "Manage and monitor your AI solutions"}
+                  {activeTab === "contacts" && "Messages from potential clients"}
+                  {activeTab === "settings" && "Configure your account and preferences"}
+                  {activeTab === "help" && "Get help and support for your account"}
+                </p>
+              </div>
+              <Button onClick={() => setShowToolForm(true)} className="bg-white text-black hover:bg-white/90" data-testid="add-tool-button">
+                <Plus className="w-4 h-4 mr-2" /> Add New
+              </Button>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="container mx-auto px-4 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-white mb-2">
+            {activeTab === "overview" && "Dashboard Overview"}
+            {activeTab === "tools" && "My AI Tools"}
+            {activeTab === "products" && "AI Products"}
+            {activeTab === "services" && "AI Services"}
+            {activeTab === "solutions" && "AI Solutions"}
+            {activeTab === "contacts" && "Contact Inquiries"}
+            {activeTab === "settings" && "Settings"}
+            {activeTab === "help" && "Help & Support"}
+          </h2>
+          <p className="text-white/80">
+            {activeTab === "overview" && "Manage your AI tool listings and view performance analytics"}
+            {activeTab === "tools" && "Manage and monitor your AI tools"}
+            {activeTab === "products" && "Manage and monitor your AI products"}
+            {activeTab === "services" && "Manage and monitor your AI services"}
+            {activeTab === "solutions" && "Manage and monitor your AI solutions"}
+            {activeTab === "contacts" && "Messages from potential clients"}
+            {activeTab === "settings" && "Configure your account and preferences"}
+            {activeTab === "help" && "Get help and support for your account"}
+          </p>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-8">
-          <TabsList>
-            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-            <TabsTrigger value="tools" data-testid="tab-tools">My Bolt</TabsTrigger>
-            <TabsTrigger value="contacts" data-testid="tab-contacts">Inquiries</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-8">
+        {/* Tab Content */}
+        {activeTab === "overview" && (
+          <div className="space-y-8">
             {/* Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30 border-blue-200 dark:border-blue-800">
@@ -185,7 +308,7 @@ export default function Dashboard() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-amber-600 dark:text-amber-400 text-sm font-medium">Active Bolt</p>
+                      <p className="text-amber-600 dark:text-amber-400 text-sm font-medium">Active Tools</p>
                       <p className="text-2xl font-bold text-amber-900 dark:text-amber-100" data-testid="active-tools">
                         {activeTools}
                       </p>
@@ -198,7 +321,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/30 border-purple-200 dark:border-purple-800">
+<Card className="bg-gradient-to-br from-white/5 to-white/10 dark:from-white/5 dark:to-white/10 border-white/20">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -230,9 +353,11 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="tools" className="space-y-6">
+                  {activeTab === "tools" && (
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -252,9 +377,9 @@ export default function Dashboard() {
                   <div className="text-center py-8" data-testid="tools-loading">
                     Loading tools...
                   </div>
-                ) : tools?.length > 0 ? (
+                ) : tools?.filter((tool: any) => tool.listType === "AI Tool")?.length > 0 ? (
                   <div className="space-y-4" data-testid="tools-list">
-                    {tools.map((tool: AiTool) => (
+                    {tools.filter((tool: any) => tool.listType === "AI Tool").map((tool: any) => (
                       <div
                         key={tool.id}
                         className="flex items-center justify-between p-4 border border-border rounded-lg hover:shadow-sm transition-shadow"
@@ -327,21 +452,356 @@ export default function Dashboard() {
                 ) : (
                   <div className="text-center py-8" data-testid="no-tools">
                     <Bolt className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No tools created yet</p>
+                    <p className="text-muted-foreground">No AI tools listed yet</p>
                     <Button 
                       onClick={() => setShowToolForm(true)} 
                       className="mt-4"
                       data-testid="create-first-tool-button"
                     >
-                      Create Your First Tool
+                      List Your First Tool
                     </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="contacts" className="space-y-6">
+                   {activeTab === "products" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Your AI Products</CardTitle>
+                    <CardDescription>Manage and monitor your AI products</CardDescription>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm">
+                      Export
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {toolsLoading ? (
+                  <div className="text-center py-8" data-testid="products-loading">
+                    Loading products...
+                  </div>
+                ) : tools?.filter((tool: any) => tool.listType === "AI Product")?.length > 0 ? (
+                  <div className="space-y-4" data-testid="products-list">
+                    {tools.filter((tool: any) => tool.listType === "AI Product").map((tool: any) => (
+                      <div
+                        key={tool.id}
+                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:shadow-sm transition-shadow"
+                      >
+                        <div className="flex items-center space-x-4 flex-1">
+                          <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/40 rounded-lg flex items-center justify-center">
+                            <span className="font-bold text-green-600">
+                              {tool.name.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold" data-testid={`product-name-${tool.id}`}>
+                              {tool.name}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {tool.oneLiner}
+                            </p>
+                            <div className="flex items-center space-x-4 mt-1 text-xs text-muted-foreground">
+                              <span className="flex items-center">
+                                <Calendar className="w-3 h-3 mr-1" />
+                                Created {new Date(tool.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4">
+                          <Badge
+                            variant={
+                              tool.status === "approved"
+                                ? "default"
+                                : tool.status === "pending"
+                                ? "secondary"
+                                : "destructive"
+                            }
+                            data-testid={`product-status-${tool.id}`}
+                          >
+                            {tool.status}
+                          </Badge>
+                          
+                          <div className="text-right text-sm">
+                            <p className="font-medium">1.2K views</p>
+                            <p className="text-muted-foreground">24 contacts</p>
+                          </div>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" data-testid={`product-menu-${tool.id}`}>
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onClick={() => handleEditTool(tool)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteTool(tool.id)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8" data-testid="no-products">
+                    <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No AI products listed yet</p>
+                    <Button 
+                      onClick={() => setShowToolForm(true)} 
+                      className="mt-4"
+                      data-testid="create-first-product-button"
+                    >
+                      List Your First Product
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+                   {activeTab === "services" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Your AI Services</CardTitle>
+                    <CardDescription>Manage and monitor your AI services</CardDescription>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm">
+                      Export
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {toolsLoading ? (
+                  <div className="text-center py-8" data-testid="services-loading">
+                    Loading services...
+                  </div>
+                ) : tools?.filter((tool: any) => tool.listType === "AI Solution / Service")?.length > 0 ? (
+                  <div className="space-y-4" data-testid="services-list">
+                    {tools.filter((tool: any) => tool.listType === "AI Solution / Service").map((tool: any) => (
+                      <div
+                        key={tool.id}
+                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:shadow-sm transition-shadow"
+                      >
+                        <div className="flex items-center space-x-4 flex-1">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/40 rounded-lg flex items-center justify-center">
+                            <span className="font-bold text-blue-600">
+                              {tool.name.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold" data-testid={`service-name-${tool.id}`}>
+                              {tool.name}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {tool.oneLiner}
+                            </p>
+                            <div className="flex items-center space-x-4 mt-1 text-xs text-muted-foreground">
+                              <span className="flex items-center">
+                                <Calendar className="w-3 h-3 mr-1" />
+                                Created {new Date(tool.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4">
+                          <Badge
+                            variant={
+                              tool.status === "approved"
+                                ? "default"
+                                : tool.status === "pending"
+                                ? "secondary"
+                                : "destructive"
+                            }
+                            data-testid={`service-status-${tool.id}`}
+                          >
+                            {tool.status}
+                          </Badge>
+                          
+                          <div className="text-right text-sm">
+                            <p className="font-medium">1.2K views</p>
+                            <p className="text-muted-foreground">24 contacts</p>
+                          </div>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" data-testid={`service-menu-${tool.id}`}>
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onClick={() => handleEditTool(tool)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteTool(tool.id)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8" data-testid="no-services">
+                    <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No AI services listed yet</p>
+                    <Button 
+                      onClick={() => setShowToolForm(true)} 
+                      className="mt-4"
+                      data-testid="create-first-service-button"
+                    >
+                      List Your First Service
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+                   {activeTab === "solutions" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Your AI Solutions</CardTitle>
+                    <CardDescription>Manage and monitor your AI solutions</CardDescription>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm">
+                      Export
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {toolsLoading ? (
+                  <div className="text-center py-8" data-testid="solutions-loading">
+                    Loading solutions...
+                  </div>
+                ) : tools?.filter((tool: any) => tool.listType === "AI Solution / Service")?.length > 0 ? (
+                  <div className="space-y-4" data-testid="solutions-list">
+                    {tools.filter((tool: any) => tool.listType === "AI Solution / Service").map((tool: any) => (
+                      <div
+                        key={tool.id}
+                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:shadow-sm transition-shadow"
+                      >
+                        <div className="flex items-center space-x-4 flex-1">
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/40 rounded-lg flex items-center justify-center">
+                            <span className="font-bold text-purple-600">
+                              {tool.name.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold" data-testid={`solution-name-${tool.id}`}>
+                              {tool.name}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {tool.oneLiner}
+                            </p>
+                            <div className="flex items-center space-x-4 mt-1 text-xs text-muted-foreground">
+                              <span className="flex items-center">
+                                <Calendar className="w-3 h-3 mr-1" />
+                                Created {new Date(tool.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Badge
+                            variant={
+                              tool.status === "approved"
+                                ? "default"
+                                : tool.status === "pending"
+                                ? "secondary"
+                                : "destructive"
+                            }
+                            data-testid={`solution-status-${tool.id}`}
+                          >
+                            {tool.status}
+                          </Badge>
+                          
+                          <div className="text-right text-sm">
+                            <p className="font-medium">1.2K views</p>
+                            <p className="text-muted-foreground">24 contacts</p>
+                          </div>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" data-testid={`solution-menu-${tool.id}`}>
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onClick={() => handleEditTool(tool)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteTool(tool.id)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8" data-testid="no-solutions">
+                    <Target className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No AI solutions listed yet</p>
+                    <Button 
+                      onClick={() => setShowToolForm(true)} 
+                      className="mt-4"
+                      data-testid="create-first-solution-button"
+                    >
+                      List Your First Solution
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+         {activeTab === "contacts" && (
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Contact Requests</CardTitle>
@@ -397,18 +857,53 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
+
+        {/* Settings and Help tabs */}
+        {activeTab === "settings" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Settings</CardTitle>
+                <CardDescription>Configure your account and preferences</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Settings className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Settings configuration coming soon</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === "help" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Help & Support</CardTitle>
+                <CardDescription>Get help and support for your account</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <HelpCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Help and support documentation coming soon</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Tool Form Dialog */}
         <Dialog open={showToolForm} onOpenChange={setShowToolForm}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="tool-form-dialog">
             <DialogHeader>
               <DialogTitle>
-                {editingTool ? "Edit AI Tool" : "Add New AI Tool"}
+                {editingTool ? "Edit AI Tool" : "List New AI Tool/Service"}
               </DialogTitle>
             </DialogHeader>
-            <ToolForm
+            <OnboardingForm
               initialData={editingTool || undefined}
               onSuccess={handleFormSuccess}
               onCancel={() => {
@@ -419,6 +914,9 @@ export default function Dashboard() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
+      </SidebarInset>
+    </SidebarProvider>
     </div>
   );
 }

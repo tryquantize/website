@@ -1,3 +1,13 @@
+/* File Overview
+  Path: server/db.ts
+  Purpose: Bootstraps a Neon Postgres connection and exports a Drizzle ORM client bound to the shared schema.
+  Requires the environment variable DATABASE_URL.
+
+  Reading tip for newcomers:
+  - If DATABASE_URL is missing, we throw to signal misconfiguration early
+  - The exported `db` is used by the storage.db.ts implementation
+*/
+
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";

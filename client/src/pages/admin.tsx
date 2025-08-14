@@ -1,3 +1,12 @@
+/* File Overview
+  Path: client/src/pages/admin.tsx
+  Purpose: A top-level page component rendered based on the current route.
+
+  Reading tip for newcomers:
+  - Scan the exports at the bottom to see what the rest of the app imports from here
+  - Follow the data flow via function parameters and return values
+*/
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

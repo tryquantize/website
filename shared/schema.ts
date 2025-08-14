@@ -1,3 +1,13 @@
+/* File Overview
+  Path: shared/schema.ts
+  Purpose: Central definition of database tables, relations, and Zod-powered insert schemas.
+  Shared between server and client to keep types in sync.
+
+  Reading tip for newcomers:
+  - Each pgTable(...) defines the shape of a table, its columns, and defaults
+  - The createInsertSchema(...) helpers derive Zod validators from the table definitions
+*/
+
 import { sql, relations } from "drizzle-orm";
 import { pgTable, text, varchar, timestamp, uuid, pgEnum, jsonb, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";

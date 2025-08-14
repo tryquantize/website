@@ -1,3 +1,12 @@
+/* File Overview
+  Path: client/src/pages/auth/register.tsx
+  Purpose: A top-level page component rendered based on the current route.
+
+  Reading tip for newcomers:
+  - Scan the exports at the bottom to see what the rest of the app imports from here
+  - Follow the data flow via function parameters and return values
+*/
+
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
@@ -11,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
+import { handleIndependentGoogleAuth } from "@/lib/independent-google-auth";
 import { Bot, Eye, EyeOff, AlertCircle, CheckCircle, Mail, Lock } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebookF } from "react-icons/fa";
@@ -45,6 +55,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
+  // Removed Firebase auth to avoid conflicts
   const [isLogin, setIsLogin] = useState(false); // false = Create Account, true = Sign In
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -99,22 +110,26 @@ export default function AuthPage() {
     },
     onSuccess: (data) => {
       login(data.user);
-      setLocation(data.user.role === "startup" ? "/dashboard" : "/");
+      setLocation(data.user.role === "startup" ? "/dashboard" : "/welcome-transition");
     },
     onError: (error: any) => {
       setError(error.message || "Registration failed. Please try again.");
     }
   });
 
-  const onLoginSubmit = (data: LoginFormData) => {
+  const onLoginSubmit = async (data: LoginFormData) => {
     setError("");
+    // Use existing auth system only
     loginMutation.mutate(data);
   };
 
-  const onRegisterSubmit = (data: RegisterFormData) => {
+  const onRegisterSubmit = async (data: RegisterFormData) => {
     setError("");
+    // Use existing auth system only
     registerMutation.mutate(data);
   };
+
+  // Removed complex Google auth handler
 
   const passwordStrength = {
     hasMinLength: registerForm.watch("password")?.length >= 8,
@@ -139,7 +154,7 @@ export default function AuthPage() {
       <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-0 bg-[#252033] rounded-2xl shadow-2xl overflow-hidden">
         {/* Left visual panel */}
         <div className="relative hidden md:block">
-          <img src={heroImage} alt="Onboarding" className="absolute inset-0 w-full h-full object-cover" />
+          <img src="/forest.png" alt="Forest" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative z-10 h-full p-6 flex flex-col">
             <div className="flex items-center justify-between">
@@ -147,15 +162,13 @@ export default function AuthPage() {
                 <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
                   <Bot className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-white font-semibold tracking-wide">AI Discovery</span>
+            <span className="text-firequest font-semibold tracking-wide">Quantize</span>
               </div>
               <Link href="/" className="text-white/90 bg-white/10 hover:bg-white/20 transition-colors rounded-full px-3 py-1 text-sm">
                 Back to website →
               </Link>
             </div>
             <div className="mt-auto pb-8">
-              <h3 className="text-white text-2xl font-semibold">Capturing Moments,
-                <br /> Creating Memories</h3>
               <div className="mt-6 flex gap-2">
                 <span className="h-1 w-8 bg-white/30 rounded-full" />
                 <span className="h-1 w-8 bg-white rounded-full" />
@@ -219,6 +232,7 @@ export default function AuthPage() {
                         type="email" 
                         placeholder="Enter your email" 
                         className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-white/40 focus:bg-white/15"
+                        autoComplete="off"
                         {...loginForm.register("email")} 
                       />
                     </div>
@@ -236,6 +250,7 @@ export default function AuthPage() {
                         type={showPassword ? "text" : "password"} 
                         placeholder="Enter your password" 
                         className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-white/40 focus:bg-white/15"
+                        autoComplete="off"
                         {...loginForm.register("password")} 
                       />
                       <button
@@ -264,21 +279,14 @@ export default function AuthPage() {
                   </Button>
                 </form>
 
-                <div className="mt-6 flex items-center gap-4">
-                  <div className="h-px bg-white/10 w-full" />
-                  <span className="text-white/60 text-sm">Or sign in with</span>
-                  <div className="h-px bg-white/10 w-full" />
-                </div>
-
-                <div className="mt-4 grid grid-cols-3 gap-3">
-                  <Button type="button" variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10">
-                    <FcGoogle className="w-5 h-5" />
-                  </Button>
-                  <Button type="button" variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10">
-                    <FaApple className="w-5 h-5" />
-                  </Button>
-                  <Button type="button" variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10">
-                    <FaFacebookF className="w-5 h-5 text-[#1877F2]" />
+                <div className="mt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full bg-transparent border-white/20 text-white hover:bg-white/10"
+                    onClick={handleIndependentGoogleAuth}
+                  >
+                    <FcGoogle className="w-5 h-5 mr-2" /> Continue with Google
                   </Button>
                 </div>
               </>
@@ -301,20 +309,20 @@ export default function AuthPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName" className="text-white/90">First name</Label>
-                      <Input id="firstName" placeholder="First name" {...registerForm.register("firstName")} />
+                      <Input id="firstName" placeholder="First name" autoComplete="off" {...registerForm.register("firstName")} />
                       {registerForm.formState.errors.firstName && (
                         <p className="text-sm text-destructive">{registerForm.formState.errors.firstName.message}</p>
                       )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName" className="text-white/90">Last name</Label>
-                      <Input id="lastName" placeholder="Last name" {...registerForm.register("lastName")} />
+                      <Input id="lastName" placeholder="Last name" autoComplete="off" {...registerForm.register("lastName")} />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="register-email" className="text-white/90">Email</Label>
-                    <Input id="register-email" type="email" placeholder="Enter your email" {...registerForm.register("email")} />
+                    <Input id="register-email" type="email" placeholder="Enter your email" autoComplete="off" {...registerForm.register("email")} />
                     {registerForm.formState.errors.email && (
                       <p className="text-sm text-destructive">{registerForm.formState.errors.email.message}</p>
                     )}
@@ -323,7 +331,7 @@ export default function AuthPage() {
                   <div className="space-y-2">
                     <Label htmlFor="register-password" className="text-white/90">Enter your password</Label>
                     <div className="relative">
-                      <Input id="register-password" type={showPassword ? "text" : "password"} placeholder="Enter your password" {...registerForm.register("password")} />
+                      <Input id="register-password" type={showPassword ? "text" : "password"} placeholder="Enter your password" autoComplete="off" {...registerForm.register("password")} />
                       <button
                         type="button"
                         className="absolute right-0 top-0 h-full px-3 py-2 text-white/60 hover:text-white"
@@ -378,23 +386,24 @@ export default function AuthPage() {
                     <p className="text-sm text-destructive">{registerForm.formState.errors.agree.message as string}</p>
                   )}
 
-                  <Button type="submit" className="w-full" disabled={registerMutation.isPending} data-testid="register-submit-button">
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-b from-neutral-800 to-black text-white hover:from-neutral-900 hover:to-black" 
+                    disabled={registerMutation.isPending} 
+                    data-testid="register-submit-button"
+                  >
                     {registerMutation.isPending ? "Creating account..." : "Create account"}
                   </Button>
                 </form>
 
-                <div className="mt-6 flex items-center gap-4">
-                  <div className="h-px bg-white/10 w-full" />
-                  <span className="text-white/60 text-sm">Or register with</span>
-                  <div className="h-px bg-white/10 w-full" />
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <Button type="button" variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10">
-                    <FcGoogle className="w-5 h-5 mr-2" /> Google
-                  </Button>
-                  <Button type="button" variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10">
-                    <FaApple className="w-5 h-5 mr-2" /> Apple
+                <div className="mt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full bg-transparent border-white/20 text-white hover:bg-white/10"
+                    onClick={handleIndependentGoogleAuth}
+                  >
+                    <FcGoogle className="w-5 h-5 mr-2" /> Continue with Google
                   </Button>
                 </div>
               </>

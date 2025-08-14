@@ -1,3 +1,12 @@
+/* File Overview
+  Path: client/src/pages/list-new.tsx
+  Purpose: A top-level page component rendered based on the current route.
+
+  Reading tip for newcomers:
+  - Scan the exports at the bottom to see what the rest of the app imports from here
+  - Follow the data flow via function parameters and return values
+*/
+
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

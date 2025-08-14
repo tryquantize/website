@@ -1,3 +1,12 @@
+/* File Overview
+  Path: client/src/components/search-interface.tsx
+  Purpose: Reusable React component used across pages.
+
+  Reading tip for newcomers:
+  - Scan the exports at the bottom to see what the rest of the app imports from here
+  - Follow the data flow via function parameters and return values
+*/
+
 // React hooks for state management and lifecycle
 import { useState, useEffect } from "react";
 
@@ -10,7 +19,7 @@ import { Input } from "@/components/ui/input";                      // Form inpu
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Tooltip components
 
 // Icons from Lucide React
-import { Search, Lightbulb, Sparkles, Wrench, Building2, Package, User, Clock, TrendingUp } from "lucide-react";
+import { Search, Lightbulb, Sparkles, Wrench, Building2, Package, User, Clock, TrendingUp, Brain, ChevronDown } from "lucide-react";
 
 // Data fetching and API
 import { useMutation } from "@tanstack/react-query";               // React Query for API calls
@@ -153,6 +162,22 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
   // TYPEWRITER EFFECT STATE
   const [placeholder, setPlaceholder] = useState("");              // Current placeholder text
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0); // Index of current phrase
+  
+  // MODEL SELECTION STATE
+  const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+
+  const llmModels = [
+    "GPT-4o Mini",
+    "Gemini 2.5 Flash", 
+    "Qwen2.5 Coder 32B Instruct",
+    "Meta Llama 3.2 3B Instruct",
+    "Qwen2.5 72B Instruct",
+    "Meta Llama 3.1 405B Instruct",
+    "Mistral Nemo",
+    "Google Gemma 2 9B",
+    "Mistral 7B Instruct"
+  ];
 
   /**
    * HERO TEXT FLICKER WORDS
@@ -304,7 +329,9 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     mutationFn: async (searchQuery: string) => {
       const response = await apiRequest("POST", "/api/search", {
         query: searchQuery,                                       // User's search query
-        userId: user?.id                                          // User ID for personalization
+        userId: user?.id,                                         // User ID for personalization
+        selectedModel,                                            // Selected LLM model
+        selectedTypes: Array.from(selectedTypes)                 // Selected filter types
       });
       return response.json();                                   // Parse JSON response
     },
@@ -321,17 +348,29 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
   /**
    * SEARCH EXECUTION HANDLER
    * 
-   * Orchestrates the search process with smooth animations:
+   * Orchestrates the search process with authentication check:
    * 1. Validates query is not empty
-   * 2. Hides suggestion dropdown
-   * 3. Starts fade-out transition (300ms)
-   * 4. Shows full-screen loading animation
-   * 5. Navigates to results page after 4.3 seconds
-   * 
-   * The timing creates a polished, cinematic search experience
+   * 2. Checks if user is logged in
+   * 3. If not logged in, shows transition and redirects to auth page
+   * 4. If logged in, proceeds with search animation and results
    */
   const handleSearch = () => {
     if (!query.trim()) return;                                    // Don't search empty queries
+    
+    // Check if user is logged in
+    if (!user) {
+      // Store query for after login
+      localStorage.setItem('pending-search-query', query.trim());
+      
+      // Show transition animation before redirecting to auth
+      setShowSuggestions(false);
+      setIsTransitioning(true);
+      
+      setTimeout(() => {
+        setLocation('/auth');
+      }, 1000);                                                   // 1 second transition
+      return;
+    }
     
     setShowSuggestions(false);                                   // Hide suggestion dropdown
     setIsTransitioning(true);                                    // Start fade-out transition
@@ -343,25 +382,43 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     
     // Navigate to results page after loading animation
     setTimeout(() => {
-      setLocation(`/results?q=${encodeURIComponent(query)}`);     // Navigate with encoded query
+      const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
+      setLocation(`/results?q=${encodeURIComponent(query)}${typesParam}`);
     }, 4300);                                                     // 4.3s total (300ms + 4s animation)
   };
 
   /**
    * KEYBOARD NAVIGATION HANDLER
    * 
-   * Provides full keyboard support for search interface:
+   * Provides full keyboard support with authentication check:
    * - Enter: Execute search (selected suggestion or current query)
    * - Arrow Down: Move to next suggestion
    * - Arrow Up: Move to previous suggestion
    * - Escape: Close suggestions dropdown
    * 
-   * Enhances accessibility and power-user experience
+   * Redirects to auth page if user not logged in
    */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // ENTER KEY: Execute search
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();                                         // Prevent form submission
+      
+      // Check if user is logged in
+      if (!user) {
+        const queryToStore = selectedSuggestionIndex >= 0 && filteredSuggestions[selectedSuggestionIndex] 
+          ? filteredSuggestions[selectedSuggestionIndex] 
+          : query.trim();
+        if (queryToStore) {
+          localStorage.setItem('pending-search-query', queryToStore);
+          // Show transition animation before redirecting to auth
+          setShowSuggestions(false);
+          setIsTransitioning(true);
+          setTimeout(() => {
+            setLocation('/auth');
+          }, 1000);
+        }
+        return;
+      }
       
       // If a suggestion is selected, use it
       if (selectedSuggestionIndex >= 0 && filteredSuggestions[selectedSuggestionIndex]) {
@@ -374,7 +431,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
           setIsSearching(true);
         }, 300);
         setTimeout(() => {
-          setLocation(`/results?q=${encodeURIComponent(selectedQuery)}`);
+          const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
+          setLocation(`/results?q=${encodeURIComponent(selectedQuery)}${typesParam}`);
         }, 4300);
       } else {
         // No suggestion selected, use current query
@@ -404,26 +462,27 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
   /**
    * SUGGESTION CLICK HANDLER
    * 
-   * Handles mouse clicks on suggestion items
-   * Immediately navigates to results (no loading animation for direct clicks)
-   * Provides instant feedback for mouse users
+   * Handles mouse clicks on suggestion items:
+   * 1. Updates search bar with suggestion
+   * 2. Hides suggestions dropdown
+   * User must then click search or press Enter to proceed
    */
   const handleSuggestionClick = (suggestion: string) => {
     setQuery(suggestion);                                         // Update query display
-    setLocation(`/results?q=${encodeURIComponent(suggestion)}`);  // Navigate immediately
     setShowSuggestions(false);                                    // Hide suggestions
+    // Note: User must now click search or press Enter to proceed
   };
 
   /**
    * SUGGESTION TILE CLICK HANDLER
    * 
    * Handles clicks on the quick suggestion tiles below the search bar
-   * Updates the query but doesn't immediately search (lets user modify if needed)
-   * Different behavior from dropdown suggestions for better UX
+   * Updates the query in search bar for user to modify or search
    */
   const handleSuggestionTileClick = (suggestion: string) => {
     setQuery(suggestion);                                         // Update query in search bar
     setShowSuggestions(false);                                    // Hide any open suggestions
+    // Note: User must now click search or press Enter to proceed
   };
 
   const quickSuggestions = [
@@ -512,6 +571,18 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     return () => clearInterval(interval);
   }, [quickSuggestions.length]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowModelDropdown(false);
+    };
+    
+    if (showModelDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showModelDropdown]);
+
   /**
    * TYPE FILTER TOGGLE FUNCTION
    * 
@@ -564,26 +635,27 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
           ? 'opacity-0 scale-90 pointer-events-none'
           : 'w-full max-w-4xl mx-auto mb-8 px-2 transform translate-y-0 opacity-100 scale-100'
       }`}>
-        <div className={`relative rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-hidden transition-all duration-1500 ease-out ${
+        <div className={`relative rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out ${
           isSearching ? 'transform scale-95' : 'transform scale-100'
-        }`}>
-          {/* Left search icon button */}
-          <button
-            aria-label="Search"
-            onClick={handleSearch}
-            disabled={!query.trim() || searchMutation.isPending}
-            className="absolute left-4 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
-            data-testid="search-button"
-          >
-            {searchMutation.isPending ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Search className="h-4 w-4" />
-            )}
-          </button>
+        }`} style={{height: '85px'}}>
+          {/* Search input area - increased for better centering */}
+          <div className="relative px-4 flex items-center" style={{height: '45px'}}>
+            {/* Search button */}
+            <button
+              aria-label="Search"
+              onClick={handleSearch}
+              disabled={!query.trim() || searchMutation.isPending}
+              className="absolute right-4 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
+              data-testid="search-button"
+            >
+              {searchMutation.isPending ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+            </button>
 
-          {/* Input */}
-          <div className="pr-[15rem] pl-14 py-3">
+            {/* Input */}
             <Input
               type="text"
               placeholder={placeholder}
@@ -592,105 +664,116 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               onKeyDown={handleKeyDown}
               onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              className="h-12 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+              className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-14 flex items-center"
               data-testid="search-input"
             />
           </div>
 
-          {/* Right utility pills */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2.5">
-            <TooltipProvider>
-              {/* Tools */}
-              <Tooltip>
-                <TooltipTrigger asChild>
+          {/* Bottom row - Icons - reduced by 20% */}
+          <div className="relative border-t border-white/10 px-4 py-2" style={{height: '40px'}}>
+            <div className="flex items-center justify-between">
+              {/* Left - Brain icon with dropdown and selected model */}
+              <div className="relative flex items-center space-x-2">
+                <div className="relative">
                   <button
-                    className={
-                      `h-8 w-8 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
-                      (selectedTypes.has('tool')
-                        ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                        : 'bg-white/5 border-white/20 text-white/90')
-                    }
-                    aria-label="Tools"
-                    onClick={() => toggleType('tool')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowModelDropdown(!showModelDropdown);
+                    }}
+                    className={`flex h-6 w-6 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 ${
+                      selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
+                    }`}
                   >
-                    <Wrench className="h-4 w-4" />
+                    <Brain className="h-3 w-3" />
                   </button>
-                </TooltipTrigger>
-                <TooltipContent>Tools</TooltipContent>
-              </Tooltip>
-              {/* Company */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={
-                      `h-8 w-8 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
-                      (selectedTypes.has('company')
-                        ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                        : 'bg-white/5 border-white/20 text-white/90')
-                    }
-                    aria-label="Company"
-                    onClick={() => toggleType('company')}
-                  >
-                    <Building2 className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Company</TooltipContent>
-              </Tooltip>
-              {/* Solution */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={
-                      `h-8 w-8 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
-                      (selectedTypes.has('solution')
-                        ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                        : 'bg-white/5 border-white/20 text-white/90')
-                    }
-                    aria-label="Solution"
-                    onClick={() => toggleType('solution')}
-                  >
-                    <Lightbulb className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Solution</TooltipContent>
-              </Tooltip>
-              {/* Freelancer */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={
-                      `h-8 w-8 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
-                      (selectedTypes.has('freelancer')
-                        ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                        : 'bg-white/5 border-white/20 text-white/90')
-                    }
-                    aria-label="Freelancer"
-                    onClick={() => toggleType('freelancer')}
-                  >
-                    <User className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Freelancer</TooltipContent>
-              </Tooltip>
-              {/* Product */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className={
-                      `h-8 w-8 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
-                      (selectedTypes.has('product')
-                        ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                        : 'bg-white/5 border-white/20 text-white/90')
-                    }
-                    aria-label="Product"
-                    onClick={() => toggleType('product')}
-                  >
-                    <Package className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Product</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                  
+                  {showModelDropdown && (
+                    <>
+                      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10000]" onClick={() => setShowModelDropdown(false)} />
+                      <div className="absolute top-8 left-0 z-[10001] bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl min-w-[200px] max-h-24 overflow-y-auto">
+                        {llmModels.map((model) => (
+                          <button
+                            key={model}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedModel(model);
+                              setShowModelDropdown(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-xs hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                              selectedModel === model ? 'bg-blue-600/20 text-blue-300' : 'text-white/80'
+                            }`}
+                          >
+                            {model}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                <span className="text-xs text-white/70">{selectedModel || "GPT-4o Mini"}</span>
+              </div>
+
+              {/* Right - Filter buttons */}
+              <div className="flex items-center gap-2.5">
+                <TooltipProvider>
+                  {/* Company */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className={
+                          `h-6 w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          (selectedTypes.has('company')
+                            ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
+                            : 'bg-white/5 border-white/20 text-white/90')
+                        }
+                        aria-label="Company"
+                        onClick={() => toggleType('company')}
+                      >
+                        <Building2 className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Company</TooltipContent>
+                  </Tooltip>
+                  {/* Freelancer */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className={
+                          `h-6 w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          (selectedTypes.has('freelancer')
+                            ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
+                            : 'bg-white/5 border-white/20 text-white/90')
+                        }
+                        aria-label="Freelancer"
+                        onClick={() => toggleType('freelancer')}
+                      >
+                        <User className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Freelancer</TooltipContent>
+                  </Tooltip>
+                  {/* Product */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className={
+                          `h-6 w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          (selectedTypes.has('product')
+                            ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
+                            : 'bg-white/5 border-white/20 text-white/90')
+                        }
+                        aria-label="Product"
+                        onClick={() => toggleType('product')}
+                      >
+                        <Package className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Product</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -761,8 +844,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
       {isSearching && (
         <div className="fixed inset-0 flex flex-col items-center justify-center z-30 animate-fade-in">
           <div className="relative">
-            <div className="w-24 h-24 border-4 border-white/20 border-t-purple-500 border-r-blue-400 rounded-full animate-spin mb-8" style={{animationDuration: '1s'}}></div>
-            <div className="absolute inset-0 w-24 h-24 border-4 border-transparent border-b-cyan-500 border-l-purple-400 rounded-full animate-spin mb-8" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+      <div className="w-24 h-24 border-4 border-white/20 border-t-white/60 border-r-white/40 rounded-full animate-spin mb-8" style={{animationDuration: '1s'}}></div>
+      <div className="absolute inset-0 w-24 h-24 border-4 border-transparent border-b-white/50 border-l-white/30 rounded-full animate-spin mb-8" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
           </div>
           <div className="text-center">
             <p className="text-white text-2xl font-semibold mb-3">Searching for "{query}"...</p>

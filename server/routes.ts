@@ -1,14 +1,28 @@
+/* File Overview
+  Path: server/routes.ts
+  Purpose: Declares all REST API endpoints for the application. This includes:
+  - Authentication (register, login)
+  - Tools (CRUD, listing, analytics, clicks)
+  - Startup-specific data (tools, contact requests, analytics)
+  - Admin actions (approve/reject tools)
+
+  Reading tip for newcomers:
+  - Each route follows a simple pattern: validate/parse input, call storage methods, return JSON
+  - The storage layer is swappable (memory vs database) via the exported `storage` in server/storage.ts
+*/
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertAiToolSchema, insertContactRequestSchema, insertSearchQuerySchema } from "@shared/schema";
 import { z } from "zod";
+import fetch from 'node-fetch';
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
     try {
+      // Parse and validate the incoming body with Zod to ensure correct shape
       const userData = insertUserSchema.parse(req.body);
       
       // Check if user already exists
@@ -50,6 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { search, status, industries, pricingModel } = req.query;
       
+      // Convert raw query params into a normalized filters object
       const filters = {
         search: search as string,
         status: status as string,
@@ -84,6 +99,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/tools", async (req, res) => {
     try {
+      // Validate the payload against the shared schema
       const toolData = insertAiToolSchema.parse(req.body);
       const tool = await storage.createTool(toolData);
       res.json(tool);
@@ -148,6 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contact requests
   app.post("/api/contact-requests", async (req, res) => {
     try {
+      // Strongly-typed request body validation using Zod schema
       const contactData = insertContactRequestSchema.parse(req.body);
       const contactRequest = await storage.createContactRequest(contactData);
       res.json(contactRequest);
@@ -159,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Search routes
   app.post("/api/search", async (req, res) => {
     try {
-      const { query, userId } = req.body;
+      const { query, userId, context, selectedModel } = req.body;
       
       // Record the search
       const searchData = {
@@ -170,17 +187,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.recordSearch(searchData);
 
-      // Perform search
-      const tools = await storage.getTools({ search: query });
-      
-      // Update search with results count
-      searchData.resultsShown = tools.length;
-      
-      res.json({
-        query,
-        results: tools,
-        count: tools.length
-      });
+      // Call Python AI service for AI-powered search
+      try {
+        const aiResponse = await fetch('http://localhost:5004/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query,
+            context: context || {},
+            selectedModel
+          })
+        });
+
+        if (!aiResponse.ok) {
+          throw new Error(`AI service responded with status: ${aiResponse.status}`);
+        }
+
+        const aiResult = await aiResponse.json();
+        
+        if (aiResult.success) {
+          // Also get traditional search results as fallback
+          const tools = await storage.getTools({ search: query });
+          
+          res.json({
+            query,
+            aiResponse: aiResult.response,
+            suggestions: aiResult.suggestions,
+            companies: aiResult.companies || [],
+            traditionalResults: tools,
+            count: tools.length,
+            aiPowered: true,
+            success: true
+          });
+        } else {
+          throw new Error(aiResult.error || 'AI service failed');
+        }
+      } catch (aiError) {
+        console.error('AI service error:', aiError);
+        
+        // Fallback to traditional search if AI service fails
+        const tools = await storage.getTools({ search: query });
+        
+        res.json({
+          query,
+          results: tools,
+          count: tools.length,
+          aiPowered: false,
+          fallback: true,
+          aiError: aiError.message
+        });
+      }
     } catch (error) {
       res.status(500).json({ message: "Search failed" });
     }

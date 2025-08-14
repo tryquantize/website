@@ -1,3 +1,12 @@
+/* File Overview
+  Path: client/src/components/ui/dropdown-menu.tsx
+  Purpose: Reusable UI primitives (largely Shadcn + Radix wrappers) with Tailwind styling.
+
+  Reading tip for newcomers:
+  - Scan the exports at the bottom to see what the rest of the app imports from here
+  - Follow the data flow via function parameters and return values
+*/
+
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"

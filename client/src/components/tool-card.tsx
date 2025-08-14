@@ -1,3 +1,12 @@
+/* File Overview
+  Path: client/src/components/tool-card.tsx
+  Purpose: Reusable React component used across pages.
+
+  Reading tip for newcomers:
+  - Scan the exports at the bottom to see what the rest of the app imports from here
+  - Follow the data flow via function parameters and return values
+*/
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +66,7 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
 
   return (
     <Card 
-      className="h-full hover:shadow-xl hover:shadow-purple-500/20 hover:border-purple-400/50 transition-all duration-300 group bg-card/60 backdrop-blur-sm border-purple-500/20"
+      className="h-full hover:shadow-xl hover:shadow-white/10 hover:border-white/40 transition-all duration-300 group bg-card/60 backdrop-blur-sm border-white/20"
       data-testid={`tool-card-${tool.id}`}
     >
       <CardHeader className="pb-3">
