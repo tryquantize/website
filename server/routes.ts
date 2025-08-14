@@ -189,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Call Python AI service for AI-powered search
       try {
-        const aiResponse = await fetch('http://localhost:5004/search', {
+        const aiResponse = await fetch('http://localhost:5002/search', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
