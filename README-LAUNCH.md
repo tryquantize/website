@@ -5,36 +5,35 @@
 To launch the website, simply run:
 
 ```bash
-./startup.sh
+./launch.sh
 ```
 
 This script will:
-- Clean up any existing processes
-- Install dependencies if needed
-- Set up the Python virtual environment if needed
-- Start both the AI service and main server
-- Show you the status of both services
+- Clean up any existing processes on ports 3001 and 5002
+- Run cleanup script to remove build artifacts
+- Start the AI service in background
+- Start the main development server
+- Display URLs for both services
 
 ## Manual Launch Options
 
-### Option 1: Using the startup script (Recommended)
-```bash
-./startup.sh
-```
-
-### Option 2: Using the launch script
+### Option 1: Using the launch script (Recommended)
 ```bash
 ./launch.sh
 ```
 
-### Option 3: Using yarn scripts
+### Option 2: Using yarn dev command
 ```bash
-yarn start-all
+yarn dev
 ```
 
-### Option 4: Manual step-by-step
+### Option 3: Manual step-by-step
 ```bash
-# Clean up
+# Clean up existing processes
+lsof -ti:3001 | xargs kill -9
+lsof -ti:5002 | xargs kill -9
+
+# Run cleanup
 node cleanup.js
 
 # Start AI service
@@ -53,6 +52,8 @@ export NODE_ENV=development && yarn tsx server/index.ts
 - **AI Service**: http://localhost:5002
 
 ## Stopping Services
+
+Press `Ctrl+C` in the terminal where you ran `./launch.sh`, or manually kill processes:
 
 ```bash
 # Kill both services
