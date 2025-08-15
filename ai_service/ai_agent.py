@@ -2,6 +2,10 @@ import requests
 import json
 from typing import Dict, List, Any
 from config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, AI_MODEL, SYSTEM_PROMPT, MODEL_MAPPING, COMPANY_SYSTEM_PROMPT, FREELANCER_SYSTEM_PROMPT, PRODUCT_SYSTEM_PROMPT
+from exa_search import ExaSearchService
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AISearchAgent:
     def __init__(self):
@@ -9,17 +13,21 @@ class AISearchAgent:
         self.base_url = OPENROUTER_BASE_URL
         self.model = AI_MODEL
         self.system_prompt = SYSTEM_PROMPT
+        self.exa_search = ExaSearchService()
     
     def search_ai_tools(self, query: str, context: Dict[str, Any] = None, selected_model: str = None, selected_types: List[str] = None) -> Dict[str, Any]:
         """
         Main search function that processes user queries and returns AI-generated recommendations
         """
         try:
+            # Perform web search using Exa
+            web_search_results = self._perform_web_search(query, selected_types)
+            
             # Determine which system prompt to use based on selected types
             system_prompt = self._get_system_prompt(selected_types)
             
-            # Prepare the user message with context
-            user_message = self._prepare_user_message(query, context, selected_types)
+            # Prepare the user message with context and web results
+            user_message = self._prepare_user_message(query, context, selected_types, web_search_results)
             
             # Determine which model to use
             model_to_use = MODEL_MAPPING.get(selected_model, self.model) if selected_model else self.model
@@ -54,37 +62,70 @@ class AISearchAgent:
             response_data = response.json()
             ai_response = response_data['choices'][0]['message']['content']
             
+            # Store citations for frontend access
+            citations_data = web_search_results.get("citations", []) if web_search_results.get("success") else []
+            ai_response_with_citations = ai_response
+            
             # Generate related search suggestions
             suggestions = self._generate_search_suggestions(query, ai_response, model_to_use)
             
-            # Extract companies from the AI response
-            companies = self.extract_companies(ai_response, model_to_use, selected_types)
+            # Extract companies from the web search results
+            companies = self.extract_companies(web_search_results, model_to_use, selected_types)
             
             return {
                 "query": query,
-                "response": ai_response,
+                "aiResponse": ai_response_with_citations,
                 "suggestions": suggestions,
                 "companies": companies,
+                "citations": citations_data,
                 "model_used": model_to_use,
+                "web_search_used": web_search_results.get("success", False),
                 "success": True
             }
             
         except Exception as e:
             return {
                 "query": query,
-                "response": f"Error processing search: {str(e)}",
+                "aiResponse": f"Error processing search: {str(e)}",
                 "suggestions": [],
+                "companies": [],
                 "model_used": self.model,
+                "web_search_used": False,
                 "success": False,
                 "error": str(e)
             }
     
-    def _prepare_user_message(self, query: str, context: Dict[str, Any] = None, selected_types: List[str] = None) -> str:
+    def _perform_web_search(self, query: str, selected_types: List[str] = None) -> Dict[str, Any]:
         """
-        Prepare the user message with additional context if provided
+        Perform web search based on query and selected types
+        """
+        try:
+            if selected_types and len(selected_types) == 1:
+                if 'company' in selected_types:
+                    return self.exa_search.search_for_companies(query)
+                elif 'freelancer' in selected_types:
+                    return self.exa_search.search_for_freelancers(query)
+                elif 'product' in selected_types:
+                    return self.exa_search.search_for_products(query)
+            
+            # Default general search
+            return self.exa_search.search_web(query)
+            
+        except Exception as e:
+            logger.error(f"Web search failed: {str(e)}")
+            return {"success": False, "error": str(e), "results": [], "citations": []}
+    
+    def _prepare_user_message(self, query: str, context: Dict[str, Any] = None, selected_types: List[str] = None, web_search_results: Dict[str, Any] = None) -> str:
+        """
+        Prepare the user message with additional context and web search results
         """
         message = f"User Query: {query}"
         
+        # Add web search context if available
+        if web_search_results and web_search_results.get("success"):
+            web_context = self.exa_search.format_search_context(web_search_results)
+            message += f"\n\n{web_context}"
+            message += "\n\nIMPORTANT: When writing your response, include citation numbers [1], [2], [3], etc. when referencing information from the above sources."
         # Add filter information
         if selected_types and len(selected_types) > 0:
             if len(selected_types) == 1:
@@ -199,120 +240,136 @@ Return only the 5 suggestions, one per line, without numbering or bullets."""
                 f"Getting started with {original_query}"
             ]
     
-    def extract_companies(self, search_result: str, model: str = None, selected_types: List[str] = None) -> List[Dict[str, Any]]:
+    def extract_companies(self, web_search_results: Dict[str, Any], model: str = None, selected_types: List[str] = None) -> List[Dict[str, Any]]:
         """
-        Extract company information from search results and format them as cards
+        Extract company information from web search results and format them as cards
         """
         try:
+            # Use web search results if available, otherwise fallback
+            if not web_search_results.get("success") or not web_search_results.get("results"):
+                return self._get_fallback_companies(selected_types)
+            
+            # Format web search results for extraction
+            web_context = self.exa_search.format_search_context(web_search_results)
+            
             # Determine extraction type based on selected filters
             if selected_types and len(selected_types) == 1:
                 if 'freelancer' in selected_types:
-                    extraction_prompt = f"""Extract freelancer information from the following search result and format it as a JSON array of freelancer objects.
+                    extraction_prompt = f"""Extract REAL freelancer information from the following web search results and format it as a JSON array of freelancer objects.
 
-Search Result:
-{search_result}
+Web Search Results:
+{web_context}
 
-For each freelancer mentioned, extract:
-- name: Freelancer name
+For each freelancer or professional mentioned in the search results, extract:
+- name: Actual freelancer/professional name from the search results
 - description: Brief description of their skills/expertise (max 100 characters)
-- features: Array of 2-3 key skills or specializations
-- pricing: Hourly rate or project pricing if mentioned
-- website: Portfolio/profile URL if mentioned
-- category: Type of expertise (e.g., "AI Developer", "ML Engineer", etc.)
+- features: Array of 2-3 key skills or specializations mentioned
+- pricing: Hourly rate or project pricing if mentioned, otherwise "Contact for pricing"
+- website: Actual website URL from search results
+- category: Type of expertise based on search results
 
-Return ONLY a valid JSON array with 3-5 freelancer objects. If fewer than 3 freelancers are found, create similar freelancers based on the context.
+Return ONLY a valid JSON array with 3-5 freelancer objects based on REAL data from search results.
 
 Example format:
 [
   {{
-    "name": "Freelancer Name",
-    "description": "Brief description of expertise",
+    "name": "Actual Name from Search",
+    "description": "Brief description from search results",
     "features": ["Skill 1", "Skill 2", "Skill 3"],
-    "pricing": "$50/hour",
-    "website": "https://portfolio.com",
+    "pricing": "Contact for pricing",
+    "website": "https://actual-website.com",
     "category": "AI Developer"
   }}
 ]"""
                 elif 'product' in selected_types:
-                    extraction_prompt = f"""Extract product information from the following search result and format it as a JSON array of product objects.
+                    extraction_prompt = f"""Extract REAL product information from the following web search results and format it as a JSON array of product objects.
 
-Search Result:
-{search_result}
+Web Search Results:
+{web_context}
 
-For each product mentioned, extract:
-- name: Product name
-- description: Brief description of the product/tool (max 100 characters)
-- features: Array of 2-3 key features or capabilities
-- pricing: Pricing information if mentioned (free, subscription, one-time)
-- website: Official website or trial link if mentioned
-- category: Type of product (e.g., "AI Writing Tool", "Image Generator", etc.)
+For each product/tool mentioned in the search results, extract:
+- name: Actual product name from the search results
+- description: Brief description of the product/tool from search results (max 100 characters)
+- features: Array of 2-3 key features mentioned in search results
+- pricing: Actual pricing information from search results, otherwise "Contact for pricing"
+- website: Actual website URL from search results
+- category: Type of product based on search results
 
-Return ONLY a valid JSON array with 3-5 product objects. If fewer than 3 products are found, create similar products based on the context.
+Return ONLY a valid JSON array with 3-5 product objects based on REAL data from search results.
 
 Example format:
 [
   {{
-    "name": "Product Name",
-    "description": "Brief description of product",
+    "name": "Actual Product Name",
+    "description": "Brief description from search results",
     "features": ["Feature 1", "Feature 2", "Feature 3"],
-    "pricing": "$19/month",
-    "website": "https://product.com",
-    "category": "AI Writing Tool"
+    "pricing": "Contact for pricing",
+    "website": "https://actual-website.com",
+    "category": "AI Tool"
   }}
 ]"""
                 else:
                     # Company extraction (default)
-                    extraction_prompt = f"""Extract company information from the following search result and format it as a JSON array of company objects.
+                    extraction_prompt = f"""Extract REAL company information from the following web search results and format it as a JSON array of company objects.
 
-Search Result:
-{search_result}
+Web Search Results:
+{web_context}
 
-For each company mentioned, extract:
-- name: Company name
-- description: Brief description of their service/product (max 100 characters)
-- features: Array of 2-3 key features
-- pricing: Pricing information if mentioned
-- website: Website URL if mentioned
-- category: Type of service (e.g., "AI Writing", "Image Generation", etc.)
+For each company/startup mentioned in the search results, extract:
+- name: Actual company name from the search results
+- description: Brief description of their service/product from search results (max 100 characters)
+- features: Array of 2-3 key features mentioned in search results
+- pricing: Actual pricing information from search results, otherwise "Contact for pricing"
+- website: Actual website URL from search results
+- category: Type of service based on search results
 
-Return ONLY a valid JSON array with 3-5 company objects. If fewer than 3 companies are found, create similar companies based on the context.
+Return ONLY a valid JSON array with 3-5 company objects based on REAL data from search results.
 
 Example format:
 [
   {{
-    "name": "Company Name",
-    "description": "Brief description of service",
+    "name": "Actual Company Name",
+    "description": "Brief description from search results",
     "features": ["Feature 1", "Feature 2", "Feature 3"],
-    "pricing": "$20/month",
-    "website": "https://example.com",
-    "category": "AI Writing"
+    "pricing": "Contact for pricing",
+    "website": "https://actual-website.com",
+    "category": "AI Service"
   }}
 ]"""
             else:
-                extraction_prompt = f"""Extract company information from the following search result and format it as a JSON array of company objects.
+                # Mixed results - companies + products when no filter is selected
+                extraction_prompt = f"""Extract REAL mixed information from the following web search results and format it as a JSON array with 15 objects (5 companies + 10 products/tools).
 
-Search Result:
-{search_result}
+Web Search Results:
+{web_context}
 
-For each company mentioned, extract:
-- name: Company name
-- description: Brief description of their service/product (max 100 characters)
-- features: Array of 2-3 key features
-- pricing: Pricing information if mentioned
-- website: Website URL if mentioned
-- category: Type of service (e.g., "AI Writing", "Image Generation", etc.)
+For the first 5 items (companies), extract from search results:
+- name: Actual company name from search results
+- description: Brief description from search results (max 100 characters)
+- features: Array of 2-3 key features mentioned in search results
+- pricing: Actual pricing from search results, otherwise "Contact for pricing"
+- website: Actual website URL from search results
+- category: Type of service based on search results
 
-Return ONLY a valid JSON array with 3-5 company objects. If fewer than 3 companies are found, create similar companies based on the context.
+For the next 10 items (products/tools), extract from search results:
+- name: Actual product/tool name from search results
+- description: Brief description from search results (max 80 characters)
+- features: Array of 2-3 key features mentioned in search results
+- pricing: Actual pricing from search results, otherwise "Contact for pricing"
+- website: Actual website URL from search results
+- category: Type of product based on search results
+
+Return ONLY a valid JSON array with exactly 15 objects based on REAL data from search results.
 
 Example format:
 [
   {{
-    "name": "Company Name",
-    "description": "Brief description of service",
+    "name": "Actual Company Name",
+    "description": "Brief description from search results",
     "features": ["Feature 1", "Feature 2", "Feature 3"],
-    "pricing": "$20/month",
-    "website": "https://example.com",
-    "category": "AI Writing"
+    "pricing": "Contact for pricing",
+    "website": "https://actual-website.com",
+    "category": "AI Service"
   }}
 ]"""
 
@@ -349,20 +406,37 @@ Example format:
                 
                 try:
                     companies = json.loads(companies_text)
-                    # Ensure we have 3-5 companies
-                    if len(companies) > 5:
-                        companies = companies[:5]
-                    elif len(companies) < 3:
-                        # Add default companies if needed
-                        while len(companies) < 3:
-                            companies.append({
-                                "name": f"AI Solution {len(companies) + 1}",
-                                "description": "Advanced AI-powered solution for your needs",
-                                "features": ["AI-Powered", "Easy Integration", "24/7 Support"],
-                                "pricing": "Contact for pricing",
-                                "website": "#",
-                                "category": "AI Tools"
-                            })
+                    # Ensure we have the right number of items based on filter
+                    if selected_types and len(selected_types) == 1:
+                        # Single filter selected - ensure 3-5 items
+                        if len(companies) > 5:
+                            companies = companies[:5]
+                        elif len(companies) < 3:
+                            # Add default items if needed
+                            while len(companies) < 3:
+                                companies.append({
+                                    "name": f"AI Solution {len(companies) + 1}",
+                                    "description": "Advanced AI-powered solution for your needs",
+                                    "features": ["AI-Powered", "Easy Integration", "24/7 Support"],
+                                    "pricing": "Contact for pricing",
+                                    "website": "#",
+                                    "category": "AI Tools"
+                                })
+                    else:
+                        # No filter or multiple filters - ensure 15 items
+                        if len(companies) > 15:
+                            companies = companies[:15]
+                        elif len(companies) < 15:
+                            # Add default items if needed
+                            while len(companies) < 15:
+                                companies.append({
+                                    "name": f"AI Tool {len(companies) + 1}",
+                                    "description": "Powerful AI tool for your workflow",
+                                    "features": ["Easy to Use", "Fast Results", "Reliable"],
+                                    "pricing": "Free",
+                                    "website": "#",
+                                    "category": "AI Tools"
+                                })
                     
                     return companies
                 except json.JSONDecodeError:

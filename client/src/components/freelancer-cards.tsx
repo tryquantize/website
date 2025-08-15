@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, ExternalLink, ArrowLeft, Send, User } from "lucide-react";
+import { MessageCircle, ExternalLink, ArrowLeft, Send, User, Heart } from "lucide-react";
+import { useFavorites } from "@/contexts/favorites-context";
+import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
+import { useNotification } from "@/contexts/notification-context";
 
 interface Freelancer {
   name: string;
@@ -20,6 +23,9 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
   const [chatStates, setChatStates] = useState<{[key: number]: boolean}>({});
   const [messages, setMessages] = useState<{[key: number]: Array<{text: string, isUser: boolean}>}>({});
   const [inputValues, setInputValues] = useState<{[key: number]: string}>({});
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { currentUser } = useFirebaseAuth();
+  const { showFavoritesNotification } = useNotification();
 
   const handleChatClick = (index: number) => {
     setChatStates(prev => ({...prev, [index]: true}));
@@ -100,14 +106,42 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
               </div>
             ) : (
               <div className="space-y-3 h-full flex flex-col">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h5 className="text-white text-base font-medium">{freelancer.name}</h5>
+                      <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full">{freelancer.category}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="text-white text-base font-medium">{freelancer.name}</h5>
-                    <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full">{freelancer.category}</span>
-                  </div>
+                  {currentUser && (
+                    <Button
+                      onClick={() => {
+                        const freelancerId = `freelancer_${index}_${freelancer.name}`;
+                        if (isFavorite(freelancerId)) {
+                          removeFromFavorites(freelancerId);
+                        } else {
+                          addToFavorites({
+                            id: freelancerId,
+                            type: 'freelancer',
+                            name: freelancer.name,
+                            description: freelancer.description,
+                            features: freelancer.features,
+                            pricing: freelancer.pricing,
+                            website: freelancer.website,
+                            category: freelancer.category
+                          }, showFavoritesNotification);
+                        }
+                      }}
+                      size="sm"
+                      variant="ghost"
+                      className="p-1 h-auto"
+                    >
+                      <Heart className={`w-4 h-4 ${isFavorite(`freelancer_${index}_${freelancer.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+                    </Button>
+                  )}
                 </div>
                 
                 <p className="text-white/70 text-sm">{freelancer.description}</p>
@@ -129,7 +163,7 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
                   <Button
                     onClick={() => handleChatClick(index)}
                     size="sm"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2"
+                    className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-medium shadow-lg shadow-yellow-400/30 text-xs px-2"
                   >
                     <MessageCircle className="w-3 h-3 mr-1" />
                     Chat
@@ -137,7 +171,7 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
                   <Button
                     onClick={() => alert(`Hiring ${freelancer.name}...`)}
                     size="sm"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs px-2"
+                    className="flex-1 bg-gradient-to-r from-gray-300 to-gray-500 hover:from-gray-400 hover:to-gray-600 text-black font-medium shadow-lg shadow-gray-400/30 text-xs px-2"
                   >
                     💼 Hire
                   </Button>

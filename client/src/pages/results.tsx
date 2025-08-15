@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Package, Building, UserCheck, Lightbulb as Solution, Sparkles, Clock, ArrowRight, Lightbulb, Copy, Edit, Wrench, Building2, User, Brain, ChevronDown, LogOut } from "lucide-react";
+import { Search, Star, Package, Building, UserCheck, Lightbulb as Solution, Sparkles, Clock, ArrowRight, Lightbulb, Copy, Edit, Wrench, Building2, User, Brain, ChevronDown, LogOut, Mic, MicOff, PanelLeftClose, PanelLeftOpen, DollarSign, Target } from "lucide-react";
 import { QuantizeLogo } from "@/components/quantize-logo";
 import { UserLogo } from "@/components/user-logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -19,9 +19,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CompanyCards } from "@/components/company-cards";
 import { FreelancerCards } from "@/components/freelancer-cards";
 import { ProductCards } from "@/components/product-cards";
+import { ProductToolCards } from "@/components/product-tool-cards";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
+import { useFavorites } from "@/contexts/favorites-context";
+import { useConversations } from "@/contexts/conversation-context";
+import { useVoiceInput } from "@/hooks/use-voice-input";
+import { ConversationSidebar } from "@/components/conversation-sidebar";
+import { NewConversationState } from "@/components/new-conversation-state";
+import { FavoritesNotification } from "@/components/favorites-notification";
+import { NotificationProvider } from "@/contexts/notification-context";
 
 // Mock search results - in real app this would come from API
 const mockSearchResults = [
@@ -107,6 +115,7 @@ interface SearchResult {
   aiResponse?: string;
   suggestions?: string[];
   companies?: Company[];
+  citations?: Array<{id: number, title: string, url: string}>;
   traditionalResults?: any[];
   aiPowered?: boolean;
   timestamp: number;
@@ -132,6 +141,27 @@ export default function ResultsPage() {
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
+  const { pinnedCards } = useFavorites();
+  const { createNewConversation, addMessageToConversation, loadConversation, currentConversation } = useConversations();
+  const { isListening, transcript, startListening, stopListening, resetTranscript } = useVoiceInput();
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [sidebarMinimized, setSidebarMinimized] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [showNewConversation, setShowNewConversation] = useState(false);
+  const [favoritesNotification, setFavoritesNotification] = useState({ show: false, itemName: '' });
+  const [selectedBudgets, setSelectedBudgets] = useState<Set<string>>(new Set());
+  const [showBudgetSelection, setShowBudgetSelection] = useState(false);
+  const [showUseCaseSelection, setShowUseCaseSelection] = useState(false);
+  const [useCaseInput, setUseCaseInput] = useState('');
+  const [isLoadingBudgetResults, setIsLoadingBudgetResults] = useState(false);
+  
+  // Update search query when voice transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setSearchQuery(transcript);
+      resetTranscript();
+    }
+  }, [transcript, resetTranscript]);
 
   const llmModels = [
     "GPT-4o Mini",
@@ -144,6 +174,33 @@ export default function ResultsPage() {
     "Google Gemma 2 9B",
     "Mistral 7B Instruct"
   ];
+
+  const budgetOptions = [
+    "Free",
+    "<$10",
+    "<$50",
+    "<$100",
+    "<$250",
+    "<$500",
+    "<$1000",
+    "<$2500",
+    "<$5000",
+    "Enterprise"
+  ];
+
+
+
+  // Function to check if query contains budget/cost information
+  const hasBudgetInQuery = (query: string) => {
+    const budgetKeywords = /\$|budget|cost|price|pricing|cheap|expensive|free|paid|subscription|monthly|yearly|annual/i;
+    return budgetKeywords.test(query);
+  };
+
+  // Function to check if query is generalized (no specific domain/niche)
+  const isGeneralizedQuery = (query: string) => {
+    const specificKeywords = /\b(for|in|healthcare|finance|education|ecommerce|retail|marketing|sales|hr|legal|real estate|construction|manufacturing|logistics|travel|hospitality|gaming|entertainment|social media|crm|erp|accounting|project management|customer service|inventory|supply chain|analytics|reporting|dashboard|automation|workflow|integration|api|mobile app|web app|saas|platform|enterprise|startup|small business|freelancer|agency|consultant)\b/i;
+    return !specificKeywords.test(query);
+  };
 
   // Typewriter effect for placeholder
   const placeholderPhrases = [
@@ -221,9 +278,14 @@ export default function ResultsPage() {
     }
     
     if (query) {
+      // Create new conversation for initial search
+      const conversationId = createNewConversation(query);
+      setCurrentConversationId(conversationId);
+      setShowNewConversation(false);
+      
       // Small delay to ensure selectedTypes is set before search
       setTimeout(() => {
-        performInitialSearch(query);
+        performInitialSearch(query, conversationId);
       }, 100);
     }
   }, [location]);
@@ -240,7 +302,7 @@ export default function ResultsPage() {
     }
   }, [showModelDropdown]);
 
-  const performInitialSearch = async (query: string) => {
+  const performInitialSearch = async (query: string, conversationId?: string) => {
     setIsInitialLoading(true);
     setContentItems([]);
 
@@ -269,10 +331,8 @@ export default function ResultsPage() {
       const data = await response.json();
       
       const newCompanies = data.companies || [];
-      const uniqueNewCompanies = newCompanies.filter((newCompany: Company) => 
-        !allCompanies.some(existingCompany => existingCompany.name === newCompany.name)
-      );
-      const updatedAllCompanies = [...allCompanies, ...uniqueNewCompanies];
+      // For initial search, show all companies
+      const updatedAllCompanies = newCompanies;
       setAllCompanies(updatedAllCompanies);
 
       const result: SearchResult = {
@@ -280,24 +340,47 @@ export default function ResultsPage() {
         aiResponse: data.aiResponse,
         suggestions: data.suggestions || [],
         companies: updatedAllCompanies,
+        citations: data.citations || [],
         traditionalResults: data.traditionalResults || data.results || [],
         aiPowered: data.aiPowered,
         timestamp: Date.now()
       };
 
-      // Replace loading with result and suggestions
+      // Check if budget and use case selection should be shown
+      const shouldShowBudgetSelection = !hasBudgetInQuery(query);
+      const shouldShowUseCaseSelection = !hasBudgetInQuery(query) && isGeneralizedQuery(query);
+      setShowBudgetSelection(shouldShowBudgetSelection);
+      setShowUseCaseSelection(shouldShowUseCaseSelection);
+      
+      // If budget selection is shown, clear companies initially to force budget selection
+      if (shouldShowBudgetSelection) {
+        setAllCompanies([]);
+      }
+
+      // Replace loading with result only (suggestions are now inside the result box)
       setContentItems([
         {
           id: `result-${Date.now()}`,
           type: 'result',
           data: result
-        },
-        {
-          id: `suggestions-${Date.now()}`,
-          type: 'suggestions',
-          data: { questions: result.suggestions || [] }
         }
       ]);
+      
+      // Add to conversation history
+      if (conversationId || currentConversationId) {
+        const msgId = conversationId || currentConversationId;
+        if (msgId) {
+          addMessageToConversation(msgId, {
+            id: `msg-${Date.now()}`,
+            type: 'response',
+            content: data.aiResponse,
+            timestamp: Date.now(),
+            aiResponse: data.aiResponse,
+            suggestions: data.suggestions,
+            companies: updatedAllCompanies
+          });
+        }
+      }
     } catch (error) {
       console.error('Search failed:', error);
       // Fallback to mock data
@@ -318,6 +401,7 @@ export default function ResultsPage() {
           `Getting started with ${query}`
         ],
         companies: [],
+        citations: [],
         traditionalResults: filteredResults,
         aiPowered: false,
         timestamp: Date.now()
@@ -328,13 +412,24 @@ export default function ResultsPage() {
           id: `result-${Date.now()}`,
           type: 'result',
           data: fallbackResult
-        },
-        {
-          id: `suggestions-${Date.now()}`,
-          type: 'suggestions',
-          data: { questions: fallbackResult.suggestions || [] }
         }
       ]);
+      
+      // Add to conversation history
+      if (conversationId || currentConversationId) {
+        const msgId = conversationId || currentConversationId;
+        if (msgId) {
+          addMessageToConversation(msgId, {
+            id: `msg-${Date.now()}`,
+            type: 'response',
+            content: fallbackResult.aiResponse,
+            timestamp: Date.now(),
+            aiResponse: fallbackResult.aiResponse,
+            suggestions: fallbackResult.suggestions,
+            companies: []
+          });
+        }
+      }
     } finally {
       setIsInitialLoading(false);
     }
@@ -373,10 +468,11 @@ export default function ResultsPage() {
       const data = await response.json();
       
       const newCompanies = data.companies || [];
-      const uniqueNewCompanies = newCompanies.filter((newCompany: Company) => 
-        !allCompanies.some(existingCompany => existingCompany.name === newCompany.name)
+      // For subsequent searches, show pinned cards + new results
+      const pinnedCompanies = pinnedCards.filter(pin => 
+        !newCompanies.some((newCompany: Company) => newCompany.name === pin.name)
       );
-      const updatedAllCompanies = [...allCompanies, ...uniqueNewCompanies];
+      const updatedAllCompanies = [...pinnedCompanies, ...newCompanies];
       setAllCompanies(updatedAllCompanies);
 
       const result: SearchResult = {
@@ -384,12 +480,13 @@ export default function ResultsPage() {
         aiResponse: data.aiResponse,
         suggestions: data.suggestions || [],
         companies: updatedAllCompanies,
+        citations: data.citations || [],
         traditionalResults: data.traditionalResults || data.results || [],
         aiPowered: data.aiPowered,
         timestamp: Date.now()
       };
 
-      // Replace loading with result and add new suggestions
+      // Replace loading with result only
       setContentItems(prev => {
         const newItems = [...prev];
         const lastIndex = newItems.length - 1;
@@ -400,11 +497,6 @@ export default function ResultsPage() {
             data: result
           };
         }
-        newItems.push({
-          id: `suggestions-${Date.now()}`,
-          type: 'suggestions',
-          data: { questions: result.suggestions || [] }
-        });
         return newItems;
       });
 
@@ -421,6 +513,7 @@ export default function ResultsPage() {
         aiResponse: "AI search is currently unavailable. Please try again.",
         suggestions: [],
         companies: [],
+        citations: [],
         traditionalResults: [],
         aiPowered: false,
         timestamp: Date.now()
@@ -453,6 +546,11 @@ export default function ResultsPage() {
     const query = searchQuery;
     setSearchQuery("");
 
+    // Create new conversation for new search
+    const conversationId = createNewConversation(query);
+    setCurrentConversationId(conversationId);
+    setShowNewConversation(false);
+
     // Replace current suggestions with selected question (if exists)
     setContentItems(prev => {
       const newItems = [...prev];
@@ -473,6 +571,14 @@ export default function ResultsPage() {
       type: 'loading',
       data: { query }
     }]);
+    
+    // Add query to conversation
+    addMessageToConversation(conversationId, {
+      id: `msg-${Date.now()}`,
+      type: 'query',
+      content: query,
+      timestamp: Date.now()
+    });
 
     try {
       const response = await apiRequest("POST", "/api/search", {
@@ -485,10 +591,11 @@ export default function ResultsPage() {
       const data = await response.json();
       
       const newCompanies = data.companies || [];
-      const uniqueNewCompanies = newCompanies.filter((newCompany: Company) => 
-        !allCompanies.some(existingCompany => existingCompany.name === newCompany.name)
+      // For new searches, show pinned cards + new results
+      const pinnedCompanies = pinnedCards.filter(pin => 
+        !newCompanies.some((newCompany: Company) => newCompany.name === pin.name)
       );
-      const updatedAllCompanies = [...allCompanies, ...uniqueNewCompanies];
+      const updatedAllCompanies = [...pinnedCompanies, ...newCompanies];
       setAllCompanies(updatedAllCompanies);
 
       const result: SearchResult = {
@@ -496,12 +603,13 @@ export default function ResultsPage() {
         aiResponse: data.aiResponse,
         suggestions: data.suggestions || [],
         companies: updatedAllCompanies,
+        citations: data.citations || [],
         traditionalResults: data.traditionalResults || data.results || [],
         aiPowered: data.aiPowered,
         timestamp: Date.now()
       };
 
-      // Replace loading with result and add new suggestions
+      // Replace loading with result only
       setContentItems(prev => {
         const newItems = [...prev];
         const lastIndex = newItems.length - 1;
@@ -512,13 +620,21 @@ export default function ResultsPage() {
             data: result
           };
         }
-        newItems.push({
-          id: `suggestions-${Date.now()}`,
-          type: 'suggestions',
-          data: { questions: result.suggestions || [] }
-        });
         return newItems;
       });
+      
+      // Add response to conversation
+      if (currentConversationId) {
+        addMessageToConversation(currentConversationId, {
+          id: `msg-${Date.now()}`,
+          type: 'response',
+          content: data.aiResponse,
+          timestamp: Date.now(),
+          aiResponse: data.aiResponse,
+          suggestions: data.suggestions,
+          companies: updatedAllCompanies
+        });
+      }
 
     } catch (error) {
       console.error('Search failed:', error);
@@ -528,6 +644,7 @@ export default function ResultsPage() {
         aiResponse: "AI search is currently unavailable. Please try again.",
         suggestions: [],
         companies: [],
+        citations: [],
         traditionalResults: [],
         aiPowered: false,
         timestamp: Date.now()
@@ -550,6 +667,19 @@ export default function ResultsPage() {
         });
         return newItems;
       });
+      
+      // Add error response to conversation
+      if (currentConversationId) {
+        addMessageToConversation(currentConversationId, {
+          id: `msg-${Date.now()}`,
+          type: 'response',
+          content: fallbackResult.aiResponse,
+          timestamp: Date.now(),
+          aiResponse: fallbackResult.aiResponse,
+          suggestions: [],
+          companies: []
+        });
+      }
     }
   };
 
@@ -599,11 +729,148 @@ export default function ResultsPage() {
     }
   };
 
+  const handleNewConversation = () => {
+    setShowNewConversation(true);
+    setContentItems([]);
+    setAllCompanies([]);
+    setCurrentConversationId(null);
+    setSelectedBudgets(new Set());
+    setShowBudgetSelection(false);
+    setShowUseCaseSelection(false);
+    setUseCaseInput('');
+    setIsLoadingBudgetResults(false);
+  };
+
+  const updateResultsWithFilters = async () => {
+    if (selectedBudgets.size === 0) {
+      // Get original companies from the last result if no budget selected
+      const lastResult = contentItems.find(item => item.type === 'result');
+      if (lastResult && lastResult.data.companies) {
+        setAllCompanies(lastResult.data.companies);
+      } else {
+        setAllCompanies([]);
+      }
+      setIsLoadingBudgetResults(false);
+      return;
+    }
+    
+    setIsLoadingBudgetResults(true);
+    
+    const lastResult = contentItems.find(item => item.type === 'result');
+    if (!lastResult) {
+      setIsLoadingBudgetResults(false);
+      return;
+    }
+    
+    let query = lastResult.data.query;
+    const context: any = { budgets: Array.from(selectedBudgets) };
+    
+    // Add use case if provided
+    if (useCaseInput.trim()) {
+      query = `${useCaseInput.trim()} ${query}`;
+      context.useCase = useCaseInput.trim();
+    }
+    
+    // Add budget
+    const budgetList = Array.from(selectedBudgets).join(', ');
+    query += ` budget ${budgetList}`;
+    
+    try {
+      const response = await apiRequest("POST", "/api/search", {
+        query,
+        context,
+        selectedModel,
+        selectedTypes: Array.from(selectedTypes)
+      });
+      
+      const data = await response.json();
+      const newCompanies = data.companies || [];
+      const pinnedCompanies = pinnedCards.filter(pin => 
+        !newCompanies.some((newCompany: Company) => newCompany.name === pin.name)
+      );
+      const updatedAllCompanies = [...pinnedCompanies, ...newCompanies];
+      setAllCompanies(updatedAllCompanies);
+      
+    } catch (error) {
+      console.error('Search failed:', error);
+    } finally {
+      setIsLoadingBudgetResults(false);
+    }
+  };
+
+  const handleBudgetSelect = async (budget: string) => {
+    const newSelectedBudgets = new Set(selectedBudgets);
+    if (newSelectedBudgets.has(budget)) {
+      newSelectedBudgets.delete(budget);
+    } else {
+      newSelectedBudgets.add(budget);
+    }
+    setSelectedBudgets(newSelectedBudgets);
+    
+    // Update results after state change
+    setTimeout(() => updateResultsWithFilters(), 0);
+  };
+
+  const handleUseCaseChange = (value: string) => {
+    setUseCaseInput(value);
+    // Update results if budget is already selected
+    if (selectedBudgets.size > 0) {
+      setTimeout(() => updateResultsWithFilters(), 300); // Debounce
+    }
+  };
+
+  const showFavoritesNotification = (itemName: string) => {
+    setFavoritesNotification({ show: true, itemName });
+  };
+
+  const hideFavoritesNotification = () => {
+    setFavoritesNotification({ show: false, itemName: '' });
+  };
+
+  const handleSelectConversation = (conversationId: string) => {
+    loadConversation(conversationId);
+    setCurrentConversationId(conversationId);
+    
+    // Load conversation messages into content items
+    const conversation = currentConversation;
+    if (conversation) {
+      const items = conversation.messages.map((msg, index) => {
+        if (msg.type === 'response') {
+          return {
+            id: `result-${msg.id}`,
+            type: 'result' as const,
+            data: {
+              query: conversation.messages[index - 1]?.content || conversation.query,
+              aiResponse: msg.aiResponse,
+              suggestions: msg.suggestions || [],
+              companies: msg.companies || [],
+              traditionalResults: [],
+              aiPowered: true,
+              timestamp: msg.timestamp
+            }
+          };
+        }
+        return null;
+      }).filter(Boolean);
+      
+      setContentItems(items as any[]);
+    }
+  };
+
   return (
     <div className="min-h-screen pb-32">
+      {/* Fixed Sidebar */}
+      {showSidebar && (
+        <ConversationSidebar 
+          onNewConversation={handleNewConversation}
+          onSelectConversation={handleSelectConversation}
+          isMinimized={sidebarMinimized}
+        />
+      )}
 
       {/* Main Content */}
-      <div className="px-8 py-1">
+      <div className={`px-8 py-1 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'}`}>
+        <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
         <div className="space-y-4">
           {contentItems.map((item) => (
             <div key={item.id}>
@@ -628,19 +895,75 @@ export default function ResultsPage() {
                         )}
                       </div>
                       <p className="text-sm text-white/60 mb-3 font-medium">Q: "{item.data.query}"</p>
-                      <div className="prose prose-invert max-w-none" style={{
-                        maxHeight: `${Math.min(item.data.aiResponse.split('\n').length, 5) * 1.5}rem`,
-                        height: 'auto',
-                        overflowY: item.data.aiResponse.split('\n').length > 5 ? 'auto' : 'visible'
-                      }}>
-                        <div className="text-white/90 leading-relaxed whitespace-pre-wrap">
-                          {item.data.aiResponse}
-                        </div>
+                      <div className="prose prose-invert max-w-none">
+                        <div className="text-white/90 leading-relaxed mb-6">
+                          {(() => {
+                            const response = item.data.aiResponse || '';
+                            const citations = item.data.citations || [];
+                            const parts = response.split(/(\[\d+\])/);
+                            
+                            return parts.map((part, index) => {
+                              // Check if this part is a citation like [1], [2], etc.
+                              const citationMatch = part.match(/^\[(\d+)\]$/);
+                              if (citationMatch) {
+                                const citationNum = parseInt(citationMatch[1]);
+                                // Find the corresponding citation
+                                const citation = citations.find(c => c.id === citationNum);
+                                if (citation) {
+                                  return (
+                                    <a 
+                                      key={index}
+                                      href={citation.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        window.open(citation.url, '_blank', 'noopener,noreferrer');
+                                      }}
+                                      className="text-blue-400 hover:text-blue-300 underline font-medium cursor-pointer"
+                                      title={citation.title}
+                                      style={{ color: '#60a5fa' }}
+                                    >
+                                      [{citationNum}]
+                                    </a>
+                                  );
+                                }
+                                return (
+                                  <span key={index} className="text-blue-400" style={{ color: '#60a5fa' }}>
+                                    [{citationNum}]
+                                  </span>
+                                );
+                              }
+                              return <span key={index}>{part}</span>;
+                            });
+                          })()
+                        }</div>
+                        
+                        {/* Related Questions inside the same box */}
+                        {item.data.suggestions && item.data.suggestions.length > 0 && (
+                          <div className="border-t border-white/10 pt-4">
+                            <h4 className="text-white/80 text-sm font-medium mb-3">Related Questions:</h4>
+                            <div className="space-y-2">
+                              {item.data.suggestions.map((question, qIndex) => (
+                                <button
+                                  key={qIndex}
+                                  onClick={() => handleSuggestionClick(question)}
+                                  className="w-full text-left p-2 rounded hover:bg-white/5 transition-all group flex items-center justify-between"
+                                >
+                                  <span className="text-white/70 text-sm group-hover:text-white transition-colors">
+                                    {question}
+                                  </span>
+                                  <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Copy Button for Answer */}
                       <button
-                        onClick={() => navigator.clipboard.writeText(item.data.aiResponse)}
+                        onClick={() => navigator.clipboard.writeText(item.data.aiResponse?.replace(/\[\d+\]/g, '') || '')}
                         className="absolute bottom-4 right-4 p-2 bg-white/10 hover:bg-white/20 border border-white/20 transition-all opacity-0 group-hover:opacity-100"
                         title="Copy answer"
                       >
@@ -648,6 +971,8 @@ export default function ResultsPage() {
                       </button>
                     </div>
                   </div>
+
+
 
 
 
@@ -742,38 +1067,7 @@ export default function ResultsPage() {
                     ))}
                   </div>
                   
-                  {/* Cards - Show only for the last suggestions */}
-                  {contentItems.indexOf(item) === contentItems.length - 1 && (() => {
-                    // Find the most recent result with companies data
-                    const lastResultWithCompanies = [...contentItems].reverse().find(contentItem => 
-                      contentItem.type === 'result' && contentItem.data.companies && contentItem.data.companies.length > 0
-                    );
-                    
-                    if (!lastResultWithCompanies) return null;
-                    
-                    // Show appropriate cards based on selected types
-                    // Get types from URL as fallback
-                    const params = new URLSearchParams(window.location.search);
-                    const urlTypes = params.get('types');
-                    const currentTypes = urlTypes ? new Set(urlTypes.split(',').filter(t => t.trim())) : selectedTypes;
-                    
-                    console.log('Card selection - URL types:', urlTypes, 'Current types:', Array.from(currentTypes));
-                    
-                    if (currentTypes.has('product') && currentTypes.size === 1) {
-                      console.log('Showing ProductCards for products');
-                      return <ProductCards products={lastResultWithCompanies.data.companies} />;
-                    } else if (currentTypes.has('company') && currentTypes.size === 1) {
-                      console.log('Showing CompanyCards for companies');
-                      return <CompanyCards companies={lastResultWithCompanies.data.companies} />;
-                    } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
-                      console.log('Showing FreelancerCards for freelancers');
-                      return <FreelancerCards freelancers={lastResultWithCompanies.data.companies} />;
-                    } else {
-                      console.log('Showing default CompanyCards');
-                      // Show company cards by default or when multiple are selected
-                      return <CompanyCards companies={lastResultWithCompanies.data.companies} />;
-                    }
-                  })()}
+
                 </div>
               )}
 
@@ -793,7 +1087,7 @@ export default function ResultsPage() {
                         </div>
                       </div>
                       <p className="text-sm text-white/60 mb-3">Q: "{item.data.query}"</p>
-                      <p className="text-sm text-white/60 mb-3">Finding the best AI solutions for your query...</p>
+                      <p className="text-sm text-white/60 mb-3">Searching the web and finding the best AI solutions for your query...</p>
                       <div className="space-y-2">
                         <div className="h-4 bg-white/10 rounded animate-pulse"></div>
                         <div className="h-4 bg-white/10 rounded animate-pulse w-3/4"></div>
@@ -806,40 +1100,134 @@ export default function ResultsPage() {
             </div>
           ))}
 
-          {/* No Results */}
-          {contentItems.length === 0 && !isInitialLoading && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto bg-white/10 rounded-full flex items-center justify-center mb-4">
-                <Search className="w-8 h-8 text-white/60" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">No results found</h3>
-              <p className="text-white/70 mb-6">Try adjusting your search terms</p>
-              <Button
-                onClick={() => setLocation('/')}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Back to Search
-              </Button>
-            </div>
+          {/* No Results - Show welcome message when no content */}
+          {contentItems.length === 0 && !isInitialLoading && !showNewConversation && (
+            <NewConversationState firstName={firstName} />
           )}
+          
+
         </div>
+        
+        {/* Use Case Selection - Show only for generalized queries */}
+        {showUseCaseSelection && (
+          <div className="bg-black/20 backdrop-blur-xl p-4 border border-white/10">
+            <div className="flex items-center space-x-2 mb-3">
+              <Target className="w-4 h-4 text-white/60" />
+              <h3 className="text-white/80 text-sm font-medium">Specify domain/niche/use case (optional):</h3>
+            </div>
+            <input
+              type="text"
+              placeholder="e.g., healthcare, e-commerce, customer service, marketing..."
+              value={useCaseInput}
+              onChange={(e) => handleUseCaseChange(e.target.value)}
+              className="w-full px-3 py-2 bg-white/5 border border-white/20 text-white placeholder:text-white/50 text-sm rounded-lg focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all"
+            />
+          </div>
+        )}
+        
+        {/* Budget Selection - Show only if no budget in query */}
+        {showBudgetSelection && (
+          <div className={`bg-black/20 backdrop-blur-xl p-4 border border-white/10 ${showUseCaseSelection ? 'border-t-0' : ''}`}>
+            <div className="flex items-center space-x-2 mb-3">
+              <DollarSign className="w-4 h-4 text-white/60" />
+              <h3 className="text-white/80 text-sm font-medium">Select your budget range:</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {budgetOptions.map((budget) => (
+                <button
+                  key={budget}
+                  onClick={() => handleBudgetSelect(budget)}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
+                    selectedBudgets.has(budget)
+                      ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 border-yellow-400/60 text-black shadow-lg shadow-yellow-400/30'
+                      : 'bg-white/5 border border-white/20 text-white/80 hover:bg-white/10 hover:border-white/30 hover:text-white'
+                  }`}
+                >
+                  {budget}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Loading Circle for Budget Results */}
+        {isLoadingBudgetResults && (
+          <div className="bg-black/20 backdrop-blur-xl p-6 border border-white/10 border-t-0 flex items-center justify-center">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-white/20 border-t-white/80"></div>
+              <span className="text-white/70 text-sm">Finding tools within your budget...</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Cards - Show below all content */}
+        {allCompanies.length > 0 && (selectedBudgets.size > 0 || !showBudgetSelection) && (() => {
+          // Show appropriate cards based on selected types
+          const params = new URLSearchParams(window.location.search);
+          const urlTypes = params.get('types');
+          const currentTypes = urlTypes ? new Set(urlTypes.split(',').filter(t => t.trim())) : selectedTypes;
+          
+          if (currentTypes.has('product') && currentTypes.size === 1) {
+            return <ProductCards products={allCompanies} />;
+          } else if (currentTypes.has('company') && currentTypes.size === 1) {
+            return <CompanyCards companies={allCompanies} />;
+          } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
+            return <FreelancerCards freelancers={allCompanies} />;
+          } else {
+            // Show company cards + product tool cards when no specific type is selected
+            const companies = allCompanies.slice(0, 5);
+            const products = allCompanies.slice(5, 15).map(companyItem => ({
+              name: companyItem.name,
+              description: companyItem.description,
+              pricing: companyItem.pricing,
+              website: companyItem.website
+            }));
+            return (
+              <div className="mt-6">
+                <CompanyCards companies={companies} />
+                <ProductToolCards products={products} />
+              </div>
+            );
+          }
+        })()}
+        </NotificationProvider>
       </div>
+      
+      {/* Favorites Notification */}
+      <FavoritesNotification 
+        show={favoritesNotification.show}
+        itemName={favoritesNotification.itemName}
+        onClose={hideFavoritesNotification}
+      />
 
       {/* Fixed Search Bar at Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-white/20 p-4 z-50">
+      <div className={`fixed bottom-0 right-0 bg-background/95 backdrop-blur-md border-t border-white/20 p-4 z-50 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'left-12' : 'left-80') : 'left-0'}`}>
         <div className="max-w-4xl mx-auto">
           <div className="relative rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible" style={{height: '85px'}}>
             {/* Search input area - increased for better centering */}
             <div className="relative px-4 flex items-center" style={{height: '45px'}}>
-              {/* Search button */}
-              <button
-                aria-label="Search"
-                onClick={() => handleNewSearch({ preventDefault: () => {} } as React.FormEvent)}
-                disabled={!searchQuery.trim()}
-                className="absolute right-4 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
-              >
-                <Search className="h-4 w-4" />
-              </button>
+              {/* Voice and Search buttons */}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2">
+                <button
+                  aria-label={isListening ? "Stop listening" : "Start voice input"}
+                  onClick={isListening ? stopListening : startListening}
+                  className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
+                    isListening 
+                      ? 'bg-red-500/20 border-red-400/40 text-red-400' 
+                      : 'bg-white/5 border-white/20 text-white/90 hover:bg-white/10'
+                  }`}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </button>
+                <button
+                  aria-label="Search"
+                  onClick={() => handleNewSearch({ preventDefault: () => {} } as React.FormEvent)}
+                  disabled={!searchQuery.trim()}
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </div>
 
               {/* Input */}
               <Input
@@ -853,7 +1241,7 @@ export default function ResultsPage() {
                     handleNewSearch(e);
                   }
                 }}
-                className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-14 flex items-center"
+                className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-20 flex items-center"
               />
             </div>
 
@@ -912,7 +1300,7 @@ export default function ResultsPage() {
                           className={
                             `h-6 w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
                             (selectedTypes.has('company')
-                              ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
+                              ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 border-yellow-400/60 text-black shadow-lg shadow-yellow-400/30'
                               : 'bg-white/5 border-white/20 text-white/90')
                           }
                           aria-label="Company"
@@ -930,7 +1318,7 @@ export default function ResultsPage() {
                           className={
                             `h-6 w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
                             (selectedTypes.has('freelancer')
-                              ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
+                              ? 'bg-gradient-to-r from-gray-300 to-gray-500 border-gray-400/60 text-black shadow-lg shadow-gray-400/30'
                               : 'bg-white/5 border-white/20 text-white/90')
                           }
                           aria-label="Freelancer"
@@ -948,7 +1336,7 @@ export default function ResultsPage() {
                           className={
                             `h-6 w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
                             (selectedTypes.has('product')
-                              ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
+                              ? 'bg-gradient-to-r from-gray-300 to-gray-500 border-gray-400/60 text-black shadow-lg shadow-gray-400/30'
                               : 'bg-white/5 border-white/20 text-white/90')
                           }
                           aria-label="Product"
@@ -967,153 +1355,26 @@ export default function ResultsPage() {
         </div>
       </div>
 
-      {/* 4 Toggle Buttons - Right Edge */}
-      <div className="fixed right-0 top-1/2 transform -translate-y-1/2 z-50 flex flex-col space-y-2">
-        {/* Products Button */}
-        <button
-          onClick={() => setActiveSection(activeSection === 'products' ? null : 'products')}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-3 rounded-l-full shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all fire-glow"
-        >
-          <Package className="w-5 h-5" />
-        </button>
-        
-        {/* Companies Button */}
-        <button
-          onClick={() => setActiveSection(activeSection === 'companies' ? null : 'companies')}
-          className="bg-gradient-to-r from-green-500 to-green-600 text-white p-3 rounded-l-full shadow-lg hover:from-green-600 hover:to-green-700 transition-all fire-glow"
-        >
-          <Building className="w-5 h-5" />
-        </button>
-        
-        {/* Freelancers Button */}
-        <button
-          onClick={() => setActiveSection(activeSection === 'freelancers' ? null : 'freelancers')}
-          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-3 rounded-l-full shadow-lg hover:from-purple-600 hover:to-purple-700 transition-all fire-glow"
-        >
-          <UserCheck className="w-5 h-5" />
-        </button>
-        
-        {/* Solutions Button */}
-        <button
-          onClick={() => setActiveSection(activeSection === 'solutions' ? null : 'solutions')}
-          className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-3 rounded-l-full shadow-lg hover:from-yellow-600 hover:to-yellow-700 transition-all fire-glow"
-        >
-          <Solution className="w-5 h-5" />
-        </button>
-      </div>
+      {/* Sidebar Toggle Button - Top Left */}
+      <button
+        onClick={() => {
+          if (showSidebar && !sidebarMinimized) {
+            setSidebarMinimized(true);
+          } else if (showSidebar && sidebarMinimized) {
+            setShowSidebar(false);
+            setSidebarMinimized(false);
+          } else {
+            setShowSidebar(true);
+            setSidebarMinimized(false);
+          }
+        }}
+        className={`fixed top-20 z-50 bg-black/40 backdrop-blur-xl border border-white/10 text-white p-2 rounded-lg hover:bg-white/10 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'left-16' : 'left-4') : 'left-4'}`}
+        title={showSidebar ? (sidebarMinimized ? "Hide sidebar" : "Minimize sidebar") : "Show sidebar"}
+      >
+        {showSidebar ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+      </button>
 
-      {/* Expandable Sections */}
-      {activeSection && (
-        <div className="fixed right-0 top-0 h-full w-80 bg-background/95 backdrop-blur-md border-l border-purple-500/30 transform transition-transform duration-300 z-40">
-          <div className="p-6 pt-20 h-full overflow-y-auto">
-            {activeSection === 'products' && (
-              <div>
-                <div className="flex items-center space-x-2 mb-4">
-                  <Package className="w-5 h-5 text-blue-400" />
-                  <h3 className="text-lg font-semibold text-white">Similar Products</h3>
-                </div>
-                <div className="space-y-3">
-                  {mockSimilarProducts.slice(0, 5).map((product) => (
-                    <div key={product.id} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/20 transition-all">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 ${product.color} rounded-lg flex items-center justify-center text-white text-sm flex-shrink-0`}>
-                          {product.logo}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-white truncate">
-                            <a href={product.url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
-                              {product.name}
-                            </a>
-                          </h4>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs text-white/80">{product.rating}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {activeSection === 'companies' && (
-              <div>
-                <div className="flex items-center space-x-2 mb-4">
-                  <Building className="w-5 h-5 text-green-400" />
-                  <h3 className="text-lg font-semibold text-white">Similar Companies</h3>
-                </div>
-                <div className="space-y-3">
-                  {[{name: "TechCorp AI", rating: 4.6}, {name: "InnovateLab", rating: 4.8}].map((company, index) => (
-                    <div key={index} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/20 transition-all">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-white text-sm flex-shrink-0">
-                          🏢
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-medium text-white">{company.name}</h4>
-                          <div className="flex items-center space-x-1 mt-1">
-                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs text-white/80">{company.rating}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {activeSection === 'freelancers' && (
-              <div>
-                <div className="flex items-center space-x-2 mb-4">
-                  <UserCheck className="w-5 h-5 text-purple-400" />
-                  <h3 className="text-lg font-semibold text-white">Similar Freelancers</h3>
-                </div>
-                <div className="space-y-3">
-                  {[{name: "Alex Chen", skill: "AI Developer"}, {name: "Sarah Kim", skill: "ML Engineer"}].map((freelancer, index) => (
-                    <div key={index} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/20 transition-all">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white text-sm flex-shrink-0">
-                          👤
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-medium text-white">{freelancer.name}</h4>
-                          <p className="text-xs text-white/60">{freelancer.skill}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {activeSection === 'solutions' && (
-              <div>
-                <div className="flex items-center space-x-2 mb-4">
-                  <Solution className="w-5 h-5 text-yellow-400" />
-                  <h3 className="text-lg font-semibold text-white">Similar Solutions</h3>
-                </div>
-                <div className="space-y-3">
-                  {[{name: "AI Automation Suite", type: "Enterprise"}, {name: "Smart Analytics Platform", type: "SaaS"}].map((solution, index) => (
-                    <div key={index} className="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/20 transition-all">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-sm flex-shrink-0">
-                          💡
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-sm font-medium text-white">{solution.name}</h4>
-                          <p className="text-xs text-white/60">{solution.type}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+
     </div>
   );
 } 

@@ -15,6 +15,7 @@ node cleanup.js
 echo "🤖 Starting AI service on port 5002..."
 cd ai_service
 source venv/bin/activate
+export EXA_API_KEY="b0abde90-8115-438d-ab42-f6538c354490"
 python app.py &
 AI_PID=$!
 cd ..

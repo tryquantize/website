@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, ExternalLink, ArrowLeft, Send } from "lucide-react";
+import { MessageCircle, ExternalLink, ArrowLeft, Send, Heart } from "lucide-react";
+import { useFavorites } from "@/contexts/favorites-context";
+import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
+import { useNotification } from "@/contexts/notification-context";
 
 interface Company {
   name: string;
@@ -20,6 +23,9 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
   const [chatStates, setChatStates] = useState<{[key: number]: boolean}>({});
   const [messages, setMessages] = useState<{[key: number]: Array<{text: string, isUser: boolean}>}>({});
   const [inputValues, setInputValues] = useState<{[key: number]: string}>({});
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { currentUser } = useFirebaseAuth();
+  const { showFavoritesNotification } = useNotification();
 
   const handleChatClick = (index: number) => {
     setChatStates(prev => ({...prev, [index]: true}));
@@ -100,9 +106,37 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
               </div>
             ) : (
               <div className="space-y-3 h-full flex flex-col">
-                <div>
-                  <h5 className="text-white text-base font-medium">{company.name}</h5>
-                  <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{company.category}</span>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h5 className="text-white text-base font-medium">{company.name}</h5>
+                    <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{company.category}</span>
+                  </div>
+                  {currentUser && (
+                    <Button
+                      onClick={() => {
+                        const companyId = `company_${index}_${company.name}`;
+                        if (isFavorite(companyId)) {
+                          removeFromFavorites(companyId);
+                        } else {
+                          addToFavorites({
+                            id: companyId,
+                            type: 'company',
+                            name: company.name,
+                            description: company.description,
+                            features: company.features,
+                            pricing: company.pricing,
+                            website: company.website,
+                            category: company.category
+                          }, showFavoritesNotification);
+                        }
+                      }}
+                      size="sm"
+                      variant="ghost"
+                      className="p-1 h-auto"
+                    >
+                      <Heart className={`w-4 h-4 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+                    </Button>
+                  )}
                 </div>
                 
                 <p className="text-white/70 text-sm">{company.description}</p>
@@ -124,7 +158,7 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
                   <Button
                     onClick={() => handleChatClick(index)}
                     size="sm"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2"
+                    className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-medium shadow-lg shadow-yellow-400/30 text-xs px-2"
                   >
                     <MessageCircle className="w-3 h-3 mr-1" />
                     Chat
@@ -132,7 +166,7 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
                   <Button
                     onClick={() => alert(`Calling ${company.name}...`)}
                     size="sm"
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs px-2"
+                    className="flex-1 bg-gradient-to-r from-gray-300 to-gray-500 hover:from-gray-400 hover:to-gray-600 text-black font-medium shadow-lg shadow-gray-400/30 text-xs px-2"
                   >
                     📞 Call
                   </Button>
