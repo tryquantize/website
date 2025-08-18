@@ -23,6 +23,7 @@ import { FavoritesProvider } from "@/contexts/favorites-context";
 import { ConversationProvider } from "@/contexts/conversation-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { AnimatedLayout } from "@/components/layout/animated-layout";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import ProductsPage from "@/pages/Products";
@@ -45,34 +46,36 @@ function Router() {
   return (
     <>
       <LoadingTransition />
-      <div className="relative z-10 min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 pt-12 md:pt-24">
-          <Switch>
-            <Route path="/">
-              {() => {
-                const { currentUser } = useFirebaseAuth();
-                return currentUser ? <LoggedInHome /> : <Home />;
-              }}
-            </Route>
-            <Route path="/loggedinhome" component={LoggedInHome} />
-            <Route path="/welcome-transition" component={WelcomeTransition} />
-            <Route path="/products" component={ProductsPage} />
-            <Route path="/dashboard" component={Dashboard} />
-            <Route path="/admin" component={Admin} />
-            <Route path="/auth" component={Register} />
-            <Route path="/auth/register" component={Register} />
-            <Route path="/waitlist" component={WaitlistPage} />
-            <Route path="/waitlist-admin" component={WaitlistAdminPage} />
-            <Route path="/onboarding" component={OnboardingPage} />
-            <Route path="/list" component={ListPage} />
-            <Route path="/results" component={ResultsPage} />
-            <Route path="/favorites" component={FavoritesPage} />
-            <Route component={NotFound} />
-          </Switch>
-        </main>
-        {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && <Footer showJoinUs={location === '/'} />}
-      </div>
+      <AnimatedLayout>
+        <div className="relative z-10 min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1 pt-12 md:pt-24">
+            <Switch>
+              <Route path="/">
+                {() => {
+                  const { currentUser } = useFirebaseAuth();
+                  return currentUser ? <LoggedInHome /> : <Home />;
+                }}
+              </Route>
+              <Route path="/loggedinhome" component={LoggedInHome} />
+              <Route path="/welcome-transition" component={WelcomeTransition} />
+              <Route path="/products" component={ProductsPage} />
+              <Route path="/dashboard" component={Dashboard} />
+              <Route path="/admin" component={Admin} />
+              <Route path="/auth" component={Register} />
+              <Route path="/auth/register" component={Register} />
+              <Route path="/waitlist" component={WaitlistPage} />
+              <Route path="/waitlist-admin" component={WaitlistAdminPage} />
+              <Route path="/onboarding" component={OnboardingPage} />
+              <Route path="/list" component={ListPage} />
+              <Route path="/results" component={ResultsPage} />
+              <Route path="/favorites" component={FavoritesPage} />
+              <Route component={NotFound} />
+            </Switch>
+          </main>
+          {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && <Footer showJoinUs={location === '/'} />}
+        </div>
+      </AnimatedLayout>
     </>
   );
 }

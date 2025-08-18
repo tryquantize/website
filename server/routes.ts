@@ -232,9 +232,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Fallback to traditional search if AI service fails
         const tools = await storage.getTools({ search: query });
         
+        // Convert tools to companies format for consistency
+        const companies = tools.map(tool => ({
+          name: tool.name,
+          description: tool.description,
+          features: tool.features || [],
+          pricing: tool.pricing,
+          website: tool.website,
+          category: tool.category
+        }));
+        
         res.json({
           query,
-          results: tools,
+          aiResponse: `Here are some AI tools related to "${query}". The AI service is currently unavailable, showing database results.`,
+          suggestions: [
+            `Best alternatives for ${query}`,
+            `Free tools for ${query}`,
+            `Enterprise solutions for ${query}`,
+            `Open source ${query} tools`,
+            `Getting started with ${query}`
+          ],
+          companies: companies,
+          citations: [],
+          traditionalResults: tools,
           count: tools.length,
           aiPowered: false,
           fallback: true,

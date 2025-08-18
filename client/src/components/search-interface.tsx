@@ -17,9 +17,12 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";                    // Reusable button component
 import { Input } from "@/components/ui/input";                      // Form input component
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Tooltip components
+import { AnimatedButton } from "@/components/ui/animated-button";    // Enhanced animated button
+import { AnimatedSearchBar } from "@/components/ui/animated-search-bar"; // Enhanced search bar
+import { LoadingSpinner } from "@/components/ui/loading-spinner";    // Premium loading animations
 
 // Icons from Lucide React
-import { Search, Lightbulb, Sparkles, Wrench, Building2, Package, User, Clock, TrendingUp, Brain, ChevronDown } from "lucide-react";
+import { Search, Lightbulb, Sparkles, Wrench, Building2, Package, User, Clock, TrendingUp, Brain, ChevronDown, Loader2, Undo } from "lucide-react";
 
 // Data fetching and API
 import { useMutation } from "@tanstack/react-query";               // React Query for API calls
@@ -27,6 +30,10 @@ import { apiRequest } from "@/lib/queryClient";                    // API reques
 
 // Authentication
 import { useAuth } from "@/lib/auth";                              // User authentication state
+
+// Prompt Enhancement
+import { enhancePrompt } from "@/lib/promptEnhancer";               // Prompt enhancement utility
+import { useToast } from "@/hooks/use-toast";                       // Toast notifications
 
 /**
  * SEARCH INTERFACE PROPS
@@ -166,6 +173,14 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
   // MODEL SELECTION STATE
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
+  
+  // PROMPT ENHANCEMENT STATE
+  const [isEnhancing, setIsEnhancing] = useState(false);           // Enhancement loading state
+  const [queryHistory, setQueryHistory] = useState<string[]>([]);  // Query history for undo
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1); // Current position in history
+  
+  // Toast notifications
+  const { toast } = useToast();
 
   const llmModels = [
     "GPT-4o Mini",
@@ -178,6 +193,65 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     "Google Gemma 2 9B",
     "Mistral 7B Instruct"
   ];
+
+  /**
+   * PROMPT ENHANCEMENT HANDLER
+   * Transforms basic user input into detailed, comprehensive search prompt
+   */
+  const handlePromptEnhancement = async () => {
+    if (!query.trim() || isEnhancing) return;
+    
+    setIsEnhancing(true);
+    
+    try {
+      const originalQuery = query;
+      const enhancedQuery = await enhancePrompt(query, {
+        role: user?.jobTitle,
+        industry: user?.industry,
+        companySize: user?.company?.size
+      });
+      
+      // Update query history for undo functionality
+      setQueryHistory(prev => [...prev, originalQuery]);
+      setCurrentHistoryIndex(queryHistory.length);
+      
+      // Update query with enhanced version
+      setQuery(enhancedQuery);
+      
+      toast({
+        title: "Prompt enhanced!",
+        description: "Your search query has been made more detailed and specific.",
+      });
+      
+    } catch (error) {
+      console.error('Prompt enhancement failed:', error);
+      toast({
+        title: "Enhancement failed",
+        description: "Please try again or refine your query manually.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  /**
+   * UNDO ENHANCEMENT HANDLER
+   * Reverts enhanced prompts back to original
+   */
+  const handleUndo = () => {
+    if (currentHistoryIndex < 0 || queryHistory.length === 0) return;
+    
+    const previousQuery = queryHistory[currentHistoryIndex];
+    if (previousQuery) {
+      setQuery(previousQuery);
+      setCurrentHistoryIndex(prev => prev - 1);
+      toast({
+        title: "Prompt reverted",
+        description: "Restored to original query.",
+      });
+    }
+  };
 
   /**
    * HERO TEXT FLICKER WORDS
@@ -395,10 +469,27 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
    * - Arrow Down: Move to next suggestion
    * - Arrow Up: Move to previous suggestion
    * - Escape: Close suggestions dropdown
+   * - Ctrl/Cmd + E: Enhance prompt
+   * - Ctrl/Cmd + Z: Undo enhancement
    * 
    * Redirects to auth page if user not logged in
    */
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const isMetaKey = e.metaKey || e.ctrlKey;
+    
+    // Cmd/Ctrl + E: Enhance prompt
+    if (isMetaKey && e.key === 'e') {
+      e.preventDefault();
+      handlePromptEnhancement();
+      return;
+    }
+    
+    // Cmd/Ctrl + Z: Undo enhancement
+    if (isMetaKey && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      handleUndo();
+      return;
+    }
     // ENTER KEY: Execute search
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();                                         // Prevent form submission
@@ -640,11 +731,57 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         }`} style={{height: '85px'}}>
           {/* Search input area - increased for better centering */}
           <div className="relative px-4 flex items-center" style={{height: '45px'}}>
+            {/* Undo button (only show if there's history) */}
+            {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      aria-label="Undo prompt enhancement"
+                      onClick={handleUndo}
+                      className="absolute right-20 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition"
+                    >
+                      <Undo className="h-3 w-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Undo enhancement (Ctrl+Z)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
+            {/* Prompt enhancer button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    aria-label="Enhance search prompt"
+                    onClick={handlePromptEnhancement}
+                    disabled={!query.trim() || isEnhancing || searchMutation.isPending}
+                    className="absolute right-12 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isEnhancing ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Enhance your prompt (Ctrl+E)</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Make your search more detailed and specific
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
             {/* Search button */}
             <button
               aria-label="Search"
               onClick={handleSearch}
-              disabled={!query.trim() || searchMutation.isPending}
+              disabled={!query.trim() || searchMutation.isPending || isEnhancing}
               className="absolute right-4 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
               data-testid="search-button"
             >
@@ -664,7 +801,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               onKeyDown={handleKeyDown}
               onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-14 flex items-center"
+              disabled={isEnhancing}
+              className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-20 flex items-center disabled:opacity-70"
               data-testid="search-input"
             />
           </div>
@@ -799,6 +937,16 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
             )}
           </div>
         )}
+        
+        {/* Enhancement feedback */}
+        {isEnhancing && (
+          <div className="absolute top-full left-0 right-0 mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-blue-300 text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Enhancing your search prompt...</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Quick Suggestions */}
@@ -806,54 +954,51 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
       }`}>
         {visibleSuggestions.map((suggestion, index) => (
-          <Button
+          <AnimatedButton
             key={index}
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => handleSuggestionTileClick(suggestion)}
-            className="text-xs rounded-md px-3 py-1 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm transition-all"
+            className="text-xs rounded-md px-3 py-1 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm"
             data-testid={`suggestion-${index}`}
+            icon={<Sparkles className="w-3 h-3" />}
           >
-            <Sparkles className="w-3 h-3 mr-2" />
             {suggestion}
-          </Button>
+          </AnimatedButton>
         ))}
         {hasMoreSuggestions && (
-          <Button
-            variant="outline"
+          <AnimatedButton
+            variant="gradient"
             size="sm"
             onClick={handleShowMore}
-            className="text-xs rounded-md px-3 py-1 border-yellow-400/40 bg-yellow-500/10 text-yellow-300 hover:bg-yellow-500/20 hover:border-yellow-400/60"
+            className="text-xs rounded-md px-3 py-1"
           >
             See more
-          </Button>
+          </AnimatedButton>
         )}
         {visibleCount > quickSuggestions.length && (
-          <Button
-            variant="outline"
+          <AnimatedButton
+            variant="secondary"
             size="sm"
             onClick={handleShowLess}
-            className="text-xs rounded-md px-3 py-1 border-white/30 bg-white/5 text-white hover:bg-white/10 hover:border-white/60"
+            className="text-xs rounded-md px-3 py-1"
           >
             See less
-          </Button>
+          </AnimatedButton>
         )}
       </div>
       
       {/* Loading State - Centered on page */}
       {isSearching && (
         <div className="fixed inset-0 flex flex-col items-center justify-center z-30 animate-fade-in">
-          <div className="relative">
-      <div className="w-24 h-24 border-4 border-white/20 border-t-white/60 border-r-white/40 rounded-full animate-spin mb-8" style={{animationDuration: '1s'}}></div>
-      <div className="absolute inset-0 w-24 h-24 border-4 border-transparent border-b-white/50 border-l-white/30 rounded-full animate-spin mb-8" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+          <div className="relative mb-8">
+            <LoadingSpinner variant="orbit" size="lg" />
           </div>
           <div className="text-center">
             <p className="text-white text-2xl font-semibold mb-3">Searching for "{query}"...</p>
             <p className="text-white/70 text-lg mb-6">Finding the best AI solutions for you</p>
             <div className="flex items-center justify-center space-x-2">
-              <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-              <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
-              <div className="w-3 h-3 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '400ms'}}></div>
+              <LoadingSpinner variant="dots" size="sm" />
             </div>
           </div>
         </div>

@@ -29,7 +29,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { OnboardingForm } from "@/components/onboarding-form";
-import { useAuth } from "@/lib/auth";
+import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Eye, 
@@ -54,14 +54,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import type { AiTool } from "@shared/schema";
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { currentUser, signOut } = useFirebaseAuth();
   const { toast } = useToast();
   const [showToolForm, setShowToolForm] = useState(false);
   const [editingTool, setEditingTool] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("overview");
 
   // Redirect non-authenticated users
-  if (!user) {
+  if (!currentUser) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
@@ -74,7 +74,7 @@ export default function Dashboard() {
   const getTools = () => {
     try {
       const tools = JSON.parse(localStorage.getItem('userTools') || '[]');
-      return tools.filter((tool: any) => tool.userId === user.id);
+      return tools.filter((tool: any) => tool.userId === currentUser.uid);
     } catch {
       return [];
     }
@@ -128,7 +128,7 @@ export default function Dashboard() {
   return (
     <div className="dashboard-layout" style={{ ['--dashboard-header-h' as any]: '64px' }}>
     <SidebarProvider defaultOpen={false}>
-      <Sidebar variant="sidebar" collapsible="icon" className="bg-white/10 backdrop-blur-md text-white border-r border-white/20">
+      <Sidebar variant="sidebar" collapsible="icon" className="bg-white/10 backdrop-blur-md text-white border-r border-white/20 w-64">
         <SidebarHeader>
           <div className="flex items-center justify-between px-2">
               <span className="text-base font-semibold text-firequest">Quantize</span>
@@ -194,7 +194,14 @@ export default function Dashboard() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => logout()}>
+              <SidebarMenuButton onClick={async () => {
+                const result = await signOut();
+                if (result.success) {
+                  toast({ title: "Logged out", description: "You have been logged out successfully." });
+                } else {
+                  toast({ title: "Logout failed", description: result.error || "Failed to log out.", variant: "destructive" });
+                }
+              }}>
                 <LogOut />
                 <span>Logout</span>
               </SidebarMenuButton>

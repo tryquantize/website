@@ -14,7 +14,53 @@ import bcrypt from "bcryptjs";
 
 export class MemoryStorage implements IStorage {
   private users: User[] = [];
-  private tools: AiTool[] = [];
+  private tools: AiTool[] = [
+    {
+      id: "1",
+      name: "OpenAI GPT-4",
+      description: "Advanced AI language model for enterprise applications",
+      category: "AI/ML",
+      pricingModel: "paid",
+      pricing: "$0.03 per 1K tokens",
+      website: "https://openai.com",
+      industries: ["Technology", "Business"],
+      features: ["Natural Language Processing", "Code Generation", "Text Analysis"],
+      startupId: "openai",
+      status: "approved",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: "2",
+      name: "Anthropic Claude",
+      description: "Constitutional AI assistant for business use",
+      category: "AI/ML",
+      pricingModel: "paid",
+      pricing: "$20/month",
+      website: "https://anthropic.com",
+      industries: ["Technology", "Education"],
+      features: ["Writing Assistant", "Code Analysis", "Research"],
+      startupId: "anthropic",
+      status: "approved",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: "3",
+      name: "Midjourney AI",
+      description: "Create stunning visuals with AI-powered art generation",
+      category: "Creative",
+      pricingModel: "paid",
+      pricing: "$10/month",
+      website: "https://midjourney.com",
+      industries: ["Creative", "Marketing"],
+      features: ["Image Generation", "Art Creation", "Visual Design"],
+      startupId: "midjourney",
+      status: "approved",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+  ];
   private contactRequests: ContactRequest[] = [];
   private searchQueries: SearchQuery[] = [];
   private toolAnalytics: ToolAnalytics[] = [];

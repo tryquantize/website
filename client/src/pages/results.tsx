@@ -11,7 +11,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Package, Building, UserCheck, Lightbulb as Solution, Sparkles, Clock, ArrowRight, Lightbulb, Copy, Edit, Wrench, Building2, User, Brain, ChevronDown, LogOut, Mic, MicOff, PanelLeftClose, PanelLeftOpen, DollarSign, Target } from "lucide-react";
+import { Search, Star, Package, Building, UserCheck, Lightbulb as Solution, Sparkles, Clock, ArrowRight, Lightbulb, Copy, Edit, Wrench, Building2, User, Brain, ChevronDown, LogOut, Mic, MicOff, PanelLeftClose, PanelLeftOpen, DollarSign, Target, Loader2, Undo } from "lucide-react";
 import { QuantizeLogo } from "@/components/quantize-logo";
 import { UserLogo } from "@/components/user-logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -30,6 +30,8 @@ import { ConversationSidebar } from "@/components/conversation-sidebar";
 import { NewConversationState } from "@/components/new-conversation-state";
 import { FavoritesNotification } from "@/components/favorites-notification";
 import { NotificationProvider } from "@/contexts/notification-context";
+import { enhancePrompt } from "@/lib/promptEnhancer";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock search results - in real app this would come from API
 const mockSearchResults = [
@@ -155,6 +157,14 @@ export default function ResultsPage() {
   const [useCaseInput, setUseCaseInput] = useState('');
   const [isLoadingBudgetResults, setIsLoadingBudgetResults] = useState(false);
   
+  // PROMPT ENHANCEMENT STATE
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [queryHistory, setQueryHistory] = useState<string[]>([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
+  
+  // Toast notifications
+  const { toast } = useToast();
+  
   // Update search query when voice transcript changes
   useEffect(() => {
     if (transcript) {
@@ -187,6 +197,60 @@ export default function ResultsPage() {
     "<$5000",
     "Enterprise"
   ];
+
+  /**
+   * PROMPT ENHANCEMENT HANDLER
+   */
+  const handlePromptEnhancement = async () => {
+    if (!searchQuery.trim() || isEnhancing) return;
+    
+    setIsEnhancing(true);
+    
+    try {
+      const originalQuery = searchQuery;
+      const enhancedQuery = await enhancePrompt(searchQuery, {
+        role: currentUser?.displayName,
+        industry: user?.industry,
+        companySize: user?.company?.size
+      });
+      
+      setQueryHistory(prev => [...prev, originalQuery]);
+      setCurrentHistoryIndex(queryHistory.length);
+      setSearchQuery(enhancedQuery);
+      
+      toast({
+        title: "Prompt enhanced!",
+        description: "Your search query has been made more detailed and specific.",
+      });
+      
+    } catch (error) {
+      console.error('Prompt enhancement failed:', error);
+      toast({
+        title: "Enhancement failed",
+        description: "Please try again or refine your query manually.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  /**
+   * UNDO ENHANCEMENT HANDLER
+   */
+  const handleUndo = () => {
+    if (currentHistoryIndex < 0 || queryHistory.length === 0) return;
+    
+    const previousQuery = queryHistory[currentHistoryIndex];
+    if (previousQuery) {
+      setSearchQuery(previousQuery);
+      setCurrentHistoryIndex(prev => prev - 1);
+      toast({
+        title: "Prompt reverted",
+        description: "Restored to original query.",
+      });
+    }
+  };
 
 
 
@@ -1204,10 +1268,65 @@ export default function ResultsPage() {
       <div className={`fixed bottom-0 right-0 bg-background/95 backdrop-blur-md border-t border-white/20 p-4 z-50 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'left-12' : 'left-80') : 'left-0'}`}>
         <div className="max-w-4xl mx-auto">
           <div className="relative rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible" style={{height: '85px'}}>
+            {/* Enhancement feedback */}
+            {isEnhancing && (
+              <div className="absolute bottom-full left-0 right-0 mb-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
+                <div className="flex items-center gap-2 text-blue-300 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Enhancing your search prompt...</span>
+                </div>
+              </div>
+            )}
             {/* Search input area - increased for better centering */}
             <div className="relative px-4 flex items-center" style={{height: '45px'}}>
-              {/* Voice and Search buttons */}
+              {/* Enhancement, Voice and Search buttons */}
               <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2">
+                {/* Undo button */}
+                {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          aria-label="Undo prompt enhancement"
+                          onClick={handleUndo}
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition"
+                        >
+                          <Undo className="h-3 w-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p>Undo enhancement (Ctrl+Z)</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                
+                {/* Prompt enhancer button */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        aria-label="Enhance search prompt"
+                        onClick={handlePromptEnhancement}
+                        disabled={!searchQuery.trim() || isEnhancing}
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isEnhancing ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3 w-3" />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>Enhance your prompt (Ctrl+E)</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Make your search more detailed and specific
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
                 <button
                   aria-label={isListening ? "Stop listening" : "Start voice input"}
                   onClick={isListening ? stopListening : startListening}
@@ -1222,7 +1341,7 @@ export default function ResultsPage() {
                 <button
                   aria-label="Search"
                   onClick={() => handleNewSearch({ preventDefault: () => {} } as React.FormEvent)}
-                  disabled={!searchQuery.trim()}
+                  disabled={!searchQuery.trim() || isEnhancing}
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
                 >
                   <Search className="h-4 w-4" />
@@ -1236,12 +1355,29 @@ export default function ResultsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
+                  const isMetaKey = e.metaKey || e.ctrlKey;
+                  
+                  // Cmd/Ctrl + E: Enhance prompt
+                  if (isMetaKey && e.key === 'e') {
+                    e.preventDefault();
+                    handlePromptEnhancement();
+                    return;
+                  }
+                  
+                  // Cmd/Ctrl + Z: Undo enhancement
+                  if (isMetaKey && e.key === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleUndo();
+                    return;
+                  }
+                  
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleNewSearch(e);
                   }
                 }}
-                className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-20 flex items-center"
+                disabled={isEnhancing}
+                className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-28 flex items-center disabled:opacity-70"
               />
             </div>
 
