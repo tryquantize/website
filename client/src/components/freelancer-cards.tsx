@@ -60,9 +60,9 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
 
   return (
     <div className="mt-6">
-      <div className="flex gap-4 overflow-x-auto pb-2" style={{scrollbarWidth: 'thin'}}>
+      <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2" style={{scrollbarWidth: 'thin'}}>
         {freelancers.map((freelancer, index) => (
-          <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all rounded-lg p-4 min-w-[168px] h-[320px] flex-shrink-0">
+          <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all rounded-lg p-4 min-w-[280px] h-[400px] flex-shrink-0">
             {chatStates[index] ? (
               <div className="space-y-3 h-full flex flex-col">
                 <div className="flex items-center justify-between">

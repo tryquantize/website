@@ -295,12 +295,12 @@ export default function Home() {
   }, [faqApi]);
 
   // Show waitlist popup after 4 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowWaitlistPopup(true);
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, []);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setShowWaitlistPopup(true);
+  //   }, 4000);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   // Countdown timer
   useEffect(() => {

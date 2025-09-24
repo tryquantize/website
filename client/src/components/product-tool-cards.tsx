@@ -29,7 +29,7 @@ export function ProductToolCards({ products }: ProductToolCardsProps) {
   return (
     <div className="mt-6">
       <h3 className="text-lg font-semibold text-white mb-4">Recommended Products</h3>
-      <div className="flex gap-4 overflow-x-auto pb-2" style={{scrollbarWidth: 'thin'}}>
+      <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2" style={{scrollbarWidth: 'thin'}}>
         {products.map((product, index) => (
           <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all rounded-lg p-4 min-w-[280px] h-[140px] flex-shrink-0 flex flex-col">
             <div className="flex items-start justify-between mb-2">
@@ -69,7 +69,7 @@ export function ProductToolCards({ products }: ProductToolCardsProps) {
               <Button
                 onClick={() => handleTryProduct(product.website)}
                 size="sm"
-                className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-medium shadow-lg shadow-yellow-400/30 text-xs px-3 py-1"
+                className="bg-white text-black font-medium hover:bg-gray-100 text-xs px-3 py-1"
               >
                 <ExternalLink className="w-3 h-3 mr-1" />
                 Try This

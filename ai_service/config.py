@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # OpenRouter API Configuration
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 # Exa Search API Configuration

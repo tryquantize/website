@@ -435,30 +435,13 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     if (!user) {
       // Store query for after login
       localStorage.setItem('pending-search-query', query.trim());
-      
-      // Show transition animation before redirecting to auth
-      setShowSuggestions(false);
-      setIsTransitioning(true);
-      
-      setTimeout(() => {
-        setLocation('/auth');
-      }, 1000);                                                   // 1 second transition
+      setLocation('/auth');
       return;
     }
     
-    setShowSuggestions(false);                                   // Hide suggestion dropdown
-    setIsTransitioning(true);                                    // Start fade-out transition
-    
-    // Start search loading animation after brief transition
-    setTimeout(() => {
-      setIsSearching(true);                                       // Show full-screen loader
-    }, 300);                                                      // 300ms delay for smooth transition
-    
-    // Navigate to results page after loading animation
-    setTimeout(() => {
-      const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
-      setLocation(`/results?q=${encodeURIComponent(query)}${typesParam}`);
-    }, 4300);                                                     // 4.3s total (300ms + 4s animation)
+    // Navigate directly to results page
+    const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
+    setLocation(`/results?q=${encodeURIComponent(query)}${typesParam}`);
   };
 
   /**
@@ -501,12 +484,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
           : query.trim();
         if (queryToStore) {
           localStorage.setItem('pending-search-query', queryToStore);
-          // Show transition animation before redirecting to auth
-          setShowSuggestions(false);
-          setIsTransitioning(true);
-          setTimeout(() => {
-            setLocation('/auth');
-          }, 1000);
+          setLocation('/auth');
         }
         return;
       }
@@ -514,17 +492,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
       // If a suggestion is selected, use it
       if (selectedSuggestionIndex >= 0 && filteredSuggestions[selectedSuggestionIndex]) {
         const selectedQuery = filteredSuggestions[selectedSuggestionIndex];
-        setQuery(selectedQuery);                                  // Update query display
-        
-        // Same animation sequence as manual search
-        setIsTransitioning(true);
-        setTimeout(() => {
-          setIsSearching(true);
-        }, 300);
-        setTimeout(() => {
-          const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
-          setLocation(`/results?q=${encodeURIComponent(selectedQuery)}${typesParam}`);
-        }, 4300);
+        const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
+        setLocation(`/results?q=${encodeURIComponent(selectedQuery)}${typesParam}`);
       } else {
         // No suggestion selected, use current query
         handleSearch();

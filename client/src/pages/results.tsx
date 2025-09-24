@@ -416,9 +416,10 @@ export default function ResultsPage() {
       setShowBudgetSelection(shouldShowBudgetSelection);
       setShowUseCaseSelection(shouldShowUseCaseSelection);
       
-      // If budget selection is shown, clear companies initially to force budget selection
+      // Show companies by default with enterprise budget assumption
       if (shouldShowBudgetSelection) {
-        setAllCompanies([]);
+        // Don't clear companies - show them by default
+        // User can filter later if needed
       }
 
       // Replace loading with result only (suggestions are now inside the result box)
@@ -500,27 +501,6 @@ export default function ResultsPage() {
   };
 
   const handleSuggestionClick = async (question: string) => {
-    // Replace current suggestions with selected question
-    setContentItems(prev => {
-      const newItems = [...prev];
-      const lastIndex = newItems.length - 1;
-      if (newItems[lastIndex]?.type === 'suggestions') {
-        newItems[lastIndex] = {
-          id: `selected-${Date.now()}`,
-          type: 'selected-question',
-          data: { question }
-        };
-      }
-      return newItems;
-    });
-
-    // Add loading
-    setContentItems(prev => [...prev, {
-      id: `loading-${Date.now()}`,
-      type: 'loading',
-      data: { query: question }
-    }]);
-
     try {
       const response = await apiRequest("POST", "/api/search", {
         query: question,
@@ -532,11 +512,10 @@ export default function ResultsPage() {
       const data = await response.json();
       
       const newCompanies = data.companies || [];
-      // For subsequent searches, show pinned cards + new results
-      const pinnedCompanies = pinnedCards.filter(pin => 
-        !newCompanies.some((newCompany: Company) => newCompany.name === pin.name)
-      );
-      const updatedAllCompanies = [...pinnedCompanies, ...newCompanies];
+      // Accumulate cards - add new companies to existing ones, avoiding duplicates
+      const existingNames = new Set(allCompanies.map(c => c.name));
+      const uniqueNewCompanies = newCompanies.filter((company: Company) => !existingNames.has(company.name));
+      const updatedAllCompanies = [...allCompanies, ...uniqueNewCompanies];
       setAllCompanies(updatedAllCompanies);
 
       const result: SearchResult = {
@@ -550,28 +529,15 @@ export default function ResultsPage() {
         timestamp: Date.now()
       };
 
-      // Replace loading with result only
-      setContentItems(prev => {
-        const newItems = [...prev];
-        const lastIndex = newItems.length - 1;
-        if (newItems[lastIndex]?.type === 'loading') {
-          newItems[lastIndex] = {
-            id: `result-${Date.now()}`,
-            type: 'result',
-            data: result
-          };
-        }
-        return newItems;
-      });
-
-      // Scroll to new result
-      setTimeout(() => {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      }, 100);
+      // Add new result to content items
+      setContentItems(prev => [...prev, {
+        id: `result-${Date.now()}`,
+        type: 'result',
+        data: result
+      }]);
 
     } catch (error) {
       console.error('Search failed:', error);
-      // Handle error with fallback
       const fallbackResult: SearchResult = {
         query: question,
         aiResponse: "AI search is currently unavailable. Please try again.",
@@ -583,23 +549,11 @@ export default function ResultsPage() {
         timestamp: Date.now()
       };
 
-      setContentItems(prev => {
-        const newItems = [...prev];
-        const lastIndex = newItems.length - 1;
-        if (newItems[lastIndex]?.type === 'loading') {
-          newItems[lastIndex] = {
-            id: `result-${Date.now()}`,
-            type: 'result',
-            data: fallbackResult
-          };
-        }
-        newItems.push({
-          id: `suggestions-${Date.now()}`,
-          type: 'suggestions',
-          data: { questions: fallbackResult.suggestions || [] }
-        });
-        return newItems;
-      });
+      setContentItems(prev => [...prev, {
+        id: `result-${Date.now()}`,
+        type: 'result',
+        data: fallbackResult
+      }]);
     }
   };
 
@@ -747,33 +701,7 @@ export default function ResultsPage() {
     }
   };
 
-  // Loading screen with skeleton
-  if (isInitialLoading) {
-    return (
-      <div className="min-h-screen pb-32">
-        <div className="px-8 py-4">
-          <div className="space-y-6">
-            <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-              <div className="flex items-start space-x-4">
-                <Skeleton className="w-10 h-10 rounded-full" />
-                <div className="flex-1 space-y-3">
-                  <Skeleton className="w-32 h-6" />
-                  <Skeleton className="w-full h-4" />
-                  <Skeleton className="w-full h-4" />
-                  <Skeleton className="w-3/4 h-4" />
-                </div>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="w-full h-24 rounded-xl" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
 
 
@@ -929,150 +857,30 @@ export default function ResultsPage() {
           onNewConversation={handleNewConversation}
           onSelectConversation={handleSelectConversation}
           isMinimized={sidebarMinimized}
+          relatedQuestions={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.suggestions || [] : []}
+          onQuestionClick={handleSuggestionClick}
+          aiResponse={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.aiResponse : ''}
+          citations={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.citations || [] : []}
+          currentQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+          conversationHistory={contentItems.slice(1).filter(item => item.type === 'result').map(item => ({
+            question: item.data.query,
+            answer: item.data.aiResponse,
+            citations: item.data.citations || [],
+            relatedQuestions: item.data.suggestions || []
+          }))}
         />
       )}
 
+
+
       {/* Main Content */}
-      <div className={`px-8 py-1 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'}`}>
+      <div className={`px-8 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'}`}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
         <div className="space-y-4">
           {contentItems.map((item) => (
             <div key={item.id}>
-              {/* Result Box */}
-              {item.type === 'result' && (
-                <div className="bg-black/40 backdrop-blur-xl p-6 border border-white/10 shadow-2xl relative group" style={{
-                  minHeight: 'auto',
-                  height: 'auto'
-                }}>
-                  <div className="flex items-start space-x-4 mb-4">
-                    <div className="flex items-center space-x-2 flex-shrink-0">
-                      <QuantizeLogo size={24} />
-                      <h3 className="text-lg font-semibold text-white">Quantize</h3>
-                    </div>
-                    <div className="flex-1 h-full">
-                      <div className="flex items-center space-x-2 mb-2">
-                        {item.data.aiPowered && (
-                          <div className="flex items-center space-x-1 px-2 py-1 bg-green-500/20 rounded-full">
-                            <Sparkles className="w-3 h-3 text-green-400" />
-                            <span className="text-xs text-green-400 font-medium">AI Powered</span>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-sm text-white/60 mb-3 font-medium">Q: "{item.data.query}"</p>
-                      <div className="prose prose-invert max-w-none">
-                        <div className="text-white/90 leading-relaxed mb-6">
-                          {(() => {
-                            const response = item.data.aiResponse || '';
-                            const citations = item.data.citations || [];
-                            const parts = response.split(/(\[\d+\])/);
-                            
-                            return parts.map((part, index) => {
-                              // Check if this part is a citation like [1], [2], etc.
-                              const citationMatch = part.match(/^\[(\d+)\]$/);
-                              if (citationMatch) {
-                                const citationNum = parseInt(citationMatch[1]);
-                                // Find the corresponding citation
-                                const citation = citations.find(c => c.id === citationNum);
-                                if (citation) {
-                                  return (
-                                    <a 
-                                      key={index}
-                                      href={citation.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        window.open(citation.url, '_blank', 'noopener,noreferrer');
-                                      }}
-                                      className="text-blue-400 hover:text-blue-300 underline font-medium cursor-pointer"
-                                      title={citation.title}
-                                      style={{ color: '#60a5fa' }}
-                                    >
-                                      [{citationNum}]
-                                    </a>
-                                  );
-                                }
-                                return (
-                                  <span key={index} className="text-blue-400" style={{ color: '#60a5fa' }}>
-                                    [{citationNum}]
-                                  </span>
-                                );
-                              }
-                              return <span key={index}>{part}</span>;
-                            });
-                          })()
-                        }</div>
-                        
-                        {/* Related Questions inside the same box */}
-                        {item.data.suggestions && item.data.suggestions.length > 0 && (
-                          <div className="border-t border-white/10 pt-4">
-                            <h4 className="text-white/80 text-sm font-medium mb-3">Related Questions:</h4>
-                            <div className="space-y-2">
-                              {item.data.suggestions.map((question, qIndex) => (
-                                <button
-                                  key={qIndex}
-                                  onClick={() => handleSuggestionClick(question)}
-                                  className="w-full text-left p-2 rounded hover:bg-white/5 transition-all group flex items-center justify-between"
-                                >
-                                  <span className="text-white/70 text-sm group-hover:text-white transition-colors">
-                                    {question}
-                                  </span>
-                                  <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Copy Button for Answer */}
-                      <button
-                        onClick={() => navigator.clipboard.writeText(item.data.aiResponse?.replace(/\[\d+\]/g, '') || '')}
-                        className="absolute bottom-4 right-4 p-2 bg-white/10 hover:bg-white/20 border border-white/20 transition-all opacity-0 group-hover:opacity-100"
-                        title="Copy answer"
-                      >
-                        <Copy className="w-4 h-4 text-white/70" />
-                      </button>
-                    </div>
-                  </div>
 
 
-
-
-
-                  {/* Traditional Results */}
-                  {item.data.traditionalResults && item.data.traditionalResults.length > 0 && (
-                    <div className="mt-6 space-y-4">
-                      <h4 className="text-lg font-semibold text-white flex items-center space-x-2">
-                        <Package className="w-5 h-5" />
-                        <span>Related Tools & Startups</span>
-                      </h4>
-                      <div className="grid gap-4">
-                        {item.data.traditionalResults.slice(0, 3).map((tool) => (
-                          <div key={tool.id} className="bg-white/5 backdrop-blur-sm p-4 border border-white/10 hover:border-white/20 transition-all">
-                            <div className="flex items-start space-x-3">
-                              <div className={`w-10 h-10 ${tool.color} rounded-lg flex items-center justify-center text-white text-sm flex-shrink-0`}>
-                                {tool.logo}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h5 className="text-white font-medium mb-1">{tool.name}</h5>
-                                <p className="text-white/70 text-sm mb-2 line-clamp-2">{tool.description}</p>
-                                <div className="flex items-center space-x-4 text-xs text-white/60">
-                                  <span>{tool.pricing}</span>
-                                  <div className="flex items-center space-x-1">
-                                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                                    <span>{tool.rating}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Selected Question */}
               {item.type === 'selected-question' && (
@@ -1135,32 +943,7 @@ export default function ResultsPage() {
                 </div>
               )}
 
-              {/* Loading Spinner */}
-              {item.type === 'loading' && (
-                <div className="bg-black/40 backdrop-blur-xl p-6 border border-white/10 shadow-2xl animate-pulse">
-                  <div className="flex items-start space-x-4">
-                    <div className="flex items-center space-x-2 flex-shrink-0">
-                      <QuantizeLogo size={24} />
-                      <h3 className="text-lg font-semibold text-white">Quantize Searching...</h3>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className="flex items-center space-x-1 px-2 py-1 bg-blue-500/20 rounded-full">
-                          <Sparkles className="w-3 h-3 text-blue-400" />
-                          <span className="text-xs text-blue-400 font-medium">AI Processing</span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-white/60 mb-3">Q: "{item.data.query}"</p>
-                      <p className="text-sm text-white/60 mb-3">Searching the web and finding the best AI solutions for your query...</p>
-                      <div className="space-y-2">
-                        <div className="h-4 bg-white/10 rounded animate-pulse"></div>
-                        <div className="h-4 bg-white/10 rounded animate-pulse w-3/4"></div>
-                        <div className="h-4 bg-white/10 rounded animate-pulse w-1/2"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+
             </div>
           ))}
 
@@ -1225,7 +1008,7 @@ export default function ResultsPage() {
         )}
         
         {/* Cards - Show below all content */}
-        {allCompanies.length > 0 && (selectedBudgets.size > 0 || !showBudgetSelection) && (() => {
+        {allCompanies.length > 0 && (() => {
           // Show appropriate cards based on selected types
           const params = new URLSearchParams(window.location.search);
           const urlTypes = params.get('types');
@@ -1250,6 +1033,18 @@ export default function ResultsPage() {
               <div className="mt-6">
                 <CompanyCards companies={companies} />
                 <ProductToolCards products={products} />
+                <div className="mt-8 bg-black/20 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
+                  <h3 className="text-lg font-semibold text-white mb-2">Would you like suppliers to reach out to you?</h3>
+                  <p className="text-white/70 text-sm mb-4">Get personalized quotes and offers directly from verified suppliers</p>
+                  <div className="flex space-x-4">
+                    <button className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all">
+                      Yes, I'm interested
+                    </button>
+                    <button className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all">
+                      No, thanks
+                    </button>
+                  </div>
+                </div>
               </div>
             );
           }
@@ -1264,251 +1059,9 @@ export default function ResultsPage() {
         onClose={hideFavoritesNotification}
       />
 
-      {/* Fixed Search Bar at Bottom */}
-      <div className={`fixed bottom-0 right-0 bg-background/95 backdrop-blur-md border-t border-white/20 p-4 z-50 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'left-12' : 'left-80') : 'left-0'}`}>
-        <div className="max-w-4xl mx-auto">
-          <div className="relative rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible" style={{height: '85px'}}>
-            {/* Enhancement feedback */}
-            {isEnhancing && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
-                <div className="flex items-center gap-2 text-blue-300 text-sm">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Enhancing your search prompt...</span>
-                </div>
-              </div>
-            )}
-            {/* Search input area - increased for better centering */}
-            <div className="relative px-4 flex items-center" style={{height: '45px'}}>
-              {/* Enhancement, Voice and Search buttons */}
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2">
-                {/* Undo button */}
-                {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          aria-label="Undo prompt enhancement"
-                          onClick={handleUndo}
-                          className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition"
-                        >
-                          <Undo className="h-3 w-3" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <p>Undo enhancement (Ctrl+Z)</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-                
-                {/* Prompt enhancer button */}
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        aria-label="Enhance search prompt"
-                        onClick={handlePromptEnhancement}
-                        disabled={!searchQuery.trim() || isEnhancing}
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isEnhancing ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-3 w-3" />
-                        )}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>Enhance your prompt (Ctrl+E)</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Make your search more detailed and specific
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <button
-                  aria-label={isListening ? "Stop listening" : "Start voice input"}
-                  onClick={isListening ? stopListening : startListening}
-                  className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
-                    isListening 
-                      ? 'bg-red-500/20 border-red-400/40 text-red-400' 
-                      : 'bg-white/5 border-white/20 text-white/90 hover:bg-white/10'
-                  }`}
-                >
-                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </button>
-                <button
-                  aria-label="Search"
-                  onClick={() => handleNewSearch({ preventDefault: () => {} } as React.FormEvent)}
-                  disabled={!searchQuery.trim() || isEnhancing}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              </div>
 
-              {/* Input */}
-              <Input
-                type="text"
-                placeholder={placeholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  const isMetaKey = e.metaKey || e.ctrlKey;
-                  
-                  // Cmd/Ctrl + E: Enhance prompt
-                  if (isMetaKey && e.key === 'e') {
-                    e.preventDefault();
-                    handlePromptEnhancement();
-                    return;
-                  }
-                  
-                  // Cmd/Ctrl + Z: Undo enhancement
-                  if (isMetaKey && e.key === 'z' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleUndo();
-                    return;
-                  }
-                  
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleNewSearch(e);
-                  }
-                }}
-                disabled={isEnhancing}
-                className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-28 flex items-center disabled:opacity-70"
-              />
-            </div>
 
-            {/* Bottom row - Icons */}
-            <div className="relative border-t border-white/10 px-4 py-2" style={{height: '40px'}}>
-              <div className="flex items-center justify-between">
-                {/* Left - Brain icon with dropdown and selected model */}
-                <div className="relative flex items-center space-x-2">
-                  <div className="relative">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowModelDropdown(!showModelDropdown);
-                      }}
-                      className={`flex h-6 w-6 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 ${
-                        selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
-                      }`}
-                    >
-                      <Brain className="h-3 w-3" />
-                    </button>
-                    
-                    {showModelDropdown && (
-                      <>
-                        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={() => setShowModelDropdown(false)} />
-                        <div className="absolute bottom-8 left-0 z-50 bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl min-w-[200px] max-h-24 overflow-y-auto">
-                          {llmModels.map((model) => (
-                            <button
-                              key={model}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedModel(model);
-                                setShowModelDropdown(false);
-                              }}
-                              className={`w-full px-3 py-2 text-left text-xs hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                                selectedModel === model ? 'bg-blue-600/20 text-blue-300' : 'text-white/80'
-                              }`}
-                            >
-                              {model}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  
-                  <span className="text-xs text-white/70">{selectedModel || "GPT-4o Mini"}</span>
-                </div>
 
-                {/* Right - Filter buttons */}
-                <div className="flex items-center gap-2.5">
-                  <TooltipProvider>
-                    {/* Company */}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          className={
-                            `h-6 w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
-                            (selectedTypes.has('company')
-                              ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 border-yellow-400/60 text-black shadow-lg shadow-yellow-400/30'
-                              : 'bg-white/5 border-white/20 text-white/90')
-                          }
-                          aria-label="Company"
-                          onClick={() => toggleType('company')}
-                        >
-                          <Building2 className="h-3 w-3" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Company</TooltipContent>
-                    </Tooltip>
-                    {/* Freelancer */}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          className={
-                            `h-6 w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
-                            (selectedTypes.has('freelancer')
-                              ? 'bg-gradient-to-r from-gray-300 to-gray-500 border-gray-400/60 text-black shadow-lg shadow-gray-400/30'
-                              : 'bg-white/5 border-white/20 text-white/90')
-                          }
-                          aria-label="Freelancer"
-                          onClick={() => toggleType('freelancer')}
-                        >
-                          <User className="h-3 w-3" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Freelancer</TooltipContent>
-                    </Tooltip>
-                    {/* Product */}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          className={
-                            `h-6 w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
-                            (selectedTypes.has('product')
-                              ? 'bg-gradient-to-r from-gray-300 to-gray-500 border-gray-400/60 text-black shadow-lg shadow-gray-400/30'
-                              : 'bg-white/5 border-white/20 text-white/90')
-                          }
-                          aria-label="Product"
-                          onClick={() => toggleType('product')}
-                        >
-                          <Package className="h-3 w-3" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Product</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Sidebar Toggle Button - Top Left */}
-      <button
-        onClick={() => {
-          if (showSidebar && !sidebarMinimized) {
-            setSidebarMinimized(true);
-          } else if (showSidebar && sidebarMinimized) {
-            setShowSidebar(false);
-            setSidebarMinimized(false);
-          } else {
-            setShowSidebar(true);
-            setSidebarMinimized(false);
-          }
-        }}
-        className={`fixed top-20 z-50 bg-black/40 backdrop-blur-xl border border-white/10 text-white p-2 rounded-lg hover:bg-white/10 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'left-16' : 'left-4') : 'left-4'}`}
-        title={showSidebar ? (sidebarMinimized ? "Hide sidebar" : "Minimize sidebar") : "Show sidebar"}
-      >
-        {showSidebar ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
-      </button>
 
 
     </div>

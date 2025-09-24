@@ -262,15 +262,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     if (!query.trim()) return;
     
     setShowSuggestions(false);
-    setIsTransitioning(true);
-    
-    setTimeout(() => {
-      setIsSearching(true);
-    }, 300);
-    
-    setTimeout(() => {
-      setLocation(`/results?q=${encodeURIComponent(query)}`);
-    }, 4300);
+    const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
+    setLocation(`/search-transition?q=${encodeURIComponent(query)}${typesParam}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -295,15 +288,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
       
       if (selectedSuggestionIndex >= 0 && filteredSuggestions[selectedSuggestionIndex]) {
         const selectedQuery = filteredSuggestions[selectedSuggestionIndex];
-        setQuery(selectedQuery);
-        
-        setIsTransitioning(true);
-        setTimeout(() => {
-          setIsSearching(true);
-        }, 300);
-        setTimeout(() => {
-          setLocation(`/results?q=${encodeURIComponent(selectedQuery)}`);
-        }, 4300);
+        const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
+        setLocation(`/search-transition?q=${encodeURIComponent(selectedQuery)}${typesParam}`);
       } else {
         handleSearch();
       }
@@ -323,8 +309,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setQuery(suggestion);
-    setLocation(`/results?q=${encodeURIComponent(suggestion)}`);
+    const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
+    setLocation(`/search-transition?q=${encodeURIComponent(suggestion)}${typesParam}`);
     setShowSuggestions(false);
   };
 

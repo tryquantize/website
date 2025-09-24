@@ -60,9 +60,9 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
 
   return (
     <div className="mt-6">
-      <div className="flex gap-4 overflow-x-auto pb-2" style={{scrollbarWidth: 'thin'}}>
+      <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2" style={{scrollbarWidth: 'thin'}}>
         {companies.map((company, index) => (
-          <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all rounded-lg p-4 min-w-[168px] h-[320px] flex-shrink-0">
+          <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all rounded-lg p-4 min-w-[320px] h-[480px] flex-shrink-0">
             {chatStates[index] ? (
               <div className="space-y-3 h-full flex flex-col">
                 <div className="flex items-center justify-between">
@@ -139,26 +139,66 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
                   )}
                 </div>
                 
-                <p className="text-white/70 text-sm">{company.description}</p>
+                <p className="text-white/70 text-sm mb-3">{company.description}</p>
                 
-                <div>
-                  <p className="text-xs text-white/60 mb-1">Features:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {company.features.slice(0, 3).map((feature, featureIndex) => (
-                      <span key={featureIndex} className="text-xs bg-white/5 text-white/80 border border-white/20 px-2 py-1 rounded">
-                        {feature}
-                      </span>
-                    ))}
+                <div className="mb-3">
+                  <p className="text-xs text-white/60 mb-1">About Company</p>
+                  <div className="text-xs text-white/70 leading-relaxed">
+                    {company.about ? company.about.map((line, i) => (
+                      <div key={i}>{line}</div>
+                    )) : (
+                      <>
+                        <div>Leading manufacturer specializing in advanced technology solutions.</div>
+                        <div>Established company with strong market presence and innovation focus.</div>
+                      </>
+                    )}
                   </div>
                 </div>
                 
-                <div className="text-sm text-white/80 font-medium">{company.pricing}</div>
+                <div className="mb-3">
+                  <p className="text-xs text-white/60 mb-1">Location</p>
+                  <div className="text-xs text-white/70">{company.location || "Mumbai, India"}</div>
+                </div>
+                
+                <div className="mb-3">
+                  <p className="text-sm text-white/80 font-medium mb-2">Key Specifications</p>
+                  <div className="space-y-1">
+                    {company.specifications ? company.specifications.map((spec, i) => (
+                      <div key={i} className="text-xs text-white/70">• {spec}</div>
+                    )) : (
+                      <>
+                        <div className="text-xs text-white/70">• Advanced microprocessor control system</div>
+                        <div className="text-xs text-white/70">• High-quality halogen operating light</div>
+                        <div className="text-xs text-white/70">• Integrated micromotor with scaler</div>
+                        <div className="text-xs text-white/70">• Built-in X-ray viewer functionality</div>
+                        <div className="text-xs text-white/70">• ISO 13485 certified quality standards</div>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-white/80 font-medium">Rating</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-yellow-400 text-sm">★</span>
+                      <span className="text-sm text-white/80">
+                        {company.rating ? `${company.rating.rating} (${company.rating.reviews})` : "4.5 (700)"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-white/60">Category</span>
+                    <span className="text-xs text-white/80">{company.category}</span>
+                  </div>
+                  <div className="text-sm text-white/80 font-medium">{company.pricing}</div>
+                </div>
                 
                 <div className="flex space-x-1 mt-auto">
                   <Button
                     onClick={() => handleChatClick(index)}
                     size="sm"
-                    className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-medium shadow-lg shadow-yellow-400/30 text-xs px-2"
+                    className="flex-1 bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
                   >
                     <MessageCircle className="w-3 h-3 mr-1" />
                     Chat
@@ -166,7 +206,7 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
                   <Button
                     onClick={() => alert(`Calling ${company.name}...`)}
                     size="sm"
-                    className="flex-1 bg-gradient-to-r from-gray-300 to-gray-500 hover:from-gray-400 hover:to-gray-600 text-black font-medium shadow-lg shadow-gray-400/30 text-xs px-2"
+                    className="flex-1 bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
                   >
                     📞 Call
                   </Button>
