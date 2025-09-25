@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, ExternalLink, ArrowLeft, Send, Heart } from "lucide-react";
+import { MessageCircle, ExternalLink, ArrowLeft, Send, Heart, GitCompare } from "lucide-react";
 import { useFavorites } from "@/contexts/favorites-context";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
@@ -17,9 +17,11 @@ interface Company {
 
 interface CompanyCardsProps {
   companies: Company[];
+  comparisonItems?: Set<string>;
+  onToggleComparison?: (itemName: string) => void;
 }
 
-export function CompanyCards({ companies }: CompanyCardsProps) {
+export function CompanyCards({ companies, comparisonItems, onToggleComparison }: CompanyCardsProps) {
   const [chatStates, setChatStates] = useState<{[key: number]: boolean}>({});
   const [messages, setMessages] = useState<{[key: number]: Array<{text: string, isUser: boolean}>}>({});
   const [inputValues, setInputValues] = useState<{[key: number]: string}>({});
@@ -112,30 +114,42 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
                     <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{company.category}</span>
                   </div>
                   {currentUser && (
-                    <Button
-                      onClick={() => {
-                        const companyId = `company_${index}_${company.name}`;
-                        if (isFavorite(companyId)) {
-                          removeFromFavorites(companyId);
-                        } else {
-                          addToFavorites({
-                            id: companyId,
-                            type: 'company',
-                            name: company.name,
-                            description: company.description,
-                            features: company.features,
-                            pricing: company.pricing,
-                            website: company.website,
-                            category: company.category
-                          }, showFavoritesNotification);
-                        }
-                      }}
-                      size="sm"
-                      variant="ghost"
-                      className="p-1 h-auto"
-                    >
-                      <Heart className={`w-4 h-4 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
-                    </Button>
+                    <div className="flex space-x-1">
+                      <Button
+                        onClick={() => {
+                          const companyId = `company_${index}_${company.name}`;
+                          if (isFavorite(companyId)) {
+                            removeFromFavorites(companyId);
+                          } else {
+                            addToFavorites({
+                              id: companyId,
+                              type: 'company',
+                              name: company.name,
+                              description: company.description,
+                              features: company.features,
+                              pricing: company.pricing,
+                              website: company.website,
+                              category: company.category
+                            }, showFavoritesNotification);
+                          }
+                        }}
+                        size="sm"
+                        variant="ghost"
+                        className="p-1 h-auto"
+                      >
+                        <Heart className={`w-4 h-4 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+                      </Button>
+                      {onToggleComparison && (
+                        <Button
+                          onClick={() => onToggleComparison(company.name)}
+                          size="sm"
+                          variant="ghost"
+                          className="p-1 h-auto"
+                        >
+                          <GitCompare className={`w-4 h-4 ${comparisonItems?.has(company.name) ? 'text-blue-500 fill-current' : 'text-white/40 hover:text-blue-400'}`} />
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
                 

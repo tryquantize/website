@@ -24,21 +24,25 @@ import { ConversationProvider } from "@/contexts/conversation-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AnimatedLayout } from "@/components/layout/animated-layout";
-import NotFound from "@/pages/not-found";
-import Home from "@/pages/home";
-import ProductsPage from "@/pages/Products";
-import Dashboard from "@/pages/dashboard";
-import Admin from "@/pages/admin";
-import Register from "@/pages/auth/register";
-import ListPage from "@/pages/list-new";
-import ResultsPage from "@/pages/results";
-import WaitlistPage from "@/pages/waitlist";
-import WaitlistAdminPage from "@/pages/waitlist-admin";
-import OnboardingPage from "@/pages/onboarding";
-import LoggedInHome from "@/pages/loggedinhome";
-import WelcomeTransition from "@/pages/welcome-transition";
-import SearchTransition from "@/pages/search-transition";
-import FavoritesPage from "@/pages/favorites";
+import { lazy, Suspense } from "react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
+// Lazy load page components
+const NotFound = lazy(() => import("@/pages/not-found"));
+const Home = lazy(() => import("@/pages/home"));
+const ProductsPage = lazy(() => import("@/pages/Products"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Admin = lazy(() => import("@/pages/admin"));
+const Register = lazy(() => import("@/pages/auth/register"));
+const ListPage = lazy(() => import("@/pages/list-new"));
+const ResultsPage = lazy(() => import("@/pages/results"));
+const WaitlistPage = lazy(() => import("@/pages/waitlist"));
+const WaitlistAdminPage = lazy(() => import("@/pages/waitlist-admin"));
+const OnboardingPage = lazy(() => import("@/pages/onboarding"));
+const LoggedInHome = lazy(() => import("@/pages/loggedinhome"));
+const WelcomeTransition = lazy(() => import("@/pages/welcome-transition"));
+const SearchTransition = lazy(() => import("@/pages/search-transition"));
+const FavoritesPage = lazy(() => import("@/pages/favorites"));
 
 function Router() {
   const { isLoading, fromPage, toPage } = useLoading();
@@ -51,29 +55,31 @@ function Router() {
         <div className="relative z-10 min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 pt-12 md:pt-24">
-            <Switch>
-              <Route path="/">
-                {() => {
-                  const { currentUser } = useFirebaseAuth();
-                  return currentUser ? <LoggedInHome /> : <Home />;
-                }}
-              </Route>
-              <Route path="/loggedinhome" component={LoggedInHome} />
-              <Route path="/welcome-transition" component={WelcomeTransition} />
-              <Route path="/products" component={ProductsPage} />
-              <Route path="/dashboard" component={Dashboard} />
-              <Route path="/admin" component={Admin} />
-              <Route path="/auth" component={Register} />
-              <Route path="/auth/register" component={Register} />
-              <Route path="/waitlist" component={WaitlistPage} />
-              <Route path="/waitlist-admin" component={WaitlistAdminPage} />
-              <Route path="/onboarding" component={OnboardingPage} />
-              <Route path="/list" component={ListPage} />
-              <Route path="/search-transition" component={SearchTransition} />
-              <Route path="/results" component={ResultsPage} />
-              <Route path="/favorites" component={FavoritesPage} />
-              <Route component={NotFound} />
-            </Switch>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-[50vh]"><LoadingSpinner /></div>}>
+              <Switch>
+                <Route path="/">
+                  {() => {
+                    const { currentUser } = useFirebaseAuth();
+                    return currentUser ? <LoggedInHome /> : <Home />;
+                  }}
+                </Route>
+                <Route path="/loggedinhome" component={LoggedInHome} />
+                <Route path="/welcome-transition" component={WelcomeTransition} />
+                <Route path="/products" component={ProductsPage} />
+                <Route path="/dashboard" component={Dashboard} />
+                <Route path="/admin" component={Admin} />
+                <Route path="/auth" component={Register} />
+                <Route path="/auth/register" component={Register} />
+                <Route path="/waitlist" component={WaitlistPage} />
+                <Route path="/waitlist-admin" component={WaitlistAdminPage} />
+                <Route path="/onboarding" component={OnboardingPage} />
+                <Route path="/list" component={ListPage} />
+                <Route path="/search-transition" component={SearchTransition} />
+                <Route path="/results" component={ResultsPage} />
+                <Route path="/favorites" component={FavoritesPage} />
+                <Route component={NotFound} />
+              </Switch>
+            </Suspense>
           </main>
           {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && <Footer showJoinUs={location === '/'} />}
         </div>

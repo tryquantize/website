@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Heart } from "lucide-react";
+import { ExternalLink, Heart, GitCompare } from "lucide-react";
 import { useFavorites } from "@/contexts/favorites-context";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
@@ -13,9 +13,11 @@ interface Product {
 
 interface ProductToolCardsProps {
   products: Product[];
+  comparisonItems?: Set<string>;
+  onToggleComparison?: (itemName: string) => void;
 }
 
-export function ProductToolCards({ products }: ProductToolCardsProps) {
+export function ProductToolCards({ products, comparisonItems, onToggleComparison }: ProductToolCardsProps) {
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { currentUser } = useFirebaseAuth();
   const { showFavoritesNotification } = useNotification();
@@ -38,30 +40,42 @@ export function ProductToolCards({ products }: ProductToolCardsProps) {
                 <p className="text-white/70 text-xs mb-2 line-clamp-2">{product.description}</p>
               </div>
               {currentUser && (
-                <Button
-                  onClick={() => {
-                    const productId = `product_tool_${index}_${product.name}`;
-                    if (isFavorite(productId)) {
-                      removeFromFavorites(productId);
-                    } else {
-                      addToFavorites({
-                        id: productId,
-                        type: 'product',
-                        name: product.name,
-                        description: product.description,
-                        features: ['Quick Access', 'Easy to Use', 'Reliable'],
-                        pricing: product.pricing,
-                        website: product.website,
-                        category: 'AI Tool'
-                      }, showFavoritesNotification);
-                    }
-                  }}
-                  size="sm"
-                  variant="ghost"
-                  className="p-1 h-auto ml-2"
-                >
-                  <Heart className={`w-4 h-4 ${isFavorite(`product_tool_${index}_${product.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
-                </Button>
+                <div className="flex space-x-1 ml-2">
+                  <Button
+                    onClick={() => {
+                      const productId = `product_tool_${index}_${product.name}`;
+                      if (isFavorite(productId)) {
+                        removeFromFavorites(productId);
+                      } else {
+                        addToFavorites({
+                          id: productId,
+                          type: 'product',
+                          name: product.name,
+                          description: product.description,
+                          features: ['Quick Access', 'Easy to Use', 'Reliable'],
+                          pricing: product.pricing,
+                          website: product.website,
+                          category: 'AI Tool'
+                        }, showFavoritesNotification);
+                      }
+                    }}
+                    size="sm"
+                    variant="ghost"
+                    className="p-1 h-auto"
+                  >
+                    <Heart className={`w-4 h-4 ${isFavorite(`product_tool_${index}_${product.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+                  </Button>
+                  {onToggleComparison && (
+                    <Button
+                      onClick={() => onToggleComparison(product.name)}
+                      size="sm"
+                      variant="ghost"
+                      className="p-1 h-auto"
+                    >
+                      <GitCompare className={`w-4 h-4 ${comparisonItems?.has(product.name) ? 'text-blue-500 fill-current' : 'text-white/40 hover:text-blue-400'}`} />
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex items-center justify-between mt-auto">

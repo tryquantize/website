@@ -15,7 +15,7 @@ node cleanup.js
 echo "🤖 Starting AI service on port 5002..."
 cd ai_service
 source venv/bin/activate
-export OPENROUTER_API_KEY="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"
+export OPENROUTER_API_KEY="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"
 export EXA_API_KEY="b0abde90-8115-438d-ab42-f6538c354490"
 python app.py &
 AI_PID=$!

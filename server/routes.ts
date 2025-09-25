@@ -317,6 +317,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Comparison route
+  app.post("/api/ai/compare", async (req, res) => {
+    try {
+      const { items, query, budget } = req.body;
+      
+      if (!items || !Array.isArray(items) || items.length < 2) {
+        return res.status(400).json({ message: "At least 2 items required for comparison" });
+      }
+
+      // Call Python AI service for comparison
+      const aiResponse = await fetch('http://localhost:5002/compare', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ items, query, budget })
+      });
+
+      if (!aiResponse.ok) {
+        throw new Error(`AI service responded with status: ${aiResponse.status}`);
+      }
+
+      const result = await aiResponse.json();
+      res.json(result);
+    } catch (error) {
+      console.error('Comparison error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate comparison",
+        success: false 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

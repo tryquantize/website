@@ -13,32 +13,32 @@ interface FlowStep {
 const flowSteps: FlowStep[] = [
   {
     id: 1,
-    title: "Understanding your requirements",
-    description: "Analyzing your search query and budget constraints",
+    title: "Understanding your intent",
+    description: "Analyzing your query, context, and budget to personalize results",
     icon: <Search className="w-5 h-5" />
   },
   {
     id: 2,
-    title: "Sourcing suppliers and manufacturers",
-    description: "Identifying Indian brands and trusted distributors in your category",
+    title: "Discovering hidden gems",
+    description: "Surfacing startups, tools, and service providers often buried by SEO noise",
     icon: <Users className="w-5 h-5" />
   },
   {
     id: 3,
-    title: "Verifying credentials and certifications",
-    description: "Checking ISO certifications, reviews, and trust factors",
+    title: "Verifying credibility",
+    description: "Checking reviews, performance, and trust signals across sources",
     icon: <Shield className="w-5 h-5" />
   },
   {
     id: 4,
-    title: "Analyzing pricing and specifications",
-    description: "Comparing features, warranties, and value propositions",
+    title: "Matching fit & value",
+    description: "Comparing features, pricing, and solution alignment to your needs",
     icon: <BarChart3 className="w-5 h-5" />
   },
   {
     id: 5,
-    title: "Compiling final recommendations",
-    description: "Ranking options by fit score and preparing detailed insights",
+    title: "Delivering instant connections",
+    description: "Preparing top recommendations with direct options to chat, demo, or connect",
     icon: <CheckCircle className="w-5 h-5" />
   }
 ];
@@ -96,9 +96,9 @@ export default function SearchTransition() {
     <div className="min-h-screen bg-black flex items-center justify-center p-8">
       <div className="max-w-3xl w-full">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-white mb-4">Deep Research in Progress</h1>
+          <h1 className="text-3xl font-bold text-white mb-4">Deep Search in Progress</h1>
           <p className="text-lg text-white/80">
-            Finding the best suppliers and products for: <span className="text-white">"{query}"</span>
+            Finding the best products, startups, and solutions for: <span className="text-white">"{query}"</span>
           </p>
         </div>
 

@@ -156,6 +156,14 @@ export default function ResultsPage() {
   const [showUseCaseSelection, setShowUseCaseSelection] = useState(false);
   const [useCaseInput, setUseCaseInput] = useState('');
   const [isLoadingBudgetResults, setIsLoadingBudgetResults] = useState(false);
+  const [showSupplierSection, setShowSupplierSection] = useState(true);
+  const [showSupplierPopup, setShowSupplierPopup] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [comparisonItems, setComparisonItems] = useState<Set<string>>(new Set());
+  const [comparisonResult, setComparisonResult] = useState<string>('');
+  const [isComparingItems, setIsComparingItems] = useState(false);
+  const [showComparisonPopup, setShowComparisonPopup] = useState(false);
   
   // PROMPT ENHANCEMENT STATE
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -731,6 +739,9 @@ export default function ResultsPage() {
     setShowUseCaseSelection(false);
     setUseCaseInput('');
     setIsLoadingBudgetResults(false);
+    setComparisonItems(new Set());
+    setComparisonResult('');
+    setIsComparingItems(false);
   };
 
   const updateResultsWithFilters = async () => {
@@ -817,6 +828,77 @@ export default function ResultsPage() {
 
   const hideFavoritesNotification = () => {
     setFavoritesNotification({ show: false, itemName: '' });
+  };
+
+  const toggleComparison = (itemName: string) => {
+    const newComparisonItems = new Set(comparisonItems);
+    if (newComparisonItems.has(itemName)) {
+      newComparisonItems.delete(itemName);
+    } else {
+      newComparisonItems.add(itemName);
+    }
+    setComparisonItems(newComparisonItems);
+    
+    if (newComparisonItems.size >= 2 && comparisonResult === '') {
+      performComparison(Array.from(newComparisonItems));
+    } else if (newComparisonItems.size < 2) {
+      setComparisonResult('');
+    }
+  };
+
+  const performComparison = async (itemNames: string[]) => {
+    setIsComparingItems(true);
+    try {
+      const selectedItems = allCompanies.filter(item => itemNames.includes(item.name));
+      const itemsText = selectedItems.map((item, i) => 
+        `${i + 1}. ${item.name}\n   Description: ${item.description}\n   Pricing: ${item.pricing}\n   Features: ${item.features?.join(', ') || 'N/A'}\n   Category: ${item.category}`
+      ).join('\n\n');
+      
+      const query = contentItems.find(item => item.type === 'result')?.data.query || '';
+      const budget = Array.from(selectedBudgets).join(', ') || 'Not specified';
+      
+      const prompt = `Compare these ${selectedItems.length} options for the query "${query}" with budget "${budget}":
+
+${itemsText}
+
+Provide a friendly comparison in 2-3 sentences that:
+1. Identifies the best fit based on the user's query and budget
+2. Explains why it's the best choice (cost, features, quality)
+3. Mentions any trade-offs or alternatives
+
+Be conversational and helpful, like a friend giving advice. Start with "Based on your needs..."`;
+      
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer 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',
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://localhost:3001',
+          'X-Title': 'Quantize Comparison'
+        },
+        body: JSON.stringify({
+          model: 'openai/gpt-4o-mini',
+          messages: [
+            {role: 'system', content: 'You are a helpful comparison assistant. Provide friendly, concise comparisons that help users make decisions.'},
+            {role: 'user', content: prompt}
+          ],
+          temperature: 0.7,
+          max_tokens: 200
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setComparisonResult(data.choices[0].message.content.trim());
+      } else {
+        setComparisonResult('Unable to generate comparison at this time.');
+      }
+    } catch (error) {
+      console.error('Comparison failed:', error);
+      setComparisonResult('Unable to generate comparison at this time.');
+    } finally {
+      setIsComparingItems(false);
+    }
   };
 
   const handleSelectConversation = (conversationId: string) => {
@@ -972,14 +1054,36 @@ export default function ResultsPage() {
           </div>
         )}
         
+        {/* Suppliers Reach Out Section */}
+        {showBudgetSelection && showSupplierSection && (
+          <div className={`bg-black/20 backdrop-blur-xl p-4 border border-white/10 ${showUseCaseSelection ? 'border-t-0' : ''}`}>
+            <h3 className="text-white/80 text-sm font-medium mb-2">Would you like suppliers to reach out to you?</h3>
+            <p className="text-white/60 text-xs mb-3">Get personalized quotes and offers directly from verified suppliers</p>
+            <div className="flex space-x-3">
+              <button 
+                onClick={() => setShowSupplierPopup(true)}
+                className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-gray-100 transition-all"
+              >
+                Yes, I'm interested
+              </button>
+              <button 
+                onClick={() => setShowSupplierSection(false)}
+                className="px-4 py-2 bg-white/10 border border-white/20 text-white/80 text-sm font-medium rounded-lg hover:bg-white/20 transition-all"
+              >
+                No, thanks
+              </button>
+            </div>
+          </div>
+        )}
+        
         {/* Budget Selection - Show only if no budget in query */}
         {showBudgetSelection && (
-          <div className={`bg-black/20 backdrop-blur-xl p-4 border border-white/10 ${showUseCaseSelection ? 'border-t-0' : ''}`}>
+          <div className="bg-black/20 backdrop-blur-xl p-4 border border-white/10 border-t-0">
             <div className="flex items-center space-x-2 mb-3">
               <DollarSign className="w-4 h-4 text-white/60" />
               <h3 className="text-white/80 text-sm font-medium">Select your budget range:</h3>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mb-4">
               {budgetOptions.map((budget) => (
                 <button
                   key={budget}
@@ -994,6 +1098,16 @@ export default function ResultsPage() {
                 </button>
               ))}
             </div>
+            {comparisonItems.size >= 2 && (
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setShowComparisonPopup(true)}
+                  className="px-4 py-2 bg-white hover:bg-gray-100 text-black font-medium rounded-lg transition-all text-sm"
+                >
+                  Compare Selected Items ({comparisonItems.size})
+                </button>
+              </div>
+            )}
           </div>
         )}
         
@@ -1007,6 +1121,15 @@ export default function ResultsPage() {
           </div>
         )}
         
+        {isComparingItems && (
+          <div className="bg-black/20 backdrop-blur-xl p-6 border border-white/10 flex items-center justify-center">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-white/20 border-t-white/80"></div>
+              <span className="text-white/70 text-sm">Comparing selected items...</span>
+            </div>
+          </div>
+        )}
+        
         {/* Cards - Show below all content */}
         {allCompanies.length > 0 && (() => {
           // Show appropriate cards based on selected types
@@ -1014,12 +1137,17 @@ export default function ResultsPage() {
           const urlTypes = params.get('types');
           const currentTypes = urlTypes ? new Set(urlTypes.split(',').filter(t => t.trim())) : selectedTypes;
           
+          const cardProps = {
+            comparisonItems,
+            onToggleComparison: toggleComparison
+          };
+          
           if (currentTypes.has('product') && currentTypes.size === 1) {
-            return <ProductCards products={allCompanies} />;
+            return <ProductCards products={allCompanies} {...cardProps} />;
           } else if (currentTypes.has('company') && currentTypes.size === 1) {
-            return <CompanyCards companies={allCompanies} />;
+            return <CompanyCards companies={allCompanies} {...cardProps} />;
           } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
-            return <FreelancerCards freelancers={allCompanies} />;
+            return <FreelancerCards freelancers={allCompanies} {...cardProps} />;
           } else {
             // Show company cards + product tool cards when no specific type is selected
             const companies = allCompanies.slice(0, 5);
@@ -1031,20 +1159,8 @@ export default function ResultsPage() {
             }));
             return (
               <div className="mt-6">
-                <CompanyCards companies={companies} />
-                <ProductToolCards products={products} />
-                <div className="mt-8 bg-black/20 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
-                  <h3 className="text-lg font-semibold text-white mb-2">Would you like suppliers to reach out to you?</h3>
-                  <p className="text-white/70 text-sm mb-4">Get personalized quotes and offers directly from verified suppliers</p>
-                  <div className="flex space-x-4">
-                    <button className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all">
-                      Yes, I'm interested
-                    </button>
-                    <button className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all">
-                      No, thanks
-                    </button>
-                  </div>
-                </div>
+                <CompanyCards companies={companies} {...cardProps} />
+                <ProductToolCards products={products} {...cardProps} />
               </div>
             );
           }
@@ -1059,10 +1175,92 @@ export default function ResultsPage() {
         onClose={hideFavoritesNotification}
       />
 
+      {/* Supplier Contact Popup */}
+      {showSupplierPopup && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-white font-semibold mb-4">Get Supplier Quotes</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-white/70 text-sm block mb-2">Search Query:</label>
+                <div className="bg-white/5 border border-white/20 rounded-lg p-3 text-white/80 text-sm">
+                  {contentItems.find(item => item.type === 'result')?.data.query || searchQuery}
+                </div>
+              </div>
+              <div>
+                <label className="text-white/70 text-sm block mb-2">Phone Number:</label>
+                <input
+                  type="tel"
+                  placeholder="+1 (555) 123-4567"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/20 text-white placeholder:text-white/50 text-sm rounded-lg focus:outline-none focus:border-white/40"
+                />
+              </div>
+              <div>
+                <label className="text-white/70 text-sm block mb-2">Email Address:</label>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/20 text-white placeholder:text-white/50 text-sm rounded-lg focus:outline-none focus:border-white/40"
+                />
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowSupplierPopup(false);
+                  setShowSupplierSection(false);
+                  setPhoneNumber('');
+                  setEmail('');
+                }}
+                className="flex-1 px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-gray-100 transition-all"
+              >
+                Submit
+              </button>
+              <button
+                onClick={() => {
+                  setShowSupplierPopup(false);
+                  setPhoneNumber('');
+                  setEmail('');
+                }}
+                className="flex-1 px-4 py-2 bg-white/10 border border-white/20 text-white/80 text-sm font-medium rounded-lg hover:bg-white/20 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-
-
-
+      {/* Comparison Popup */}
+      {showComparisonPopup && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg p-6 w-full max-w-2xl mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white font-semibold text-lg">AI Comparison Result</h3>
+              <button
+                onClick={() => setShowComparisonPopup(false)}
+                className="text-white/60 hover:text-white text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+              {isComparingItems ? (
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-white/20 border-t-white/80"></div>
+                  <span className="text-white/70">Analyzing and comparing selected items...</span>
+                </div>
+              ) : (
+                <p className="text-white/80 leading-relaxed">{comparisonResult || 'No comparison available.'}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

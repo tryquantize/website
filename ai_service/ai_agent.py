@@ -49,7 +49,7 @@ class AISearchAgent:
                     {"role": "user", "content": user_message}
                 ],
                 "temperature": 0.7,
-                "max_tokens": 2000
+                "max_tokens": 150
             }
             
             response = requests.post(
