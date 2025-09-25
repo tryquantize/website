@@ -32,7 +32,27 @@ export class FirebaseAuthService {
       await updateProfile(userCredential.user, { displayName: name });
       return { success: true, user: userCredential.user, error: null };
     } catch (error: any) {
-      return { success: false, user: null, error: error.message };
+      let errorMessage = error.message;
+      
+      // Handle specific Firebase auth errors
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email is already registered. Please try logging in instead.';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password is too weak. Please use at least 6 characters.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled. Please contact support.';
+          break;
+        default:
+          errorMessage = 'Failed to create account. Please try again.';
+      }
+      
+      return { success: false, user: null, error: errorMessage };
     }
   }
 
@@ -41,7 +61,30 @@ export class FirebaseAuthService {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       return { success: true, user: userCredential.user, error: null };
     } catch (error: any) {
-      return { success: false, user: null, error: error.message };
+      let errorMessage = error.message;
+      
+      // Handle specific Firebase auth errors
+      switch (error.code) {
+        case 'auth/user-not-found':
+          errorMessage = 'No account found with this email. Please sign up first.';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password. Please try again.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled. Please contact support.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed attempts. Please try again later.';
+          break;
+        default:
+          errorMessage = 'Failed to sign in. Please check your credentials.';
+      }
+      
+      return { success: false, user: null, error: errorMessage };
     }
   }
 

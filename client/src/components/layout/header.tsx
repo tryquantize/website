@@ -14,12 +14,14 @@ import { useAuth } from "@/lib/auth";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
-import { Moon, Sun, Search } from "lucide-react";
+import { Moon, Sun, Search, Heart, Menu, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { QuantizeLogo } from "@/components/quantize-logo";
+import { AnimatedButton } from "@/components/ui/animated-button";
+import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 
 export function Header() {
   const { theme, setTheme } = useTheme();
@@ -36,17 +38,55 @@ export function Header() {
   const isWaitlistPage = location === '/waitlist';
   const isWelcomeTransitionPage = location === '/welcome-transition';
   const [searchQuery, setSearchQuery] = useState('');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { scrollY } = useScroll();
+
+  // Handle navbar background change on scroll
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setIsScrolled(latest > 50);
+  });
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const headerClassName = cn(
-    "sticky top-0 z-50",
-    isWaitlistPage || isWelcomeTransitionPage
-      ? "bg-transparent backdrop-blur-0 border-b-0"
-      : "bg-background/70 backdrop-blur-md border-b border-white/20",
-  );
+  const navVariants = {
+    top: {
+      backgroundColor: isWaitlistPage || isWelcomeTransitionPage ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.3)',
+      backdropFilter: isWaitlistPage || isWelcomeTransitionPage ? 'blur(0px)' : 'blur(10px)',
+      borderColor: 'rgba(255, 255, 255, 0)'
+    },
+    scrolled: {
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      backdropFilter: 'blur(20px)',
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+    }
+  };
+
+  const linkVariants = {
+    rest: { scale: 1, opacity: 0.7 },
+    hover: { 
+      scale: 1.05, 
+      opacity: 1,
+      transition: { duration: 0.2 }
+    },
+    tap: { scale: 0.95 }
+  };
+
+  const mobileMenuVariants = {
+    closed: {
+      opacity: 0,
+      height: 0,
+      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+    },
+    open: {
+      opacity: 1,
+      height: 'auto',
+      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+    }
+  };
 
   // Don't render header on welcome transition page or waitlist page
   if (isWelcomeTransitionPage || isWaitlistPage) {
@@ -54,23 +94,43 @@ export function Header() {
   }
 
   return (
-    <header className={headerClassName}>
+    <>
+      <motion.header
+        className="sticky top-0 z-50 border-b"
+        variants={navVariants}
+        animate={isScrolled ? 'scrolled' : 'top'}
+      >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {isResultsPage ? (
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center space-x-2 flex-shrink-0" data-testid="logo-link">
-              <QuantizeLogo size={24} />
-      <h1 className="text-base font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent whitespace-nowrap">
-        Quantize
-      </h1>
-            </Link>
+            <motion.div
+              className="flex items-center space-x-2 flex-shrink-0"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Link href="/" className="flex items-center space-x-2" data-testid="logo-link">
+                <QuantizeLogo size={24} />
+                <h1 className="text-base font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent whitespace-nowrap">
+                  Quantize
+                </h1>
+              </Link>
+            </motion.div>
 
             <div className="flex items-center space-x-4 ml-auto">
               <span className="text-white/80">Welcome, {currentUser?.displayName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'User'}</span>
-              <Button 
+              {currentUser && (
+                <AnimatedButton 
+                  size="sm" 
+                  variant="secondary"
+                  onClick={() => setLocation('/favorites')}
+                  icon={<Heart className="w-4 h-4" />}
+                >
+                  Favorites
+                </AnimatedButton>
+              )}
+              <AnimatedButton 
                 size="sm" 
-                variant="outline"
-                className="bg-white text-black border-white hover:bg-white/90 hover:text-black whitespace-nowrap"
+                variant="primary"
                 onClick={async () => {
                   try {
                     await firebaseSignOut();
@@ -82,7 +142,7 @@ export function Header() {
                 }}
               >
                 Logout
-              </Button>
+              </AnimatedButton>
 
               <Button
                 variant="ghost"
@@ -97,12 +157,18 @@ export function Header() {
           </div>
         ) : (
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-3" data-testid="logo-link">
-              <QuantizeLogo size={32} />
-      <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
-        Quantize
-      </h1>
-            </Link>
+            <motion.div
+              className="flex items-center space-x-3"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Link href="/" className="flex items-center space-x-3" data-testid="logo-link">
+                <QuantizeLogo size={32} />
+                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
+                  Quantize
+                </h1>
+              </Link>
+            </motion.div>
 
             <div className="flex items-center space-x-4">
               <Button
@@ -125,14 +191,21 @@ export function Header() {
                   <span className="hidden sm:block text-sm font-medium">
                     {currentUser.displayName || currentUser.email}
                   </span>
-                  <Button 
-                    variant="outline" 
+                  <AnimatedButton 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={() => setLocation('/favorites')}
+                    icon={<Heart className="w-4 h-4" />}
+                  >
+                    Favorites
+                  </AnimatedButton>
+                  <AnimatedButton 
+                    variant="primary" 
                     size="sm" 
                     onClick={handleFirebaseLogout}
-                    className="bg-white text-black border-white hover:bg-white/90 hover:text-black"
                   >
                     Logout
-                  </Button>
+                  </AnimatedButton>
                 </div>
               ) : isAuthenticated && user ? (
                 <div className="flex items-center space-x-2">
@@ -150,26 +223,27 @@ export function Header() {
                 </div>
               ) : (
                 <div className="flex items-center space-x-4 ml-auto">
-                  <Button 
+                  <AnimatedButton 
                     size="sm" 
-                    className="bg-white text-black border border-white hover:bg-white/90 hover:text-black"
+                    variant="secondary"
                     onClick={() => navigateWithLoading('/auth')}
                   >
                     Get Started
-                  </Button>
-                  <Button 
+                  </AnimatedButton>
+                  <AnimatedButton 
                     size="sm" 
-                    className="bg-gradient-to-r from-[#4B0082] via-[#8A2BE2] to-[#9370DB] text-white font-semibold hover:from-[#8A2BE2] hover:via-[#9370DB] hover:to-[#8A2BE2] transform hover:scale-105 transition-all duration-200 border-0 px-4 py-2"
+                    variant="gradient"
                     onClick={() => navigateWithLoading('/waitlist')}
                   >
                     Join the Waitlist
-                  </Button>
+                  </AnimatedButton>
                 </div>
               )}
             </div>
           </div>
         )}
       </div>
-    </header>
+    </motion.header>
+    </>
   );
 }

@@ -21,16 +21,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth";
 import { useNavigation } from "@/hooks/use-navigation";
+import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
+import { FirebaseUserService } from "@/services/firebase-user-service";
 
-import { FaApple, FaXTwitter } from "react-icons/fa6";
 import { FcGoogle } from "react-icons/fc";
 import { Rocket, Building2, User2 } from "lucide-react";
 
 const MAX_FEATURES = 5;
-const DEMO_EMAIL = "demo@aidiscovery.com";
-const DEMO_PASSWORD = "demo123";
 
 const formSchema = z.object({
   // Section 1 — Basic Information
@@ -106,7 +104,7 @@ const inputSoft = "bg-black/40 border-white/10 text-white placeholder:text-white
 
 export default function OnboardingPage() {
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { signIn, signUp, signInWithGoogle, currentUser } = useFirebaseAuth();
   const { navigateWithLoading } = useNavigation();
 
   // Step state: 0 = Auth, 1..6 = sections, 7 = final submit
@@ -149,35 +147,47 @@ export default function OnboardingPage() {
   };
 
   const authLogin = async (email: string, password: string) => {
-    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      login({ id: "demo-user", email, password: "", name: "Demo User", role: "startup", createdAt: new Date(), updatedAt: new Date() } as any);
+    if (!email || !password) {
+      toast({ title: "Missing info", description: "Please enter email and password.", variant: "destructive" });
+      return;
+    }
+    
+    const result = await signIn(email, password);
+    if (result.success) {
       toast({ title: "Logged in", description: "Welcome back!" });
-      // After login, go to company dashboard
       navigateWithLoading('/dashboard');
-      return;
+    } else {
+      toast({ title: "Login failed", description: result.error || "Invalid credentials.", variant: "destructive" });
     }
-    // Fallback: accept any non-empty credentials for demo purposes
-    if (email && password) {
-      login({ id: "local-user", email, password: "", name: email.split("@")[0], role: "startup", createdAt: new Date(), updatedAt: new Date() } as any);
-      toast({ title: "Logged in", description: "You're signed in." });
-      navigateWithLoading('/dashboard');
-      return;
-    }
-    toast({ title: "Login failed", description: "Please enter valid credentials.", variant: "destructive" });
   };
 
-  const authSignup = async (name: string, email: string, password: string, role: string) => {
+  const authSignup = async (name: string, email: string, password: string, role: string, companyName?: string, companyWebsite?: string, linkedinUrl?: string) => {
     if (!name || !email || !password) {
       toast({ title: "Missing info", description: "Please fill out all fields.", variant: "destructive" });
       return;
     }
-    login({ id: "new-user", email, password: "", name, role: "startup", createdAt: new Date(), updatedAt: new Date() } as any);
-    toast({ title: "Account created", description: "You're signed in." });
-    // remember chosen role in the form for conditional fields (map combined to valid enum)
-    const mappedProfile: any = role === "Freelancer / Individual Creator" ? "Freelancer / Individual Creator" : "Startup";
-    form.setValue("profileType", mappedProfile);
-    // Redirect to dashboard instead of proceeding to form sections
-    navigateWithLoading("/dashboard");
+    
+    const result = await signUp(email, password, name);
+    if (result.success) {
+      toast({ title: "Account created", description: "Welcome! Your account has been created." });
+      // remember chosen role in the form for conditional fields
+      const mappedProfile: any = role === "Freelancer / Individual Creator" ? "Freelancer / Individual Creator" : "Startup";
+      form.setValue("profileType", mappedProfile);
+      navigateWithLoading("/dashboard");
+    } else {
+      // If email already exists, suggest switching to login
+      if (result.error?.includes('already registered')) {
+        toast({ 
+          title: "Email already registered", 
+          description: "This email is already registered. Please try logging in instead.", 
+          variant: "destructive"
+        });
+        // Automatically switch to login mode
+        setTimeout(() => setAuthMode("login"), 2000);
+      } else {
+        toast({ title: "Signup failed", description: result.error || "Failed to create account.", variant: "destructive" });
+      }
+    }
   };
 
   const stepFieldsFor = (currentStep: number): (keyof OnboardingFormData)[] => {
@@ -202,12 +212,55 @@ export default function OnboardingPage() {
 
   const prevStep = () => setStep(Math.max(step - 1, 0));
 
-  const onSubmit = (data: OnboardingFormData) => {
-    // eslint-disable-next-line no-console
-    console.log("Onboarding submission", data);
-    toast({ title: "Submitted", description: "Thanks! We will review your submission." });
-    form.reset();
-    setStep(0);
+  const onSubmit = async (data: OnboardingFormData) => {
+    if (!currentUser) {
+      toast({ title: "Authentication required", description: "Please log in to submit.", variant: "destructive" });
+      return;
+    }
+    
+    try {
+      const submissionResult = await FirebaseUserService.submitOnboarding({
+        userId: currentUser.uid,
+        userEmail: currentUser.email || '',
+        profileType: data.profileType,
+        listType: data.listType,
+        companyName: data.companyName,
+        fullName: data.fullName,
+        contactEmail: data.contactEmail,
+        websiteUrl: data.websiteUrl,
+        socialLink: data.socialLink,
+        productName: data.productName,
+        tagline: data.tagline,
+        description: data.description,
+        features: data.features || [],
+        primaryUseCases: data.primaryUseCases,
+        industriesServed: data.industriesServed,
+        targetAudience: data.targetAudience,
+        pricingModels: data.pricingModels,
+        priceTiers: data.priceTiers,
+        freeTrial: data.freeTrial,
+        freeTrialDuration: data.freeTrialDuration,
+        demoAvailable: data.demoAvailable,
+        demoLink: data.demoLink,
+        demoVideo: data.demoVideo,
+        caseStudies: data.caseStudies,
+        usp: data.usp,
+        launchDate: data.launchDate,
+        achievements: data.achievements,
+        aiTechUsed: data.aiTechUsed,
+        roadmap: data.roadmap
+      });
+      
+      if (submissionResult.success) {
+        toast({ title: "Submitted", description: "Thanks! We will review your submission." });
+        form.reset();
+        navigateWithLoading("/dashboard");
+      } else {
+        toast({ title: "Submission failed", description: submissionResult.error || "Please try again.", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Something went wrong. Please try again.", variant: "destructive" });
+    }
   };
 
   const containerVariants = {
@@ -259,18 +312,27 @@ export default function OnboardingPage() {
                       <span className="bg-transparent px-2 text-white/60">or</span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <Button type="button" variant="outline" className="bg-white text-black border-white/10" aria-label="Continue with Apple">
-                      <FaApple className="w-5 h-5" />
-                    </Button>
-                    <Button type="button" variant="outline" className="bg-white text-black border-white/10" aria-label="Continue with Google">
-                      <FcGoogle className="w-5 h-5" />
-                    </Button>
-                    <Button type="button" variant="outline" className="bg-white text-black border-white/10" aria-label="Continue with X/Twitter">
-                      <FaXTwitter className="w-5 h-5" />
+                  <div className="grid grid-cols-1 gap-3">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="bg-white text-black border-white/10" 
+                      aria-label="Continue with Google"
+                      onClick={async () => {
+                        const result = await signInWithGoogle();
+                        if (result.success) {
+                          toast({ title: "Signed in", description: "Welcome!" });
+                          navigateWithLoading('/dashboard');
+                        } else {
+                          toast({ title: "Google sign-in failed", description: result.error || "Please try again.", variant: "destructive" });
+                        }
+                      }}
+                    >
+                      <FcGoogle className="w-5 h-5 mr-2" />
+                      Continue with Google
                     </Button>
                   </div>
-                  <div className="text-center text-xs text-white/70">Demo: {DEMO_EMAIL} / {DEMO_PASSWORD}</div>
+
                 </CardContent>
               </Card>
             </motion.div>
@@ -613,7 +675,7 @@ function LoginPanel({ onLogin }: { onLogin: (email: string, password: string) =>
   );
 }
 
-function SignupPanel({ onSignup }: { onSignup: (nameOrCompany: string, email: string, password: string, role: string) => void }) {
+function SignupPanel({ onSignup }: { onSignup: (nameOrCompany: string, email: string, password: string, role: string, companyName?: string, companyWebsite?: string, linkedinUrl?: string) => void }) {
   const [role, setRole] = useState<string>("Freelancer / Individual Creator");
   const [fullName, setFullName] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -670,6 +732,10 @@ function SignupPanel({ onSignup }: { onSignup: (nameOrCompany: string, email: st
       ) : (
         <div className="space-y-4">
           <div className="space-y-2">
+            <Label>Your Full Name</Label>
+            <Input placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="space-y-2">
             <Label>Company / Brand Name</Label>
             <Input placeholder="Acme AI" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
           </div>
@@ -701,7 +767,40 @@ function SignupPanel({ onSignup }: { onSignup: (nameOrCompany: string, email: st
           type="button"
           variant="outline"
           className="bg-white text-black"
-          onClick={() => onSignup(isFreelancer ? fullName : companyName, email, password, role)}
+          onClick={() => {
+            // Validation
+            if (!email || !password || !fullName || (!isFreelancer && !companyName)) {
+              alert('Please fill in all required fields');
+              return;
+            }
+            
+            if (password !== confirmPassword) {
+              alert('Passwords do not match');
+              return;
+            }
+            
+            if (password.length < 6) {
+              alert('Password must be at least 6 characters long');
+              return;
+            }
+            
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+              alert('Please enter a valid email address');
+              return;
+            }
+            
+            onSignup(
+              isFreelancer ? fullName : companyName, 
+              email, 
+              password, 
+              role,
+              isFreelancer ? undefined : companyName,
+              isFreelancer ? undefined : companyWebsite,
+              isFreelancer ? undefined : companyUrl
+            );
+          }}
         >
           Create account
         </Button>

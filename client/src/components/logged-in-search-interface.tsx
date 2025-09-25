@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Brain, Sparkles, Building2, User, Package, Clock } from "lucide-react";
+import { Search, Brain, Sparkles, Building2, User, Package, Clock, Mic, MicOff, Loader2, Undo } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { enhancePrompt } from "@/lib/promptEnhancer";
+import { useToast } from "@/hooks/use-toast";
 
 interface LoggedInSearchInterfaceProps {
   onSearchResults?: (results: any) => void;
@@ -34,6 +36,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     }
     return "";
   });
+  
+  // Voice input temporarily disabled
   const { user } = useAuth();
   const { currentUser } = useFirebaseAuth();
   const [, setLocation] = useLocation();
@@ -47,6 +51,21 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
+  
+  // PROMPT ENHANCEMENT STATE
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [queryHistory, setQueryHistory] = useState<string[]>([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
+  
+  // Toast notifications
+  const { toast } = useToast();
+  
+  // Temporary disable voice input
+  const isListening = false;
+  const transcript = '';
+  const startListening = () => {};
+  const stopListening = () => {};
+  const resetTranscript = () => {};
 
   // Get user's first name
   const firstName = currentUser?.displayName?.split(' ')[0] || 
@@ -106,6 +125,60 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     "Google Gemma 2 9B",
     "Mistral 7B Instruct"
   ];
+
+  /**
+   * PROMPT ENHANCEMENT HANDLER
+   */
+  const handlePromptEnhancement = async () => {
+    if (!query.trim() || isEnhancing) return;
+    
+    setIsEnhancing(true);
+    
+    try {
+      const originalQuery = query;
+      const enhancedQuery = await enhancePrompt(query, {
+        role: currentUser?.displayName,
+        industry: user?.industry,
+        companySize: user?.company?.size
+      });
+      
+      setQueryHistory(prev => [...prev, originalQuery]);
+      setCurrentHistoryIndex(queryHistory.length);
+      setQuery(enhancedQuery);
+      
+      toast({
+        title: "Prompt enhanced!",
+        description: "Your search query has been made more detailed and specific.",
+      });
+      
+    } catch (error) {
+      console.error('Prompt enhancement failed:', error);
+      toast({
+        title: "Enhancement failed",
+        description: "Please try again or refine your query manually.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  /**
+   * UNDO ENHANCEMENT HANDLER
+   */
+  const handleUndo = () => {
+    if (currentHistoryIndex < 0 || queryHistory.length === 0) return;
+    
+    const previousQuery = queryHistory[currentHistoryIndex];
+    if (previousQuery) {
+      setQuery(previousQuery);
+      setCurrentHistoryIndex(prev => prev - 1);
+      toast({
+        title: "Prompt reverted",
+        description: "Restored to original query.",
+      });
+    }
+  };
 
   const placeholderPhrases = [
     "Ask anything...",
@@ -189,32 +262,34 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     if (!query.trim()) return;
     
     setShowSuggestions(false);
-    setIsTransitioning(true);
-    
-    setTimeout(() => {
-      setIsSearching(true);
-    }, 300);
-    
-    setTimeout(() => {
-      setLocation(`/results?q=${encodeURIComponent(query)}`);
-    }, 4300);
+    const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
+    setLocation(`/search-transition?q=${encodeURIComponent(query)}${typesParam}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const isMetaKey = e.metaKey || e.ctrlKey;
+    
+    // Cmd/Ctrl + E: Enhance prompt
+    if (isMetaKey && e.key === 'e') {
+      e.preventDefault();
+      handlePromptEnhancement();
+      return;
+    }
+    
+    // Cmd/Ctrl + Z: Undo enhancement
+    if (isMetaKey && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      handleUndo();
+      return;
+    }
+    
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       
       if (selectedSuggestionIndex >= 0 && filteredSuggestions[selectedSuggestionIndex]) {
         const selectedQuery = filteredSuggestions[selectedSuggestionIndex];
-        setQuery(selectedQuery);
-        
-        setIsTransitioning(true);
-        setTimeout(() => {
-          setIsSearching(true);
-        }, 300);
-        setTimeout(() => {
-          setLocation(`/results?q=${encodeURIComponent(selectedQuery)}`);
-        }, 4300);
+        const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
+        setLocation(`/search-transition?q=${encodeURIComponent(selectedQuery)}${typesParam}`);
       } else {
         handleSearch();
       }
@@ -234,8 +309,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setQuery(suggestion);
-    setLocation(`/results?q=${encodeURIComponent(suggestion)}`);
+    const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
+    setLocation(`/search-transition?q=${encodeURIComponent(suggestion)}${typesParam}`);
     setShowSuggestions(false);
   };
 
@@ -339,18 +414,77 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
           isSearching ? 'transform scale-95' : 'transform scale-100'
         }`} style={{height: '85px'}}>
           <div className="relative px-4 flex items-center" style={{height: '45px'}}>
-            <button
-              aria-label="Search"
-              onClick={handleSearch}
-              disabled={!query.trim() || searchMutation.isPending}
-              className="absolute right-4 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
-            >
-              {searchMutation.isPending ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Search className="h-4 w-4" />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2">
+              {/* Undo button */}
+              {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        aria-label="Undo prompt enhancement"
+                        onClick={handleUndo}
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition"
+                      >
+                        <Undo className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>Undo enhancement (Ctrl+Z)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
-            </button>
+              
+              {/* Prompt enhancer button */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      aria-label="Enhance search prompt"
+                      onClick={handlePromptEnhancement}
+                      disabled={!query.trim() || isEnhancing || searchMutation.isPending}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isEnhancing ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3 w-3" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Enhance your prompt (Ctrl+E)</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Make your search more detailed and specific
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <button
+                aria-label={isListening ? "Stop listening" : "Start voice input"}
+                onClick={isListening ? stopListening : startListening}
+                className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
+                  isListening 
+                    ? 'bg-red-500/20 border-red-400/40 text-red-400' 
+                    : 'bg-white/5 border-white/20 text-white/90 hover:bg-white/10'
+                }`}
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </button>
+              <button
+                aria-label="Search"
+                onClick={handleSearch}
+                disabled={!query.trim() || searchMutation.isPending || isEnhancing}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
+              >
+                {searchMutation.isPending ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4" />
+                )}
+              </button>
+            </div>
 
             <Input
               type="text"
@@ -360,7 +494,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
               onKeyDown={handleKeyDown}
               onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-14 flex items-center"
+              disabled={isEnhancing}
+              className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-28 flex items-center disabled:opacity-70"
             />
           </div>
 
@@ -465,6 +600,16 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
             </div>
           </div>
         </div>
+        
+        {/* Enhancement feedback */}
+        {isEnhancing && (
+          <div className="absolute top-full left-0 right-0 mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-blue-300 text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Enhancing your search prompt...</span>
+            </div>
+          </div>
+        )}
 
         {/* Search Suggestions Dropdown */}
         {showSuggestions && (
