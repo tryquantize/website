@@ -91,3 +91,8 @@ server/public/
 
 # Vite specific
 vite.config.ts.*
+__pycache__
+.venv
+*.pyc
+.env
+.DS_Store
