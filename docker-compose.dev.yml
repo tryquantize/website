@@ -1,6 +1,23 @@
 # Development docker-compose configuration with hot-reloading
 
 services:
+  # Web - Next.js application
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+    container_name: quantize-web-dev
+    hostname: localhost
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    networks:
+      - quantize-network
+    restart: unless-stopped
+
   # AI Service - Python Flask application for AI-powered search
   ai-service:
     build:
@@ -30,53 +47,10 @@ services:
         python3 -m venv venv;
       fi;
       echo "--- Installing dependencies ---";
-      venv/bin/pip install -r requirements.txt;
+      venv/bin/pip install -q -r requirements.txt;
       echo "--- Starting AI service ---";
       exec venv/bin/python app.py
       '
-
-  # Server - Node.js Express backend with hot-reloading (no image build)
-  server:
-    image: node:20-alpine
-    working_dir: /app
-    container_name: quantize-server-dev
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=development
-      - PORT=3001
-      - AI_SERVICE_URL=http://ai-service:5002
-    volumes:
-      - ./:/app
-      - /app/node_modules
-      - yarn-cache:/root/.cache/yarn
-    depends_on:
-      - ai-service
-    networks:
-      - quantize-network
-    restart: unless-stopped
-    command: >
-      sh -c 'corepack enable; if [ ! -d node_modules ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then yarn install; fi; yarn tsx --watch packages/server/index.ts'
-
-  # Client - Vite dev server for React app (no image build for speed)
-  client:
-    image: node:20-alpine
-    working_dir: /app
-    container_name: quantize-client-dev
-    ports:
-      - "5173:5173"
-    environment:
-      - NODE_ENV=development
-    volumes:
-      - ./:/app
-      - /app/node_modules
-      - yarn-cache:/root/.cache/yarn
-    depends_on:
-      - server
-    networks:
-      - quantize-network
-    command: >
-      sh -c 'corepack enable; if [ ! -d node_modules ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then yarn install; fi; yarn run vite --host 0.0.0.0 --port 5173'
 
 networks:
   quantize-network:
