@@ -1,3 +1,4 @@
+import Link from "next/link";
 /* File Overview
   Path: client/src/components/layout/footer.tsx
   Purpose: Layout UI components (shared page structure like header and footer).
@@ -7,7 +8,7 @@
   - Follow the data flow via function parameters and return values
 */
 
-import { Link } from "wouter";
+
 import { Bot, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigation } from "@/hooks/use-navigation";

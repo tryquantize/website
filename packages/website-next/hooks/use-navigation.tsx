@@ -7,7 +7,7 @@
   - Follow the data flow via function parameters and return values
 */
 
-import { useLocation } from 'wouter';
+import { useLocation } from "@/hooks/use-location";
 import { useLoading } from '@/contexts/loading-context';
 
 const getPageName = (path: string): string => {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation } from "@/hooks/use-location";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Brain, Sparkles, Building2, User, Package, Clock, Mic, MicOff, Loader2, Undo } from "lucide-react";

@@ -11,7 +11,7 @@
 import { useState, useEffect } from "react";
 
 // Routing for navigation
-import { useLocation } from "wouter";
+import { useLocation } from "@/hooks/use-location";
 
 // UI components
 import { Button } from "@/components/ui/button";                    // Reusable button component

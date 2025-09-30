@@ -3,7 +3,7 @@ import { Search, ArrowRight, Brain, Building2, User, Package, Sparkles, Loader2,
 import { Input } from '@/components/ui/input';
 import { QuantizeLogo } from '@/components/quantize-logo';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useLocation } from 'wouter';
+import { useLocation } from "@/hooks/use-location";
 import { useConversations } from '@/contexts/conversation-context';
 import { useAuth } from '@/lib/auth';
 import { useFirebaseAuth } from '@/contexts/firebase-auth-context';

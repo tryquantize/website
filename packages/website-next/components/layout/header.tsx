@@ -1,3 +1,4 @@
+import Link from "next/link";
 /* File Overview
   Path: client/src/components/layout/header.tsx
   Purpose: Layout UI components (shared page structure like header and footer).
@@ -7,7 +8,7 @@
   - Follow the data flow via function parameters and return values
 */
 
-import { Link, useLocation, useRoute } from "wouter";
+import { useLocation, useRoute } from "@/hooks/use-location";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import { useAuth } from "@/lib/auth";
