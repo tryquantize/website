@@ -4,6 +4,6 @@
 
 export { BackgroundParticles } from './background-particles';
 export { LoadingTransition } from './loading-transition';
-export { PageLayout } from './page-layout';
-export { ThemeProvider } from './theme-provider';
+export { default as PageLayout } from './page-layout';
+export { ThemeProvider, useTheme } from './theme-provider';
 export * from './branding';

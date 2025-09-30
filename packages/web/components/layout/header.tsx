@@ -10,7 +10,7 @@ import Link from "next/link";
 
 import { useLocation, useRoute } from "@/hooks/use-location";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/shared";
 import { useAuth } from "@/lib/auth";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

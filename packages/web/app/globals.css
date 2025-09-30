@@ -5,6 +5,9 @@
 /* Import custom animations */
 @import './styles/animations.css';
 
+/* Import custom utilities */
+@import './styles/utilities.css';
+
 /* Import Tailwind CSS layers */
 @tailwind base;
 @tailwind components;
