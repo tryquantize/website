@@ -3,8 +3,9 @@ import { storage } from "@/lib/server/storage";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     const analytics = await storage.getToolAnalytics(params.id);
     return NextResponse.json(analytics);

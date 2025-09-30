@@ -3,8 +3,9 @@ import { storage } from "@/lib/server/storage";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     await storage.recordToolClick(params.id);
     return NextResponse.json({ success: true });

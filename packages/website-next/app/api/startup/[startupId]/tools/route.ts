@@ -3,10 +3,11 @@ import { storage } from "@/lib/server/storage";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { startupId: string } }
+  props: { params: Promise<{ startupId: string }> }
 ) {
+  const params = await props.params;
   try {
-    const tools = await storage.getStartupTools(params.startupId);
+    const tools = await storage.getToolsByStartup(params.startupId);
     return NextResponse.json(tools);
   } catch (error) {
     return NextResponse.json(

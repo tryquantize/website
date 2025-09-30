@@ -4,10 +4,11 @@ import { insertAiToolSchema } from "@shared/schema";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
-    const tool = await storage.getToolById(params.id);
+    const tool = await storage.getTool(params.id);
     if (!tool) {
       return NextResponse.json(
         { message: "Tool not found" },
@@ -25,8 +26,9 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     const body = await request.json();
     const updates = insertAiToolSchema.partial().parse(body);
@@ -42,8 +44,9 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     await storage.deleteTool(params.id);
     return NextResponse.json({ success: true });

@@ -4,7 +4,7 @@ import { insertAiToolSchema } from "@shared/schema";
 
 export async function GET() {
   try {
-    const tools = await storage.getAllTools();
+    const tools = await storage.getTools();
     return NextResponse.json(tools);
   } catch (error) {
     return NextResponse.json(

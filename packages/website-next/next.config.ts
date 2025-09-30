@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -16,14 +15,12 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-    externalDir: true, // Allow imports from parent directory
   },
-  transpilePackages: ['@shared'],
   webpack: (config) => {
     // Allow webpack to resolve the shared directory
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@shared': path.resolve(__dirname, '../shared'),
+      '@shared': require('path').resolve(__dirname, 'shared'),
     };
     return config;
   },

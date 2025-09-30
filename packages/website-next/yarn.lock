@@ -2181,10 +2181,10 @@ dom-helpers@^5.0.1:
     "@babel/runtime" "^7.8.7"
     csstype "^3.0.2"
 
-drizzle-orm@^0.39.1:
-  version "0.39.3"
-  resolved "https://registry.yarnpkg.com/drizzle-orm/-/drizzle-orm-0.39.3.tgz#4f844d5849a0236082340e47e2dc9eecc1e0e64c"
-  integrity sha512-EZ8ZpYvDIvKU9C56JYLOmUskazhad+uXZCTCRN4OnRMsL+xAJ05dv1eCpAG5xzhsm1hqiuC5kAZUCS924u2DTw==
+drizzle-orm@0.44.5:
+  version "0.44.5"
+  resolved "https://registry.yarnpkg.com/drizzle-orm/-/drizzle-orm-0.44.5.tgz#e81a470631e95bfd1bf61bd853d013954cd5fa2b"
+  integrity sha512-jBe37K7d8ZSKptdKfakQFdeljtu3P2Cbo7tJoJSVZADzIKOBo9IAJPOmMsH2bZl90bZgh8FQlD8BjxXA/zuBkQ==
 
 drizzle-zod@0.8.3:
   version "0.8.3"
