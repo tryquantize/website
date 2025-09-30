@@ -7,7 +7,6 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json yarn.lock ./
-COPY packages/server/package.json ./packages/server/ 2>/dev/null || true
 COPY packages/shared ./packages/shared
 
 # Install dependencies

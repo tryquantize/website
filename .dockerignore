@@ -66,7 +66,8 @@ coverage/
 *.temp
 .tmp/
 .temp/
-README.md
-LICENSE
-docker-compose*.yml
-Dockerfile*
+# Keep meta files and docker descriptors
+# README.md
+# LICENSE
+# docker-compose*.yml
+# Dockerfile*

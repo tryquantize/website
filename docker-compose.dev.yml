@@ -1,5 +1,4 @@
 # Development docker-compose configuration with hot-reloading
-version: '3.8'
 
 services:
   # AI Service - Python Flask application for AI-powered search
@@ -18,15 +17,28 @@ services:
       - EXA_API_KEY=${EXA_API_KEY:-}
     volumes:
       - ./packages/ai-service:/app
+      - ai-venv:/app/venv
+      - pip-cache:/root/.cache/pip
     networks:
       - quantize-network
     restart: unless-stopped
+    # Bootstrap venv if missing, install deps, then run
+    command: >
+      sh -c '
+      if [ ! -f venv/bin/python ]; then
+        echo "--- Creating Python virtual environment ---";
+        python3 -m venv venv;
+      fi;
+      echo "--- Installing dependencies ---";
+      venv/bin/pip install -r requirements.txt;
+      echo "--- Starting AI service ---";
+      exec venv/bin/python app.py
+      '
 
-  # Server - Node.js Express backend with hot-reloading
+  # Server - Node.js Express backend with hot-reloading (no image build)
   server:
-    build:
-      context: .
-      dockerfile: packages/server/Dockerfile
+    image: node:20-alpine
+    working_dir: /app
     container_name: quantize-server-dev
     ports:
       - "3001:3001"
@@ -35,16 +47,42 @@ services:
       - PORT=3001
       - AI_SERVICE_URL=http://ai-service:5002
     volumes:
-      - ./packages/server:/app/packages/server
-      - ./packages/shared:/app/packages/shared
+      - ./:/app
       - /app/node_modules
+      - yarn-cache:/root/.cache/yarn
     depends_on:
       - ai-service
     networks:
       - quantize-network
     restart: unless-stopped
-    command: yarn tsx --watch packages/server/index.ts
+    command: >
+      sh -c 'corepack enable; if [ ! -d node_modules ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then yarn install; fi; yarn tsx --watch packages/server/index.ts'
+
+  # Client - Vite dev server for React app (no image build for speed)
+  client:
+    image: node:20-alpine
+    working_dir: /app
+    container_name: quantize-client-dev
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - yarn-cache:/root/.cache/yarn
+    depends_on:
+      - server
+    networks:
+      - quantize-network
+    command: >
+      sh -c 'corepack enable; if [ ! -d node_modules ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then yarn install; fi; yarn run vite --host 0.0.0.0 --port 5173'
 
 networks:
   quantize-network:
     driver: bridge
+
+volumes:
+  ai-venv:
+  pip-cache:
+  yarn-cache:

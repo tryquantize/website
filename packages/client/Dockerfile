@@ -6,20 +6,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Install dependencies earlier to leverage caching
 COPY ../../package.json ../../yarn.lock ./
-COPY ../../packages/client/package.json ./packages/client/
-COPY ../../packages/shared ./packages/shared
-
-# Install dependencies
 RUN yarn install --frozen-lockfile
 
 # Copy source files
 COPY ../../packages/client ./packages/client
 COPY ../../vite.config.ts ../../tsconfig.json ../../tailwind.config.ts ../../postcss.config.js ../../components.json ./
 
-# Build the application
-RUN yarn build
+# Build the application (use yarn so local bin is on PATH)
+RUN yarn vite build
 
 # Production stage with Nginx
 FROM nginx:alpine
