@@ -1,6 +1,6 @@
 /* File Overview
   Path: vite.config.ts
-  Purpose: Configures Vite for the client app. Sets the project root to client/, defines aliases used across the codebase, and places the production build in dist/public so the Express server can serve it.
+  Purpose: Configures Vite for the client app. Sets the project root to packages/client/, defines aliases used across the codebase, and places the production build in dist/public so the Express server can serve it.
 
   Reading tip for newcomers:
   - Aliases like @ and @shared make imports shorter and clearer
@@ -17,11 +17,11 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
+      "@": path.resolve(import.meta.dirname, "packages/client", "src"),
+      "@shared": path.resolve(import.meta.dirname, "packages/shared"),
     },
   },
-  root: path.resolve(import.meta.dirname, "client"),
+  root: path.resolve(import.meta.dirname, "packages/client"),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
