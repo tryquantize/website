@@ -1,3 +1,18 @@
+"""
+AI Service Flask Application
+
+This module provides a Flask-based REST API for AI-powered search functionality.
+It integrates with OpenRouter for AI responses and Exa for web search.
+
+Endpoints:
+    - GET /health: Health check endpoint
+    - POST /search: Main AI search endpoint
+    - POST /suggestions: Generate search suggestions
+    - POST /extract-companies: Extract company information from search results
+
+Author: Quantize Team
+"""
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ai_agent import AISearchAgent
@@ -17,7 +32,20 @@ ai_agent = AISearchAgent()
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """
+    Health check endpoint for monitoring service status.
+    
+    Returns:
+        tuple: JSON response with health status and HTTP status code
+        
+    Example response:
+        {
+            "status": "healthy",
+            "model": "openai/gpt-4o-mini",
+            "api_key_configured": true,
+            "success": true
+        }
+    """
     try:
         health_status = ai_agent.health_check()
         return jsonify(health_status), 200 if health_status['success'] else 500
@@ -30,7 +58,29 @@ def health_check():
 
 @app.route('/search', methods=['POST'])
 def ai_search():
-    """Main AI search endpoint"""
+    """
+    Main AI search endpoint for discovering AI tools and solutions.
+    
+    Request body:
+        {
+            "query": str - The search query
+            "context": dict - Optional context (budget, industry, etc.)
+            "selectedModel": str - Optional AI model selection
+            "selectedTypes": list - Optional filter types
+        }
+    
+    Returns:
+        tuple: JSON response with search results and HTTP status code
+        
+    Example response:
+        {
+            "query": "AI tools for content creation",
+            "response": "Based on your requirements...",
+            "suggestions": ["related query 1", "related query 2", ...],
+            "model_used": "openai/gpt-4o-mini",
+            "success": true
+        }
+    """
     try:
         # Get request data
         data = request.get_json()
@@ -66,7 +116,24 @@ def ai_search():
 
 @app.route('/suggestions', methods=['POST'])
 def generate_suggestions():
-    """Generate search suggestions based on a query"""
+    """
+    Generate related search suggestions based on a query.
+    
+    Request body:
+        {
+            "query": str - The original search query
+        }
+    
+    Returns:
+        tuple: JSON response with suggestions and HTTP status code
+        
+    Example response:
+        {
+            "query": "AI tools",
+            "suggestions": ["Best AI writing tools", "AI design tools", ...],
+            "success": true
+        }
+    """
     try:
         data = request.get_json()
         
@@ -96,7 +163,26 @@ def generate_suggestions():
 
 @app.route('/extract-companies', methods=['POST'])
 def extract_companies():
-    """Extract company information from search results"""
+    """
+    Extract company information from search results.
+    
+    Request body:
+        {
+            "search_result": str - Search result text to extract companies from
+        }
+    
+    Returns:
+        tuple: JSON response with extracted companies and HTTP status code
+        
+    Example response:
+        {
+            "companies": [
+                {"name": "Company 1", "description": "...", ...},
+                {"name": "Company 2", "description": "...", ...}
+            ],
+            "success": true
+        }
+    """
     try:
         data = request.get_json()
         

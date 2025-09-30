@@ -1,41 +1,96 @@
-# AI Search Service
+# AI Service
 
-This Python service provides AI-powered search functionality for the Pixel Search application using OpenRouter API with GPT-4o Mini.
+Python Flask service providing AI-powered search functionality for the Quantize platform using OpenRouter API with GPT-4o Mini and Exa search.
+
+## Overview
+
+The AI service is a microservice that handles:
+- AI-powered search queries
+- Web content retrieval and synthesis
+- Related search suggestions
+- Citation management
+- Multiple LLM support
+
+## Architecture
+
+```mermaid
+graph LR
+    A[Client Request] --> B[Flask App]
+    B --> C[Search Handler]
+    C --> D[Exa Search API]
+    C --> E[OpenRouter API]
+    D --> F[Web Content]
+    E --> G[GPT-4o Mini]
+    F --> C
+    G --> C
+    C --> H[Response Builder]
+    H --> I[Client Response]
+    
+    style B fill:#e8f4f8
+    style C fill:#f0e8f8
+    style H fill:#f8f0e8
+```
 
 ## Features
 
 - **AI-Powered Search**: Uses GPT-4o Mini via OpenRouter for intelligent search responses
+- **Web Integration**: Real-time web search using Exa API
 - **Search Suggestions**: Generates 5 related search queries based on the original query
-- **Cascading Search**: Supports multiple search results on the same page
-- **System Prompt**: Clear system prompt visible in `config.py` for transparency
-- **Health Check**: Built-in health check endpoint for monitoring
+- **Multi-Model Support**: Supports multiple LLM models (GPT-4o Mini, Gemini 2.5 Flash, etc.)
+- **Citation Tracking**: Automatically includes citations in responses
+- **Health Monitoring**: Built-in health check endpoint
+- **CORS Enabled**: Cross-origin requests supported
 
 ## Setup
 
-1. **Install Dependencies**:
+### Local Development
+
+1. **Create Virtual Environment**:
    ```bash
-   cd ai_service
+   cd packages/ai-service
    python3 -m venv venv
-   source venv/bin/activate
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. **Install Dependencies**:
+   ```bash
    pip install -r requirements.txt
    ```
 
-2. **Configure Environment**:
+3. **Configure Environment**:
    ```bash
    cp .env.example .env
-   # Edit .env and add your OpenRouter API key
+   # Edit .env and add your API keys:
+   # OPENROUTER_API_KEY=your_key_here
+   # EXA_API_KEY=your_key_here
    ```
 
-3. **Start the Service**:
+4. **Start the Service**:
    ```bash
-   ./start.sh
-   ```
-   
-   Or manually:
-   ```bash
-   source venv/bin/activate
    python app.py
    ```
+   
+   The service will be available at `http://localhost:5002`
+
+### Docker
+
+```bash
+# Build
+docker build -t quantize-ai-service .
+
+# Run
+docker run -p 5002:5002 \
+  -e OPENROUTER_API_KEY=your_key \
+  -e EXA_API_KEY=your_key \
+  quantize-ai-service
+```
+
+### Docker Compose
+
+```bash
+# From project root
+docker-compose up ai-service
+```
 
 ## API Endpoints
 
