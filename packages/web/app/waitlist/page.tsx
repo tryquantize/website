@@ -52,7 +52,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { WaitlistService } from "@/lib/waitlist-service";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/shared";
 
 interface CountdownTime {
   days: number;

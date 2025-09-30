@@ -17,8 +17,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";     // API data f
 import { apiRequest } from "@/lib/queryClient";                    // API request utility
 
 // Custom components
-import { SearchInterface } from "@/components/search-interface";    // Main search component with typewriter effect
-import { ToolCard } from "@/components/tool-card";                 // Individual tool display cards
+import { SearchInterface } from "@/components/features/search";    // Main search component with typewriter effect
+import { ToolCard } from "@/components/features/products";         // Individual tool display cards
 
 // UI components
 import { Button } from "@/components/ui/button";                   // Reusable button component
@@ -47,12 +47,12 @@ import { useAuth } from "@/lib/auth";                              // Authentica
 import { useNavigation } from "@/hooks/use-navigation";            // Navigation with loading transitions
 import { useMistScroll } from "@/hooks/use-mist-scroll";           // Mist fade on scroll
 import { WaitlistService } from "@/lib/waitlist-service";          // Waitlist service
-import { useTheme } from "@/components/theme-provider";            // Theme provider
+import { useTheme } from "@/components/shared";                     // Theme provider
 
 // Types and schemas
 import { insertContactRequestSchema } from "@shared/schema";        // Contact form schema
 import type { AiTool } from "@shared/schema";                      // AI tool type definition
-import PageLayout from "@/components/page-layout";                 // Page layout wrapper
+import PageLayout from "@/components/shared/page-layout";           // Page layout wrapper
 
 
 /**

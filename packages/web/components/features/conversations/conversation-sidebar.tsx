@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ArrowRight, Brain, Building2, User, Package, Sparkles, Loader2, Undo, Plus, MessageSquare, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { QuantizeLogo } from '@/components/quantize-logo';
+import { QuantizeLogo } from '@/components/shared/branding';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLocation } from "@/hooks/use-location";
 import { useConversations } from '@/contexts/conversation-context';

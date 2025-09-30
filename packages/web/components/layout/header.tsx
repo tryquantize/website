@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { QuantizeLogo } from "@/components/quantize-logo";
+import { QuantizeLogo } from "@/components/shared/branding";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 

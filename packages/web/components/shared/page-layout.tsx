@@ -3,7 +3,7 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AnimatedLayout } from "@/components/layout/animated-layout";
-import { LoadingTransition } from "@/components/loading-transition";
+import { LoadingTransition } from "./loading-transition";
 
 export default function PageLayout({
   children,

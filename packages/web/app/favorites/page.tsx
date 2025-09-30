@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useFavorites } from '@/contexts/favorites-context';
 import { useFirebaseAuth } from '@/contexts/firebase-auth-context';
-import { FavoritesCard } from '@/components/favorites-card';
+import { FavoritesCard } from '@/components/features/favorites';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Heart } from 'lucide-react';

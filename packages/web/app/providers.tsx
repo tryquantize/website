@@ -1,10 +1,9 @@
 "use client";
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider, BackgroundParticles } from "@/components/shared";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
-import { BackgroundParticles } from "@/components/background-particles";
 import { LoadingProvider } from "@/contexts/loading-context";
 import { FirebaseAuthProvider } from "@/contexts/firebase-auth-context";
 import { FavoritesProvider } from "@/contexts/favorites-context";

@@ -1,5 +1,5 @@
 import React from 'react';
-import { QuantizeLogo } from '@/components/quantize-logo';
+import { QuantizeLogo } from '@/components/shared/branding';
 
 interface NewConversationStateProps {
   firstName: string;

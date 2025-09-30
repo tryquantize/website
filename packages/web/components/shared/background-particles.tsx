@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "./theme-provider";
 
 type Particle = {
   x: number;

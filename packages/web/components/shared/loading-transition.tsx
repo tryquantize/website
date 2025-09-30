@@ -8,7 +8,7 @@
 */
 
 import React, { useEffect, useState } from 'react';
-import { BackgroundParticles } from '@/components/background-particles';
+import { BackgroundParticles } from './background-particles';
 import { useLoading } from '@/contexts/loading-context';
 
 const quotes = [

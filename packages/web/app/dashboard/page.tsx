@@ -30,7 +30,7 @@ import {
   SidebarTrigger,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { OnboardingForm } from "@/components/onboarding-form";
+import { OnboardingForm } from "@/components/features/onboarding";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { 
