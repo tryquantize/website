@@ -129,8 +129,8 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-layout" style={{ ['--dashboard-header-h' as any]: '64px' }}>
-    <SidebarProvider defaultOpen={false}>
-      <Sidebar variant="sidebar" collapsible="icon" className="bg-white/10 backdrop-blur-md text-white border-r border-white/20 w-64">
+    <SidebarProvider >
+      <Sidebar variant="inset"  className="bg-white/10 backdrop-blur-md text-white border-r border-white/20 w-64">
         <SidebarHeader>
           <div className="flex items-center justify-between px-2">
               <span className="text-base font-semibold text-firequest">Quantize</span>
@@ -142,37 +142,37 @@ export default function Dashboard() {
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "overview"} onClick={() => setActiveTab("overview")}>
+                <SidebarMenuButton className={activeTab === "overview" ? "bg-white/20" : ""} onClick={() => setActiveTab("overview")}>
                   <BarChart3 />
                   <span>Overview</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "tools"} onClick={() => setActiveTab("tools")}>
+                <SidebarMenuButton className={activeTab === "tools" ? "bg-white/20" : ""} onClick={() => setActiveTab("tools")}>
                   <Bolt />
                   <span>My Tools</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "products"} onClick={() => setActiveTab("products")}>
+                <SidebarMenuButton className={activeTab === "products" ? "bg-white/20" : ""} onClick={() => setActiveTab("products")}>
                   <Building2 />
                   <span>Products</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "services"} onClick={() => setActiveTab("services")}>
+                <SidebarMenuButton className={activeTab === "services" ? "bg-white/20" : ""} onClick={() => setActiveTab("services")}>
                   <Zap />
                   <span>Services</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "solutions"} onClick={() => setActiveTab("solutions")}>
+                <SidebarMenuButton className={activeTab === "solutions" ? "bg-white/20" : ""} onClick={() => setActiveTab("solutions")}>
                   <Target />
                   <span>Solutions</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive={activeTab === "contacts"} onClick={() => setActiveTab("contacts")}>
+                <SidebarMenuButton className={activeTab === "contacts" ? "bg-white/20" : ""} onClick={() => setActiveTab("contacts")}>
                   <MessageSquare />
                   <span>Inquiries</span>
                 </SidebarMenuButton>
@@ -184,13 +184,13 @@ export default function Dashboard() {
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton isActive={activeTab === "settings"} onClick={() => setActiveTab("settings")}>
+              <SidebarMenuButton className={activeTab === "settings" ? "bg-white/20" : ""} onClick={() => setActiveTab("settings")}>
                 <Settings />
                 <span>Settings</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton isActive={activeTab === "help"} onClick={() => setActiveTab("help")}>
+              <SidebarMenuButton className={activeTab === "help" ? "bg-white/20" : ""} onClick={() => setActiveTab("help")}>
                 <HelpCircle />
                 <span>Help</span>
               </SidebarMenuButton>

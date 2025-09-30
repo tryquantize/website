@@ -221,7 +221,7 @@ export default function OnboardingPage() {
     }
     
     try {
-      const submissionResult = await FirebaseUserService.submitOnboarding({
+      const submissionResult = await FirebaseUserService.submitOnboarding({status: "pending", 
         userId: currentUser.uid,
         userEmail: currentUser.email || '',
         profileType: data.profileType,

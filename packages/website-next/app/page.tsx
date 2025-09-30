@@ -66,10 +66,13 @@ import PageLayout from "@/components/page-layout";                 // Page layou
  * - clientEmail: Valid email format required
  * - message: Minimum 10 characters for meaningful communication
  */
-const contactFormSchema = insertContactRequestSchema.extend({
-  clientName: z.string().min(1, "Name is required"),              // Required name field
-  clientEmail: z.string().email("Valid email is required"),       // Valid email required
-  message: z.string().min(10, "Message must be at least 10 characters") // Minimum message length
+const contactFormSchema = z.object({
+  toolId: z.string(),
+  clientId: z.string().optional(),
+  clientName: z.string().min(1, "Name is required"),
+  clientEmail: z.string().email("Valid email is required"),
+  message: z.string().min(10, "Message must be at least 10 characters"),
+  status: z.string().optional(),
 });
 
 // TypeScript type derived from the schema

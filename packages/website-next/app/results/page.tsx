@@ -210,11 +210,12 @@ export default function ResultsPage() {
     
     try {
       const originalQuery = searchQuery;
-      const enhancedQuery = await enhancePrompt(searchQuery, {
-        role: currentUser?.displayName,
-        industry: user?.industry,
-        companySize: user?.company?.size
-      });
+//       const enhancedQuery = await enhancePrompt(searchQuery, {
+      const enhancedQuery = searchQuery; // Temporarily disabled prompt enhancement
+//         role: currentUser?.displayName,
+//         industry: user?.industry,
+//         companySize: user?.company?.size
+//       });
       
       setQueryHistory(prev => [...prev, originalQuery]);
       setCurrentHistoryIndex(queryHistory.length);
@@ -489,9 +490,9 @@ export default function ResultsPage() {
           addMessageToConversation(msgId, {
             id: `msg-${Date.now()}`,
             type: 'response',
-            content: fallbackResult.aiResponse,
+            content: fallbackResult.aiResponse || "",
             timestamp: Date.now(),
-            aiResponse: fallbackResult.aiResponse,
+            aiResponse: fallbackResult.aiResponse || "",
             suggestions: fallbackResult.suggestions,
             companies: []
           });
@@ -693,9 +694,9 @@ export default function ResultsPage() {
         addMessageToConversation(currentConversationId, {
           id: `msg-${Date.now()}`,
           type: 'response',
-          content: fallbackResult.aiResponse,
+          content: fallbackResult.aiResponse || "",
           timestamp: Date.now(),
-          aiResponse: fallbackResult.aiResponse,
+          aiResponse: fallbackResult.aiResponse || "",
           suggestions: [],
           companies: []
         });
@@ -910,7 +911,7 @@ export default function ResultsPage() {
               {item.type === 'suggestions' && item.data.questions.length > 0 && (
                 <div className="space-y-0">
                   <div className="grid grid-cols-1">
-                    {item.data.questions.map((question, index) => (
+                    {item.data.questions.map((question: string, index: number) => (
                       <div key={index} className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-lg relative group border-t-0 first:border-t">
                         <button
                           onClick={() => handleSuggestionClick(question)}
