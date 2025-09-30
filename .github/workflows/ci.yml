@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        cache: 'yarn'
+    
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+    
+    - name: Type check
+      run: yarn check
+    
+    - name: Build
+      run: yarn build
+  
+  test-ai-service:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install AI service dependencies
+      run: |
+        cd packages/ai-service
+        pip install -r requirements.txt
+    
+    - name: Check AI service syntax
+      run: |
+        cd packages/ai-service
+        python -m py_compile app.py config.py ai_agent.py
+  
+  docker-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build AI Service Docker image
+      run: |
+        docker build -f packages/ai-service/Dockerfile -t quantize-ai-service packages/ai-service
+    
+    - name: Build Server Docker image
+      run: |
+        docker build -f packages/server/Dockerfile -t quantize-server .
+    
+    - name: Build Client Docker image
+      run: |
+        docker build -f packages/client/Dockerfile -t quantize-client .
