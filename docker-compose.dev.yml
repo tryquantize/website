@@ -1,0 +1,50 @@
+# Development docker-compose configuration with hot-reloading
+version: '3.8'
+
+services:
+  # AI Service - Python Flask application for AI-powered search
+  ai-service:
+    build:
+      context: ./packages/ai-service
+      dockerfile: Dockerfile
+    container_name: quantize-ai-service-dev
+    ports:
+      - "5002:5002"
+    environment:
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=5002
+      - FLASK_DEBUG=true
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - EXA_API_KEY=${EXA_API_KEY:-}
+    volumes:
+      - ./packages/ai-service:/app
+    networks:
+      - quantize-network
+    restart: unless-stopped
+
+  # Server - Node.js Express backend with hot-reloading
+  server:
+    build:
+      context: .
+      dockerfile: packages/server/Dockerfile
+    container_name: quantize-server-dev
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - AI_SERVICE_URL=http://ai-service:5002
+    volumes:
+      - ./packages/server:/app/packages/server
+      - ./packages/shared:/app/packages/shared
+      - /app/node_modules
+    depends_on:
+      - ai-service
+    networks:
+      - quantize-network
+    restart: unless-stopped
+    command: yarn tsx --watch packages/server/index.ts
+
+networks:
+  quantize-network:
+    driver: bridge
