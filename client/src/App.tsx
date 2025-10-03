@@ -24,6 +24,7 @@ import { ConversationProvider } from "@/contexts/conversation-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AnimatedLayout } from "@/components/layout/animated-layout";
+import { Analytics } from "@vercel/analytics/react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import ProductsPage from "@/pages/Products";
@@ -94,6 +95,7 @@ function App() {
                   <Toaster />
                   <BackgroundParticles />
                   <Router />
+                  <Analytics />
                 </TooltipProvider>
               </LoadingProvider>
             </ConversationProvider>
