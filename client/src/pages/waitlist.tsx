@@ -254,14 +254,9 @@ export default function WaitlistPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Load waitlist count and set up real-time listener
+  // Set static waitlist count
   useEffect(() => {
-    const unsubscribe = WaitlistService.onWaitlistCountChange((count) => {
-      setWaitlistCount(count);
-    });
-
-    // Cleanup listener on unmount
-    return () => unsubscribe();
+    setWaitlistCount(1247); // Static count
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -270,38 +265,23 @@ export default function WaitlistPage() {
 
     setIsSubmitting(true);
 
-    try {
-      const fullWhatsappNumber = whatsappNumber ? `${countryCode}${whatsappNumber}` : undefined;
-      const result = await WaitlistService.addToWaitlist(name, email, fullWhatsappNumber);
+    // Static implementation - no backend calls
+    setTimeout(() => {
+      playGuitarSound();
       
-      if (result.success) {
-        // Play pleasant guitar sound effect
-        playGuitarSound();
-        
-        // Counter will update automatically via real-time listener
-        toast({
-          title: "Welcome to the waitlist! 🎉",
-          description: `Thanks, ${name.split(" ")[0] || "there"}. You're spot #${result.position}. We'll notify you at ${email}!`,
-        });
-        setName("");
-        setEmail("");
-        setWhatsappNumber("");
-      } else {
-        toast({
-          title: "Oops! Something went wrong",
-          description: result.error || "Failed to join waitlist. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+      // Increment static counter
+      setWaitlistCount(prev => prev + 1);
+      
       toast({
-        title: "Oops! Something went wrong",
-        description: "Failed to join waitlist. Please try again.",
-        variant: "destructive",
+        title: "Welcome to the waitlist! 🎉",
+        description: `Thanks, ${name.split(" ")[0] || "there"}. You're now on the waitlist! We'll notify you at ${email}!`,
       });
-    } finally {
+      
+      setName("");
+      setEmail("");
+      setWhatsappNumber("");
       setIsSubmitting(false);
-    }
+    }, 1000);
   };
 
 
@@ -321,24 +301,24 @@ export default function WaitlistPage() {
         </Button>
       </div>
       <div className="relative overflow-hidden">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-16 text-center">
+        <div className="relative max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 pt-4 pb-16 text-center">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-6 inline-flex items-center justify-center bg-white text-black border border-gray-200 rounded-full px-4 py-2 min-w-[400px] h-8">
-              <Clock className="h-4 w-4 mr-2" /> 
-              <span className="text-sm font-semibold whitespace-nowrap">
-                Coming in {countdown.days} Days {countdown.hours} Hours {countdown.minutes} Minutes {countdown.seconds} Seconds {countdown.milliseconds.toString().padStart(2, '0')} Milliseconds
+            <div className="mb-4 sm:mb-6 inline-flex items-center justify-center bg-white text-black border border-gray-200 rounded-full px-2 sm:px-4 py-1 sm:py-2 min-w-[280px] sm:min-w-[400px] h-6 sm:h-8">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> 
+              <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
+                Coming in {countdown.days}D {countdown.hours}H {countdown.minutes}M {countdown.seconds}S
               </span>
             </div>
 
             <h1
-              className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight"
+              className="text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight px-2"
               style={{ fontFamily: "Instrument Serif, serif" }}
             >
               When we're live, you won't miss Google, you'll wonder why you ever used it.
             </h1>
 
             <p
-              className="text-2xl md:text-3xl mb-10 max-w-3xl mx-auto bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-600 bg-clip-text text-transparent"
+              className="text-sm sm:text-lg md:text-2xl lg:text-3xl mb-6 sm:mb-8 md:mb-10 max-w-3xl mx-auto bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-600 bg-clip-text text-transparent px-2"
               style={{ fontFamily: "Instrument Serif, serif" }}
             >
               Where your questions meet the world's smartest solutions.

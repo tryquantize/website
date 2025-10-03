@@ -13,17 +13,17 @@ export default function LoggedInHome() {
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         {/* Hero Section with Custom Search Interface */}
-        <div className="mb-16">
+        <div className="mb-8 sm:mb-12 md:mb-16">
           <LoggedInSearchInterface onSearchResults={handleSearchResults} />
           
           {/* Browse All Solutions Button */}
-          <div className="text-center mt-8">
+          <div className="text-center mt-4 sm:mt-6 md:mt-8">
             <Button
               onClick={() => navigateWithLoading('/list')}
               variant="outline"
-              className="border-purple-400/40 text-white hover:bg-purple-500/20 hover:border-purple-400/60 px-8 py-4 text-lg"
+              className="border-purple-400/40 text-white hover:bg-purple-500/20 hover:border-purple-400/60 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base lg:text-lg"
             >
               Browse All Solutions
             </Button>
