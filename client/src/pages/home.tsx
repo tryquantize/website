@@ -812,7 +812,7 @@ export default function Home() {
      * Uses container class for consistent max-width and centering
      */
     <div ref={pageRef} className="min-h-screen">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         {/* 
          * HERO SECTION WITH SEARCH
          * 
@@ -821,7 +821,7 @@ export default function Home() {
          * - Quick access button to browse all solutions
          * - Cosmic theme styling with purple accents
          */}
-        <div className="mb-16 mist-target mist-lift">
+        <div className="mb-8 sm:mb-12 md:mb-16 mist-target mist-lift">
           {/* Main search interface component */}
           <SearchInterface onSearchResults={handleSearchResults} />
           
@@ -830,11 +830,11 @@ export default function Home() {
            * Secondary CTA for users who want to browse without searching
            * Styled with cosmic theme colors and hover effects
            */}
-          <div className="text-center mt-6 sm:mt-8">
+          <div className="text-center mt-4 sm:mt-6 md:mt-8">
             <Button
               onClick={() => navigateWithLoading('/list')}           // Navigate with loading transition
               variant="outline"
-              className="border-purple-400/40 text-white hover:bg-purple-500/20 hover:border-purple-400/60 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg"
+              className="border-purple-400/40 text-white hover:bg-purple-500/20 hover:border-purple-400/60 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base lg:text-lg"
             >
               Browse All Solutions
             </Button>
@@ -848,13 +848,13 @@ export default function Home() {
          * Large, bold typography for maximum impact
          * Centered layout with generous spacing
          */}
-        <div className="text-center mb-16 sm:mb-20 md:mb-24 mist-target mist-lift px-4">
+        <div className="text-center mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 mist-target mist-lift px-2 sm:px-4">
           {/* 
            * MAIN HEADLINE
            * Large, responsive text that scales from 3xl to 6xl
            * Bold weight for strong visual hierarchy
            */}
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 sm:mb-8 leading-tight">
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-4 sm:mb-6 md:mb-8 leading-tight">
             Discover the World's Best AI Tools, All in One Place
           </h2>
           
@@ -863,7 +863,7 @@ export default function Home() {
            * Explains the core value proposition in detail
            * Responsive text size for readability, constrained width for optimal reading
            */}
-          <p className="text-lg sm:text-xl md:text-2xl text-white/80 max-w-4xl mx-auto mb-8 sm:mb-10 md:mb-12 leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-white/80 max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10 lg:mb-12 leading-relaxed">
             We bring together the smartest AI tools, products, services, and experts so you can find exactly what you need — faster, simpler, smarter.
           </p>
         </div>
@@ -912,10 +912,10 @@ export default function Home() {
         </div>
 
         {/* Testimonials Section */}
-        <div className="mb-16 sm:mb-20 md:mb-24 mist-target px-4">
-          <div className="text-center mb-8 sm:mb-12">
-            <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">What Our Users Are Saying</h3>
-            <p className="text-sm sm:text-base text-white/70">Trusted by teams worldwide for speed, curation, and clarity.</p>
+        <div className="mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 mist-target px-2 sm:px-4">
+          <div className="text-center mb-6 sm:mb-8 md:mb-12">
+            <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-white mb-2 sm:mb-3">What Our Users Are Saying</h3>
+            <p className="text-xs sm:text-sm md:text-base text-white/70">Trusted by teams worldwide for speed, curation, and clarity.</p>
           </div>
 
           {/* Responsive grid - single column on mobile, 2 on tablet, 3 on desktop */}

@@ -100,9 +100,9 @@ export function Header() {
         variants={navVariants}
         animate={isScrolled ? 'scrolled' : 'top'}
       >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         {isResultsPage ? (
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
             <motion.div
               className="flex items-center space-x-2 flex-shrink-0"
               whileHover={{ scale: 1.05 }}
@@ -156,15 +156,15 @@ export function Header() {
             </div>
           </div>
         ) : (
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-12 sm:h-14 md:h-16">
             <motion.div
               className="flex items-center space-x-2 sm:space-x-3"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <Link href="/" className="flex items-center space-x-2 sm:space-x-3" data-testid="logo-link">
-                <QuantizeLogo size={24} className="sm:w-8 sm:h-8" />
-                <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
+              <Link href="/" className="flex items-center space-x-1 sm:space-x-2 md:space-x-3" data-testid="logo-link">
+                <QuantizeLogo size={20} className="sm:w-6 sm:h-6 md:w-8 md:h-8" />
+                <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
                   Quantize
                 </h1>
               </Link>

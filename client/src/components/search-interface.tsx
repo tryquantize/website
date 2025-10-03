@@ -672,19 +672,19 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
       <div className={`text-center transition-all duration-1000 ease-out ${
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'mb-0 opacity-100 scale-100 translate-y-0'
       }`}>
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6 leading-tight px-4" style={{ fontFamily: 'Instrument Serif, serif' }}>
+        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight px-2 sm:px-4" style={{ fontFamily: 'Instrument Serif, serif' }}>
           <span className="text-white">
             Ask, Discover.
           </span>
           <br />
-          <span className="inline-flex items-baseline sm:ml-8 md:ml-12 lg:ml-16">
+          <span className="inline-flex items-baseline flex-wrap justify-center sm:justify-start sm:ml-4 md:ml-8 lg:ml-12">
             <span className="text-white">Find the right&nbsp;</span>
-            <span className="flicker-text text-white inline-block w-[7ch] sm:w-[8ch] md:w-[9ch] text-left align-baseline">
+            <span className="flicker-text text-white inline-block w-[6ch] sm:w-[7ch] md:w-[8ch] text-left align-baseline">
               {flickerWord}
             </span>
           </span>
         </h1>
-        <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl italic text-white mb-6 max-w-2xl mx-auto leading-relaxed px-4" style={{ fontFamily: 'Instrument Serif, serif' }}>
+        <p className="text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl italic text-white mb-4 sm:mb-6 max-w-2xl mx-auto leading-relaxed px-2 sm:px-4" style={{ fontFamily: 'Instrument Serif, serif' }}>
           Where your questions meet the world's smartest solutions.
         </p>
       </div>
@@ -693,13 +693,13 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
       <div className={`transition-all duration-1500 ease-out ${
         isSearching 
           ? 'opacity-0 scale-90 pointer-events-none'
-          : 'w-full max-w-4xl mx-auto mb-8 px-4 sm:px-2 transform translate-y-0 opacity-100 scale-100'
+          : 'w-full max-w-4xl mx-auto mb-6 sm:mb-8 px-2 sm:px-4 transform translate-y-0 opacity-100 scale-100'
       }`}>
-        <div className={`relative rounded-[20px] sm:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out ${
+        <div className={`relative rounded-[16px] sm:rounded-[20px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[65px] sm:h-[75px] md:h-[85px] ${
           isSearching ? 'transform scale-95' : 'transform scale-100'
-        }`} style={{height: '75px', '@media (min-width: 640px)': {height: '85px'}}}>
-          {/* Search input area - increased for better centering */}
-          <div className="relative px-4 flex items-center" style={{height: '45px'}}>
+        }`}>
+          {/* Search input area - mobile optimized */}
+          <div className="relative px-2 sm:px-4 flex items-center h-[35px] sm:h-[40px] md:h-[45px]">
             {/* Undo button (only show if there's history) */}
             {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
               <TooltipProvider>
@@ -771,13 +771,13 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               disabled={isEnhancing}
-              className="h-10 w-full border-0 bg-transparent shadow-none text-sm sm:text-base md:text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-16 sm:pr-20 flex items-center disabled:opacity-70"
+              className="h-8 sm:h-9 md:h-10 w-full border-0 bg-transparent shadow-none text-xs sm:text-sm md:text-base lg:text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-12 sm:pr-16 md:pr-20 flex items-center disabled:opacity-70"
               data-testid="search-input"
             />
           </div>
 
-          {/* Bottom row - Icons - reduced by 20% */}
-          <div className="relative border-t border-white/10 px-4 py-2" style={{height: '40px'}}>
+          {/* Bottom row - Icons - mobile optimized */}
+          <div className="relative border-t border-white/10 px-2 sm:px-4 py-1 sm:py-2 h-[30px] sm:h-[35px] md:h-[40px]">
             <div className="flex items-center justify-between">
               {/* Left - Brain icon with dropdown and selected model */}
               <div className="relative flex items-center space-x-2">
@@ -818,7 +818,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                   )}
                 </div>
                 
-                <span className="text-xs text-white/70">{selectedModel || "GPT-4o Mini"}</span>
+                <span className="text-xs text-white/70 hidden sm:inline">{selectedModel || "GPT-4o Mini"}</span>
               </div>
 
               {/* Right - Filter buttons */}
