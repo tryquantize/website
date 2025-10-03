@@ -188,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.recordSearch(searchData);
 
       // Call Python AI service for AI-powered search
-      const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5002';
+      const aiServiceUrl = process.env.AI_SERVICE_URL || 'https://quantize-production.up.railway.app';
       
       try {
         const aiResponse = await fetch(`${aiServiceUrl}/search`, {
