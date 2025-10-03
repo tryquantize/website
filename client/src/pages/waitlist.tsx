@@ -259,15 +259,14 @@ export default function WaitlistPage() {
   useEffect(() => {
     const loadWaitlistCount = async () => {
       const count = await WaitlistService.getWaitlistCount();
-      // Set minimum count to 100 if Firebase count is less
-      setWaitlistCount(Math.max(count, 100));
+      setWaitlistCount(count);
     };
     
     loadWaitlistCount();
     
     // Listen for real-time updates
     const unsubscribe = WaitlistService.onWaitlistCountChange((count) => {
-      setWaitlistCount(Math.max(count, 100));
+      setWaitlistCount(count);
     });
     
     return () => unsubscribe();

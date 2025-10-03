@@ -75,8 +75,8 @@ export class WaitlistService {
   static async getWaitlistCount(): Promise<number> {
     try {
       const querySnapshot = await getDocs(collection(db, this.COLLECTION_NAME));
-      // Ensure minimum count of 100
-      return Math.max(querySnapshot.size + 100, 100);
+      // Start at 100 and add actual entries
+      return 100 + querySnapshot.size;
     } catch (error) {
       console.error('Error getting waitlist count:', error);
       return 100; // Return 100 as fallback
@@ -85,10 +85,11 @@ export class WaitlistService {
 
   static onWaitlistCountChange(callback: (count: number) => void) {
     return onSnapshot(collection(db, this.COLLECTION_NAME), (snapshot) => {
-      // Ensure minimum count of 100 plus actual entries
-      callback(Math.max(snapshot.size + 100, 100));
+      // Start at 100 and add actual entries
+      callback(100 + snapshot.size);
     }, (error) => {
       console.error('Error listening to waitlist changes:', error);
+      callback(100); // Fallback to 100
     });
   }
 
