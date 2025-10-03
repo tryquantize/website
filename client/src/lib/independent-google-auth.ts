@@ -24,7 +24,7 @@ export const handleIndependentGoogleAuth = async () => {
     console.log('Google sign-in successful:', result.user);
     
     // Redirect to the specified URL
-    window.location.href = 'https://quantize-one.vercel.app/';
+    window.location.href = 'https://quantize.site/';
     
     return { success: true, user: result.user };
   } catch (error: any) {
