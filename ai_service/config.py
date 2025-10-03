@@ -4,11 +4,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # OpenRouter API Configuration
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 # Exa Search API Configuration
-EXA_API_KEY = os.getenv("EXA_API_KEY", "b0abde90-8115-438d-ab42-f6538c354490")
+EXA_API_KEY = os.getenv("EXA_API_KEY")
 EXA_BASE_URL = "https://api.exa.ai"
 
 # AI Model Configuration
@@ -87,6 +87,6 @@ INSTRUCTIONS:
 """
 
 # Flask Configuration
-FLASK_HOST = os.getenv("FLASK_HOST", "localhost")
-FLASK_PORT = int(os.getenv("FLASK_PORT", 5002))
-FLASK_DEBUG = os.getenv("FLASK_DEBUG", "True").lower() == "true"
+FLASK_HOST = os.getenv("FLASK_HOST", "0.0.0.0")
+FLASK_PORT = int(os.getenv("PORT", os.getenv("FLASK_PORT", 5002)))
+FLASK_DEBUG = os.getenv("FLASK_DEBUG", "False").lower() == "true"

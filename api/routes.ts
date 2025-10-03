@@ -187,54 +187,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.recordSearch(searchData);
 
-      // Call Python AI service for AI-powered search (only in development)
-      if (process.env.NODE_ENV === 'development') {
-        try {
-          const aiResponse = await fetch('http://localhost:5002/search', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query,
-              context: context || {},
-              selectedModel,
-              selectedTypes: selectedTypes || []
-            })
-          });
-
-          if (!aiResponse.ok) {
-            throw new Error(`AI service responded with status: ${aiResponse.status}`);
-          }
-
-          const aiResult = await aiResponse.json();
-          
-          if (aiResult.success) {
-            // Also get traditional search results as fallback
-            const tools = await storage.getTools({ search: query });
-            
-            res.json({
-              query,
-              aiResponse: aiResult.aiResponse,
-              suggestions: aiResult.suggestions,
-              companies: aiResult.companies || [],
-              citations: aiResult.citations || [],
-              traditionalResults: tools,
-              count: tools.length,
-              aiPowered: true,
-              success: true
-            });
-            return;
-          } else {
-            throw new Error(aiResult.error || 'AI service failed');
-          }
-        } catch (aiError) {
-          console.error('AI service error:', aiError);
-        }
-      }
+      // Call Python AI service for AI-powered search
+      const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5002';
       
-      // Fallback to traditional search (production or AI service unavailable)
       try {
+        const aiResponse = await fetch(`${aiServiceUrl}/search`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query,
+            context: context || {},
+            selectedModel,
+            selectedTypes: selectedTypes || []
+          })
+        });
+
+        if (!aiResponse.ok) {
+          throw new Error(`AI service responded with status: ${aiResponse.status}`);
+        }
+
+        const aiResult = await aiResponse.json();
+        
+        if (aiResult.success) {
+          // Also get traditional search results as fallback
+          const tools = await storage.getTools({ search: query });
+          
+          res.json({
+            query,
+            aiResponse: aiResult.aiResponse,
+            suggestions: aiResult.suggestions,
+            companies: aiResult.companies || [],
+            citations: aiResult.citations || [],
+            traditionalResults: tools,
+            count: tools.length,
+            aiPowered: true,
+            success: true
+          });
+          return;
+        } else {
+          throw new Error(aiResult.error || 'AI service failed');
+        }
+      } catch (aiError) {
         console.error('AI service error:', aiError);
         
         // Fallback to traditional search if AI service fails
