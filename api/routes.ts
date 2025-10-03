@@ -190,6 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Call Python AI service for AI-powered search
       const aiServiceUrl = process.env.AI_SERVICE_URL || 'https://quantize-production.up.railway.app';
       console.log(`Attempting to call AI service at: ${aiServiceUrl}`);
+      // AI service integration with Railway - updated with env var
       
       try {
         const aiResponse = await fetch(`${aiServiceUrl}/search`, {
