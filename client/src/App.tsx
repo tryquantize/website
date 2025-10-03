@@ -55,7 +55,8 @@ function Router() {
           <Header />
           <main className="flex-1 pt-12 md:pt-24">
             <Switch>
-              <Route path="/">
+              <Route path="/" component={SpiralDemoPage} />
+              <Route path="/home">
                 {() => {
                   const { currentUser } = useFirebaseAuth();
                   return currentUser ? <LoggedInHome /> : <Home />;
@@ -75,12 +76,11 @@ function Router() {
               <Route path="/search-transition" component={SearchTransition} />
               <Route path="/results" component={ResultsPage} />
               <Route path="/favorites" component={FavoritesPage} />
-              <Route path="/spiral-demo" component={SpiralDemoPage} />
               <Route path="/glowing-search-demo" component={GlowingSearchDemoPage} />
               <Route component={NotFound} />
             </Switch>
           </main>
-          {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/spiral-demo' && location !== '/glowing-search-demo' && <Footer showJoinUs={location === '/'} />}
+          {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/' && location !== '/glowing-search-demo' && <Footer showJoinUs={location === '/home'} />}
         </div>
       </AnimatedLayout>
     </>

@@ -1,14 +1,15 @@
 'use client'
 
 import { SpiralAnimation } from "@/components/ui/spiral-animation"
+import { Button } from "@/components/ui/button"
 import { useState, useEffect } from 'react'
 
 const SpiralDemo = () => {
   const [startVisible, setStartVisible] = useState(false)
   
-  // Handle navigation to personal site
-  const navigateToPersonalSite = () => {
-    window.location.href = "https://quantize.site/"
+  // Handle navigation to home page
+  const navigateToHomePage = () => {
+    window.location.href = "https://quantize.site/home"
   }
   
   // Fade in the start button after animation loads
@@ -27,24 +28,31 @@ const SpiralDemo = () => {
         <SpiralAnimation />
       </div>
       
-      {/* Simple Elegant Text Button with Pulsing Effect */}
+      {/* Welcome Text and Enter Button */}
       <div 
         className={`
           absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10
-          transition-all duration-1500 ease-out
+          transition-all duration-1500 ease-out text-center
           ${startVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
         `}
       >
-        <button 
-          onClick={navigateToPersonalSite}
+        <h1 className="text-white text-4xl md:text-6xl font-bold mb-8 tracking-wide" style={{ fontFamily: 'Instrument Serif, serif' }}>
+          Welcome to Quantize
+        </h1>
+        <Button 
+          onClick={navigateToHomePage}
+          glowing={true}
+          glowColor="#402fb5,#cf30aa"
+          glowIntensity="high"
           className="
-            text-white text-2xl tracking-[0.2em] uppercase font-extralight
+            text-white text-xl tracking-[0.2em] uppercase font-extralight
+            px-8 py-3 bg-black/50 border border-white/30 rounded-lg
             transition-all duration-700
-            hover:tracking-[0.3em] animate-pulse
+            hover:tracking-[0.3em] hover:bg-white/10
           "
         >
           Enter
-        </button>
+        </Button>
       </div>
     </div>
   )
