@@ -105,14 +105,22 @@ class CompanyEnrichmentAgent:
     def _get_company_rating(self, company_name: str) -> Dict[str, Any]:
         """Agent 5: Get company rating and reviews"""
         try:
-            prompt = f"What is the typical customer rating for {company_name}? Return in format: rating,review_count (e.g., 4.5,1200)"
+            prompt = f"What is the typical customer rating for {company_name}? Return ONLY in format: rating,review_count (e.g., 4.5,1200). No other text."
             response = self._make_agent_request(prompt)
             if response and ',' in response:
-                parts = response.strip().split(',')
-                return {
-                    "rating": float(parts[0]),
-                    "reviews": int(parts[1])
-                }
+                # Extract only the first line and clean it
+                clean_response = response.strip().split('\n')[0].strip()
+                if ',' in clean_response:
+                    parts = clean_response.split(',')
+                    # Extract numbers from the parts
+                    rating_str = ''.join(c for c in parts[0] if c.isdigit() or c == '.')
+                    reviews_str = ''.join(c for c in parts[1] if c.isdigit())
+                    
+                    if rating_str and reviews_str:
+                        return {
+                            "rating": float(rating_str),
+                            "reviews": int(reviews_str)
+                        }
         except Exception as e:
             logger.error(f"Rating agent failed: {str(e)}")
         
