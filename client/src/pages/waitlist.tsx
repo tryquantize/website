@@ -51,6 +51,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { WaitlistService } from "@/lib/waitlist-service";
 import { useTheme } from "@/components/theme-provider";
+import { Header } from "@/components/layout/header";
 
 interface CountdownTime {
   days: number;
@@ -254,9 +255,22 @@ export default function WaitlistPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Set static waitlist count
+  // Load waitlist count from Firebase with initial value of 100
   useEffect(() => {
-    setWaitlistCount(1247); // Static count
+    const loadWaitlistCount = async () => {
+      const count = await WaitlistService.getWaitlistCount();
+      // Set minimum count to 100 if Firebase count is less
+      setWaitlistCount(Math.max(count, 100));
+    };
+    
+    loadWaitlistCount();
+    
+    // Listen for real-time updates
+    const unsubscribe = WaitlistService.onWaitlistCountChange((count) => {
+      setWaitlistCount(Math.max(count, 100));
+    });
+    
+    return () => unsubscribe();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -265,29 +279,47 @@ export default function WaitlistPage() {
 
     setIsSubmitting(true);
 
-    // Static implementation - no backend calls
-    setTimeout(() => {
-      playGuitarSound();
-      
-      // Increment static counter
-      setWaitlistCount(prev => prev + 1);
-      
+    try {
+      const result = await WaitlistService.addToWaitlist(
+        name,
+        email,
+        whatsappNumber ? `${countryCode}${whatsappNumber}` : undefined
+      );
+
+      if (result.success) {
+        playGuitarSound();
+        
+        toast({
+          title: "Welcome to the waitlist! 🎉",
+          description: `Thanks, ${name.split(" ")[0] || "there"}. You're #${result.position} on the waitlist! We'll notify you at ${email}!`,
+        });
+        
+        setName("");
+        setEmail("");
+        setWhatsappNumber("");
+      } else {
+        toast({
+          title: "Oops! Something went wrong",
+          description: result.error || "Failed to join waitlist. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Welcome to the waitlist! 🎉",
-        description: `Thanks, ${name.split(" ")[0] || "there"}. You're now on the waitlist! We'll notify you at ${email}!`,
+        title: "Error",
+        description: "Failed to join waitlist. Please try again.",
+        variant: "destructive",
       });
-      
-      setName("");
-      setEmail("");
-      setWhatsappNumber("");
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
 
 
   return (
     <div className="min-h-screen relative">
+      <Header />
       {/* Theme Toggle Button - Top Right */}
       <div className="absolute top-4 right-4 z-50">
         <Button

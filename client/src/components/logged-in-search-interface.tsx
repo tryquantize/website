@@ -109,7 +109,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     } else if (hour >= 17 && hour < 22) {
       return `Good evening ${firstName}`;
     } else {
-      return `Good night ${firstName}`;
+      return `Good evening ${firstName}`;
     }
   };
 

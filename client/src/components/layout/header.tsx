@@ -88,15 +88,15 @@ export function Header() {
     }
   };
 
-  // Don't render header on welcome transition page or waitlist page
-  if (isWelcomeTransitionPage || isWaitlistPage) {
+  // Don't render header on welcome transition page
+  if (isWelcomeTransitionPage) {
     return null;
   }
 
   return (
     <>
       <motion.header
-        className="sticky top-0 z-50 border-b"
+        className={`${isWaitlistPage ? 'fixed' : 'sticky'} top-0 z-50 border-b w-full`}
         variants={navVariants}
         animate={isScrolled ? 'scrolled' : 'top'}
       >
