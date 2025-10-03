@@ -10,7 +10,13 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+# Enable CORS for all routes with specific origins
+CORS(app, origins=[
+    "http://localhost:3001",
+    "https://quantize-ai.vercel.app",
+    "https://*.vercel.app",
+    "https://quantize-one.vercel.app"
+])
 
 # Initialize AI agent
 ai_agent = AISearchAgent()
