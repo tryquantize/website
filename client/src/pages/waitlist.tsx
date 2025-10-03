@@ -259,6 +259,7 @@ export default function WaitlistPage() {
   useEffect(() => {
     const loadWaitlistCount = async () => {
       const count = await WaitlistService.getWaitlistCount();
+      console.log('Initial waitlist count:', count);
       setWaitlistCount(count);
     };
     
@@ -266,6 +267,7 @@ export default function WaitlistPage() {
     
     // Listen for real-time updates
     const unsubscribe = WaitlistService.onWaitlistCountChange((count) => {
+      console.log('Waitlist count updated:', count);
       setWaitlistCount(count);
     });
     
@@ -287,6 +289,10 @@ export default function WaitlistPage() {
 
       if (result.success) {
         playGuitarSound();
+        
+        // Manually update counter immediately
+        const newCount = await WaitlistService.getWaitlistCount();
+        setWaitlistCount(newCount);
         
         toast({
           title: "Welcome to the waitlist! 🎉",
