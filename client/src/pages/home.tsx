@@ -46,6 +46,7 @@ import { useNavigation } from "@/hooks/use-navigation";            // Navigation
 import { useMistScroll } from "@/hooks/use-mist-scroll";           // Mist fade on scroll
 import { WaitlistService } from "@/lib/waitlist-service";          // Waitlist service
 import { useTheme } from "@/components/theme-provider";            // Theme provider
+import { SpiralBackground } from "@/components/ui/spiral-background"; // Spiral animation background
 
 // Types and schemas
 import { insertContactRequestSchema } from "@shared/schema";        // Contact form schema
@@ -811,8 +812,9 @@ export default function Home() {
      * Full-height container with responsive padding
      * Uses container class for consistent max-width and centering
      */
-    <div ref={pageRef} className="min-h-screen">
-      <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+    <div ref={pageRef} className="min-h-screen relative">
+      <SpiralBackground />
+      <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 relative z-10">
         {/* 
          * HERO SECTION WITH SEARCH
          * 
