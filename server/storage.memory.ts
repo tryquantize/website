@@ -9,7 +9,7 @@ import {
   type SearchQuery,
   type InsertSearchQuery,
   type ToolAnalytics
-} from "@shared/schema";
+} from "../shared/schema";
 import bcrypt from "bcryptjs";
 
 export class MemoryStorage implements IStorage {

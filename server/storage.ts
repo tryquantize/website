@@ -24,7 +24,7 @@ import {
   type SearchQuery,
   type InsertSearchQuery,
   type ToolAnalytics
-} from "@shared/schema";
+} from "../shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { eq, desc, and, sql, count } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -44,7 +44,7 @@ async function initializeDatabase() {
       neonConfig.webSocketConstructor = ws.default;
       
       pool = new Pool({ connectionString: process.env.DATABASE_URL });
-      db = drizzle({ client: pool, schema: await import("@shared/schema") });
+      db = drizzle({ client: pool, schema: await import("../shared/schema") });
       return true;
     }
   } catch (error) {

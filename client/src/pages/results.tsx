@@ -162,6 +162,8 @@ export default function ResultsPage() {
   const [queryHistory, setQueryHistory] = useState<string[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
   
+
+  
   // Toast notifications
   const { toast } = useToast();
   
@@ -819,6 +821,8 @@ export default function ResultsPage() {
     setFavoritesNotification({ show: false, itemName: '' });
   };
 
+
+
   const handleSelectConversation = (conversationId: string) => {
     loadConversation(conversationId);
     setCurrentConversationId(conversationId);
@@ -1007,6 +1011,8 @@ export default function ResultsPage() {
           </div>
         )}
         
+
+        
         {/* Cards - Show below all content */}
         {allCompanies.length > 0 && (() => {
           // Show appropriate cards based on selected types
@@ -1058,9 +1064,6 @@ export default function ResultsPage() {
         itemName={favoritesNotification.itemName}
         onClose={hideFavoritesNotification}
       />
-
-
-
 
 
 
