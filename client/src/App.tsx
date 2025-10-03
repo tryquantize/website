@@ -40,6 +40,7 @@ import LoggedInHome from "@/pages/loggedinhome";
 import WelcomeTransition from "@/pages/welcome-transition";
 import SearchTransition from "@/pages/search-transition";
 import FavoritesPage from "@/pages/favorites";
+import SpiralDemoPage from "@/pages/spiral-demo";
 
 function Router() {
   const { isLoading, fromPage, toPage } = useLoading();
@@ -73,10 +74,11 @@ function Router() {
               <Route path="/search-transition" component={SearchTransition} />
               <Route path="/results" component={ResultsPage} />
               <Route path="/favorites" component={FavoritesPage} />
+              <Route path="/spiral-demo" component={SpiralDemoPage} />
               <Route component={NotFound} />
             </Switch>
           </main>
-          {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && <Footer showJoinUs={location === '/'} />}
+          {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/spiral-demo' && <Footer showJoinUs={location === '/'} />}
         </div>
       </AnimatedLayout>
     </>
