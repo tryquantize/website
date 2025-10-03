@@ -812,7 +812,7 @@ export default function Home() {
      * Uses container class for consistent max-width and centering
      */
     <div ref={pageRef} className="min-h-screen">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* 
          * HERO SECTION WITH SEARCH
          * 
@@ -830,11 +830,11 @@ export default function Home() {
            * Secondary CTA for users who want to browse without searching
            * Styled with cosmic theme colors and hover effects
            */}
-          <div className="text-center mt-8">
+          <div className="text-center mt-6 sm:mt-8">
             <Button
               onClick={() => navigateWithLoading('/list')}           // Navigate with loading transition
               variant="outline"
-              className="border-purple-400/40 text-white hover:bg-purple-500/20 hover:border-purple-400/60 px-8 py-4 text-lg"
+              className="border-purple-400/40 text-white hover:bg-purple-500/20 hover:border-purple-400/60 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg"
             >
               Browse All Solutions
             </Button>
@@ -848,22 +848,22 @@ export default function Home() {
          * Large, bold typography for maximum impact
          * Centered layout with generous spacing
          */}
-        <div className="text-center mb-24 mist-target mist-lift">
+        <div className="text-center mb-16 sm:mb-20 md:mb-24 mist-target mist-lift px-4">
           {/* 
            * MAIN HEADLINE
-           * Large, responsive text that scales from 5xl to 6xl
+           * Large, responsive text that scales from 3xl to 6xl
            * Bold weight for strong visual hierarchy
            */}
-          <h2 className="text-5xl md:text-6xl font-bold text-white mb-8">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 sm:mb-8 leading-tight">
             Discover the World's Best AI Tools, All in One Place
           </h2>
           
           {/* 
            * SUPPORTING DESCRIPTION
            * Explains the core value proposition in detail
-           * Large text size for readability, constrained width for optimal reading
+           * Responsive text size for readability, constrained width for optimal reading
            */}
-          <p className="text-2xl text-white/80 max-w-4xl mx-auto mb-12">
+          <p className="text-lg sm:text-xl md:text-2xl text-white/80 max-w-4xl mx-auto mb-8 sm:mb-10 md:mb-12 leading-relaxed">
             We bring together the smartest AI tools, products, services, and experts so you can find exactly what you need — faster, simpler, smarter.
           </p>
         </div>
@@ -912,14 +912,14 @@ export default function Home() {
         </div>
 
         {/* Testimonials Section */}
-        <div className="mb-24 mist-target">
-          <div className="text-center mb-12">
-            <h3 className="text-4xl md:text-5xl font-bold text-white mb-3">What Our Users Are Saying</h3>
-            <p className="text-white/70">Trusted by teams worldwide for speed, curation, and clarity.</p>
+        <div className="mb-16 sm:mb-20 md:mb-24 mist-target px-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">What Our Users Are Saying</h3>
+            <p className="text-sm sm:text-base text-white/70">Trusted by teams worldwide for speed, curation, and clarity.</p>
           </div>
 
-          {/* 2 rows x 3 columns responsive grid with a tilted featured card */}
-          <div className="grid md:grid-cols-3 gap-6">
+          {/* Responsive grid - single column on mobile, 2 on tablet, 3 on desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {testimonials.slice(0, 6).map((t, idx) => (
               <div
                 key={idx}

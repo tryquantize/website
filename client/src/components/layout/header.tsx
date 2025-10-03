@@ -158,51 +158,53 @@ export function Header() {
         ) : (
           <div className="flex justify-between items-center h-16">
             <motion.div
-              className="flex items-center space-x-3"
+              className="flex items-center space-x-2 sm:space-x-3"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <Link href="/" className="flex items-center space-x-3" data-testid="logo-link">
-                <QuantizeLogo size={32} />
-                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
+              <Link href="/" className="flex items-center space-x-2 sm:space-x-3" data-testid="logo-link">
+                <QuantizeLogo size={24} className="sm:w-8 sm:h-8" />
+                <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
                   Quantize
                 </h1>
               </Link>
             </motion.div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleTheme}
-                className="w-9 px-0"
+                className="w-8 h-8 sm:w-9 sm:h-9 px-0"
               >
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <Sun className="h-3 w-3 sm:h-4 sm:w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-3 w-3 sm:h-4 sm:w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               </Button>
 
               {currentUser ? (
-                <div className="flex items-center space-x-2">
-                  <Avatar className="h-8 w-8">
+                <div className="flex items-center space-x-1 sm:space-x-2">
+                  <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                     <AvatarFallback className="text-xs">
                       {currentUser.displayName?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:block text-sm font-medium">
+                  <span className="hidden md:block text-sm font-medium">
                     {currentUser.displayName || currentUser.email}
                   </span>
                   <AnimatedButton 
                     variant="secondary" 
                     size="sm" 
                     onClick={() => setLocation('/favorites')}
-                    icon={<Heart className="w-4 h-4" />}
+                    icon={<Heart className="w-3 h-3 sm:w-4 sm:h-4" />}
+                    className="hidden sm:flex"
                   >
-                    Favorites
+                    <span className="hidden md:inline">Favorites</span>
                   </AnimatedButton>
                   <AnimatedButton 
                     variant="primary" 
                     size="sm" 
                     onClick={handleFirebaseLogout}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
                     Logout
                   </AnimatedButton>
@@ -222,20 +224,24 @@ export function Header() {
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center space-x-4 ml-auto">
+                <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
                   <AnimatedButton 
                     size="sm" 
                     variant="secondary"
                     onClick={() => navigateWithLoading('/auth')}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    Get Started
+                    <span className="hidden sm:inline">Get Started</span>
+                    <span className="sm:hidden">Login</span>
                   </AnimatedButton>
                   <AnimatedButton 
                     size="sm" 
                     variant="gradient"
                     onClick={() => navigateWithLoading('/waitlist')}
+                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    Join the Waitlist
+                    <span className="hidden sm:inline">Join the Waitlist</span>
+                    <span className="sm:hidden">Join</span>
                   </AnimatedButton>
                 </div>
               )}
