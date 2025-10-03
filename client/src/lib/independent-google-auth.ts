@@ -23,8 +23,8 @@ export const handleIndependentGoogleAuth = async () => {
     const result = await signInWithPopup(auth, googleProvider);
     console.log('Google sign-in successful:', result.user);
     
-    // Redirect to welcome transition page
-    window.location.href = '/welcome-transition';
+    // Redirect to the specified URL
+    window.location.href = 'https://quantize-one.vercel.app/';
     
     return { success: true, user: result.user };
   } catch (error: any) {

@@ -408,7 +408,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
       }`}>
         <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight" style={{ fontFamily: 'Instrument Serif, serif' }}>
-          <span className="text-white">{greeting}</span>
+          <span className="text-white">{greeting}, what are you looking for today?</span>
         </h1>
       </div>
 
