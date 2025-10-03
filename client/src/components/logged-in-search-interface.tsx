@@ -51,6 +51,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [showScrollSuggestions, setShowScrollSuggestions] = useState(false);
   
   // PROMPT ENHANCEMENT STATE
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -389,32 +390,39 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     }
   }, [showModelDropdown]);
 
+  // Handle scroll for suggestions
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      setShowScrollSuggestions(scrollY > 100);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <div className={`transition-all duration-1500 ease-out ${
-      isSearching 
-        ? 'max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[70vh]'
-        : 'max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[70vh]'
-    }`}>
-      {/* Welcome Message */}
-      <div className={`text-center transition-all duration-1000 ease-out ${
-        isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'mb-0 opacity-100 scale-100 translate-y-0'
+    <div className="min-h-screen flex flex-col items-center justify-center px-2 sm:px-4">
+      {/* Welcome Message - Centered */}
+      <div className={`text-center transition-all duration-1000 ease-out mb-6 ${
+        isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
       }`}>
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight" style={{ fontFamily: 'Instrument Serif, serif' }}>
-          <span className="text-white">{greeting}, what are you looking for today?</span>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight" style={{ fontFamily: 'Instrument Serif, serif' }}>
+          <span className="text-white">{greeting}</span>
         </h1>
       </div>
 
-      {/* Search Bar */}
-      <div className={`transition-all duration-1500 ease-out ${
+      {/* Search Bar - Centered */}
+      <div className={`transition-all duration-1500 ease-out w-full max-w-4xl mx-auto ${
         isSearching 
           ? 'opacity-0 scale-90 pointer-events-none'
-          : 'w-full max-w-4xl mx-auto mb-8 px-2 transform translate-y-0 opacity-100 scale-100'
+          : 'transform translate-y-0 opacity-100 scale-100'
       }`}>
-        <div className={`relative rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out ${
+        <div className={`relative rounded-[16px] sm:rounded-[20px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[65px] sm:h-[75px] md:h-[85px] ${
           isSearching ? 'transform scale-95' : 'transform scale-100'
-        }`} style={{height: '85px'}}>
-          <div className="relative px-4 flex items-center" style={{height: '45px'}}>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2">
+        }`}>
+          <div className="relative px-2 sm:px-4 flex items-center h-[35px] sm:h-[40px] md:h-[45px]">
+            <div className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 flex items-center space-x-1 sm:space-x-2">
               {/* Undo button */}
               {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
                 <TooltipProvider>
@@ -423,9 +431,9 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                       <button
                         aria-label="Undo prompt enhancement"
                         onClick={handleUndo}
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition"
+                        className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition"
                       >
-                        <Undo className="h-3 w-3" />
+                        <Undo className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="top">
@@ -443,12 +451,12 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                       aria-label="Enhance search prompt"
                       onClick={handlePromptEnhancement}
                       disabled={!query.trim() || isEnhancing || searchMutation.isPending}
-                      className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isEnhancing ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <Loader2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 animate-spin" />
                       ) : (
-                        <Sparkles className="h-3 w-3" />
+                        <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       )}
                     </button>
                   </TooltipTrigger>
@@ -464,24 +472,24 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
               <button
                 aria-label={isListening ? "Stop listening" : "Start voice input"}
                 onClick={isListening ? stopListening : startListening}
-                className={`flex h-7 w-7 items-center justify-center rounded-full border transition ${
+                className={`flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full border transition ${
                   isListening 
                     ? 'bg-red-500/20 border-red-400/40 text-red-400' 
                     : 'bg-white/5 border-white/20 text-white/90 hover:bg-white/10'
                 }`}
               >
-                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {isListening ? <MicOff className="h-3 w-3 sm:h-4 sm:w-4" /> : <Mic className="h-3 w-3 sm:h-4 sm:w-4" />}
               </button>
               <button
                 aria-label="Search"
                 onClick={handleSearch}
                 disabled={!query.trim() || searchMutation.isPending || isEnhancing}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
+                className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
               >
                 {searchMutation.isPending ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <Search className="h-4 w-4" />
+                  <Search className="h-3 w-3 sm:h-4 sm:w-4" />
                 )}
               </button>
             </div>
@@ -495,11 +503,11 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
               onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               disabled={isEnhancing}
-              className="h-10 w-full border-0 bg-transparent shadow-none text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-28 flex items-center disabled:opacity-70"
+              className="h-8 sm:h-9 md:h-10 w-full border-0 bg-transparent shadow-none text-xs sm:text-sm md:text-base lg:text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-20 sm:pr-24 md:pr-28 flex items-center disabled:opacity-70"
             />
           </div>
 
-          <div className="relative border-t border-white/10 px-4 py-2" style={{height: '40px'}}>
+          <div className="relative border-t border-white/10 px-2 sm:px-4 py-1 sm:py-2 h-[30px] sm:h-[35px] md:h-[40px]">
             <div className="flex items-center justify-between">
               <div className="relative flex items-center space-x-2">
                 <div className="relative">
@@ -508,11 +516,11 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                       e.stopPropagation();
                       setShowModelDropdown(!showModelDropdown);
                     }}
-                    className={`flex h-6 w-6 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 ${
+                    className={`flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 ${
                       selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
                     }`}
                   >
-                    <Brain className="h-3 w-3" />
+                    <Brain className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                   </button>
                   
                   {showModelDropdown && (
@@ -539,16 +547,16 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                   )}
                 </div>
                 
-                <span className="text-xs text-white/70">{selectedModel || "GPT-4o Mini"}</span>
+                <span className="text-xs text-white/70 hidden md:inline">{selectedModel || "GPT-4o Mini"}</span>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 sm:gap-2.5">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-6 w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          `h-5 w-5 sm:h-6 sm:w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
                           (selectedTypes.has('company')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -556,7 +564,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                         aria-label="Company"
                         onClick={() => toggleType('company')}
                       >
-                        <Building2 className="h-3 w-3" />
+                        <Building2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Company</TooltipContent>
@@ -630,8 +638,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
         )}
       </div>
 
-      {/* Quick Suggestions */}
-      <div className={`flex flex-wrap justify-center gap-2 mt-2 transition-all duration-1000 ease-out ${
+      {/* Quick Suggestions - Hidden initially on mobile, shown on scroll */}
+      <div className={`${showScrollSuggestions ? 'flex' : 'hidden md:flex'} flex-wrap justify-center gap-2 mt-4 transition-all duration-1000 ease-out ${
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
       }`}>
         {visibleSuggestions.map((suggestion, index) => (
