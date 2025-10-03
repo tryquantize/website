@@ -34,6 +34,15 @@ def health_check():
             "success": False
         }), 500
 
+@app.route('/test', methods=['GET'])
+def test_endpoint():
+    """Simple test endpoint"""
+    return jsonify({
+        "message": "AI service is running",
+        "success": True,
+        "timestamp": "2025-10-03"
+    }), 200
+
 @app.route('/search', methods=['POST'])
 def ai_search():
     """Main AI search endpoint"""
