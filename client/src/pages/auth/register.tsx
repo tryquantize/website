@@ -21,10 +21,10 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { handleIndependentGoogleAuth } from "@/lib/independent-google-auth";
-import { Bot, Eye, EyeOff, AlertCircle, CheckCircle, Mail, Lock } from "lucide-react";
+import { Bot, Eye, EyeOff, AlertCircle, CheckCircle, Mail, Lock, Chrome, Twitter, Gamepad2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebookF } from "react-icons/fa";
-import heroImage from "@assets/image_1754838988796.png";
+import LoginPage from "@/components/ui/gaming-login";
 
 // Login schema
 const loginSchema = z.object({
@@ -150,267 +150,340 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-0 bg-[#252033] rounded-2xl shadow-2xl overflow-hidden">
-        {/* Left visual panel */}
-        <div className="relative hidden md:block">
-          <img src="/forest.png" alt="Forest" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="relative z-10 h-full p-6 flex flex-col">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
-                </div>
-            <span className="text-firequest font-semibold tracking-wide">Quantize</span>
-              </div>
-              <Link href="/" className="text-white/90 bg-white/10 hover:bg-white/20 transition-colors rounded-full px-3 py-1 text-sm">
-                Back to website →
-              </Link>
-            </div>
-            <div className="mt-auto pb-8">
-              <div className="mt-6 flex gap-2">
-                <span className="h-1 w-8 bg-white/30 rounded-full" />
-                <span className="h-1 w-8 bg-white rounded-full" />
-                <span className="h-1 w-8 bg-white/30 rounded-full" />
-              </div>
+    <div className="relative min-h-screen w-full flex items-center justify-center px-4 py-12">
+      <LoginPage.VideoBackground videoUrl="https://videos.pexels.com/video-files/8128311/8128311-uhd_2560_1440_25fps.mp4" />
+      
+      {/* Back to website link */}
+      <Link href="/" className="absolute top-4 right-4 z-30 text-white/90 bg-white/10 hover:bg-white/20 transition-colors rounded-full px-3 py-1 text-sm">
+        Back to website →
+      </Link>
+
+      <div className="relative z-20 w-full max-w-md animate-fadeIn">
+        <div className="p-8 rounded-2xl backdrop-blur-sm bg-black/50 border border-white/10">
+          {/* Toggle between Login and Register */}
+          <div className="flex items-center justify-center mb-8">
+            <div className="bg-white/10 rounded-lg p-1 flex">
+              <button
+                onClick={toggleMode}
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                  !isLogin 
+                    ? 'bg-white/20 text-white' 
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                Create Account
+              </button>
+              <button
+                onClick={toggleMode}
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                  isLogin 
+                    ? 'bg-white/20 text-white' 
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                Sign In
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Right form panel */}
-        <div className="p-8 md:p-10">
-          <div className="max-w-md mx-auto">
-            {/* Toggle between Login and Register */}
-            <div className="flex items-center justify-center mb-8">
-              <div className="bg-white/10 rounded-lg p-1 flex">
-                <button
-                  onClick={toggleMode}
-                  className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
-                    !isLogin 
-                      ? 'bg-white/20 text-white' 
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  Create Account
-                </button>
-                <button
-                  onClick={toggleMode}
-                  className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
-                    isLogin 
-                      ? 'bg-white/20 text-white' 
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  Sign In
-                </button>
+          {isLogin ? (
+            /* Login Form with Gaming Style */
+            <>
+              <div className="mb-8 text-center">
+                <h2 className="text-3xl font-bold mb-2 relative group">
+                  <span className="absolute -inset-1 bg-gradient-to-r from-purple-600/30 via-pink-500/30 to-blue-500/30 blur-xl opacity-75 group-hover:opacity-100 transition-all duration-500 animate-pulse"></span>
+                  <span className="relative inline-block text-3xl font-bold mb-2 text-white">
+                    Quantize
+                  </span>
+                  <span className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300"></span>
+                </h2>
+                <p className="text-white/80 flex flex-col items-center space-y-1">
+                  <span className="relative group cursor-default">
+                    <span className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 to-pink-600/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+                    <span className="relative inline-block animate-pulse">Your AI universe awaits</span>
+                  </span>
+                  <span className="text-xs text-white/50 animate-pulse">
+                    [Press Enter to join the adventure]
+                  </span>
+                  <div className="flex space-x-2 text-xs text-white/40">
+                    <span className="animate-pulse">🤖</span>
+                    <span className="animate-bounce">⚡</span>
+                    <span className="animate-pulse">🚀</span>
+                  </div>
+                </p>
               </div>
-            </div>
 
-            {isLogin ? (
-              /* Login Form - Same section layout */
-              <>
-                <h1 className="text-3xl md:text-4xl font-bold text-white text-center">Sign In with Email</h1>
-                <p className="text-white/70 mt-2 text-center">
-                  Sign in to your account to continue
-                </p>
+              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
+                {error && (
+                  <Alert variant="destructive" data-testid="login-error">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
 
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="mt-8 space-y-4">
-                  {error && (
-                    <Alert variant="destructive" data-testid="login-error">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <Mail className="text-white/60" size={18} />
+                  </div>
+                  <input
+                    type="email"
+                    placeholder="Email address"
+                    className="w-full pl-10 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-purple-500/50 transition-colors"
+                    {...loginForm.register("email")}
+                    required
+                  />
+                  {loginForm.formState.errors.email && (
+                    <p className="text-sm text-destructive mt-1">{loginForm.formState.errors.email.message}</p>
                   )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email" className="text-white/90">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
-                      <Input 
-                        id="login-email" 
-                        type="email" 
-                        placeholder="Enter your email" 
-                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-white/40 focus:bg-white/15"
-                        autoComplete="off"
-                        {...loginForm.register("email")} 
-                      />
-                    </div>
-                    {loginForm.formState.errors.email && (
-                      <p className="text-sm text-destructive">{loginForm.formState.errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password" className="text-white/90">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
-                      <Input 
-                        id="login-password" 
-                        type={showPassword ? "text" : "password"} 
-                        placeholder="Enter your password" 
-                        className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-white/40 focus:bg-white/15"
-                        autoComplete="off"
-                        {...loginForm.register("password")} 
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/60 hover:text-white"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    <div className="text-right">
-                      <a href="#" className="text-sm text-white/60 hover:text-white/80">Forgot password?</a>
-                    </div>
-                    {loginForm.formState.errors.password && (
-                      <p className="text-sm text-destructive">{loginForm.formState.errors.password.message}</p>
-                    )}
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-b from-neutral-800 to-black text-white hover:from-neutral-900 hover:to-black" 
-                    disabled={loginMutation.isPending}
-                    data-testid="login-submit-button"
-                  >
-                    {loginMutation.isPending ? "Signing in..." : "Sign In"}
-                  </Button>
-                </form>
-
-                <div className="mt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full bg-transparent border-white/20 text-white hover:bg-white/10"
-                    onClick={handleIndependentGoogleAuth}
-                  >
-                    <FcGoogle className="w-5 h-5 mr-2" /> Continue with Google
-                  </Button>
                 </div>
-              </>
-            ) : (
-              /* Register Form - Same section layout */
-              <>
-                <h1 className="text-3xl md:text-4xl font-bold text-white text-center">Create an account</h1>
-                <p className="text-white/70 mt-2 text-center">
-                  Join us and discover amazing AI tools
-                </p>
 
-                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="mt-8 space-y-4">
-                  {error && (
-                    <Alert variant="destructive" data-testid="register-error">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <Lock className="text-white/60" size={18} />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    className="w-full pl-10 pr-10 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-purple-500/50 transition-colors"
+                    {...loginForm.register("password")}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white focus:outline-none transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                  {loginForm.formState.errors.password && (
+                    <p className="text-sm text-destructive mt-1">{loginForm.formState.errors.password.message}</p>
                   )}
+                </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName" className="text-white/90">First name</Label>
-                      <Input id="firstName" placeholder="First name" autoComplete="off" {...registerForm.register("firstName")} />
-                      {registerForm.formState.errors.firstName && (
-                        <p className="text-sm text-destructive">{registerForm.formState.errors.firstName.message}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName" className="text-white/90">Last name</Label>
-                      <Input id="lastName" placeholder="Last name" autoComplete="off" {...registerForm.register("lastName")} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="register-email" className="text-white/90">Email</Label>
-                    <Input id="register-email" type="email" placeholder="Enter your email" autoComplete="off" {...registerForm.register("email")} />
-                    {registerForm.formState.errors.email && (
-                      <p className="text-sm text-destructive">{registerForm.formState.errors.email.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="register-password" className="text-white/90">Enter your password</Label>
-                    <div className="relative">
-                      <Input id="register-password" type={showPassword ? "text" : "password"} placeholder="Enter your password" autoComplete="off" {...registerForm.register("password")} />
-                      <button
-                        type="button"
-                        className="absolute right-0 top-0 h-full px-3 py-2 text-white/60 hover:text-white"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                    {registerForm.watch("password") && (
-                      <div className="space-y-1 mt-2">
-                        <div className="text-xs text-white/60">Password requirements:</div>
-                        <div className="space-y-1">
-                          <div className={`flex items-center space-x-2 text-xs ${passwordStrength.hasMinLength ? 'text-green-500' : 'text-white/60'}`}>
-                            <CheckCircle className={`w-3 h-3 ${passwordStrength.hasMinLength ? 'text-green-500' : 'text-white/60'}`} />
-                            <span>At least 8 characters</span>
-                          </div>
-                          <div className={`flex items-center space-x-2 text-xs ${passwordStrength.hasLowercase ? 'text-green-500' : 'text-white/60'}`}>
-                            <CheckCircle className={`w-3 h-3 ${passwordStrength.hasLowercase ? 'text-green-500' : 'text-white/60'}`} />
-                            <span>One lowercase letter</span>
-                          </div>
-                          <div className={`flex items-center space-x-2 text-xs ${passwordStrength.hasUppercase ? 'text-green-500' : 'text-white/60'}`}>
-                            <CheckCircle className={`w-3 h-3 ${passwordStrength.hasUppercase ? 'text-green-500' : 'text-white/60'}`} />
-                            <span>One uppercase letter</span>
-                          </div>
-                          <div className={`flex items-center space-x-2 text-xs ${passwordStrength.hasNumber ? 'text-green-500' : 'text-white/60'}`}>
-                            <CheckCircle className={`w-3 h-3 ${passwordStrength.hasNumber ? 'text-green-500' : 'text-white/60'}`} />
-                            <span>One number</span>
-                          </div>
-                        </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="relative inline-block w-10 h-5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        id="remember-me"
+                        className="sr-only"
+                        checked={false}
+                        onChange={() => {}}
+                      />
+                      <div className="absolute inset-0 rounded-full transition-colors duration-200 ease-in-out bg-white/20">
+                        <div className="absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ease-in-out" />
                       </div>
-                    )}
-                    {registerForm.formState.errors.password && (
-                      <p className="text-sm text-destructive">{registerForm.formState.errors.password.message}</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-start gap-3 py-2">
-                    <Checkbox 
-                      id="agree" 
-                      checked={registerForm.watch("agree")} 
-                      onCheckedChange={(val) => registerForm.setValue("agree", val as true)} 
-                    />
-                    <label htmlFor="agree" className="text-sm text-white/80 leading-tight">
-                      I agree to the <a href="#" className="underline">Terms & Conditions</a>
+                    </div>
+                    <label htmlFor="remember-me" className="text-sm text-white/80 cursor-pointer hover:text-white transition-colors">
+                      Remember me
                     </label>
                   </div>
-                  {registerForm.formState.errors.agree && (
-                    <p className="text-sm text-destructive">{registerForm.formState.errors.agree.message as string}</p>
-                  )}
-
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-b from-neutral-800 to-black text-white hover:from-neutral-900 hover:to-black" 
-                    disabled={registerMutation.isPending} 
-                    data-testid="register-submit-button"
-                  >
-                    {registerMutation.isPending ? "Creating account..." : "Create account"}
-                  </Button>
-                </form>
-
-                <div className="mt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full bg-transparent border-white/20 text-white hover:bg-white/10"
-                    onClick={handleIndependentGoogleAuth}
-                  >
-                    <FcGoogle className="w-5 h-5 mr-2" /> Continue with Google
-                  </Button>
+                  <a href="#" className="text-sm text-white/80 hover:text-white transition-colors">
+                    Forgot password?
+                  </a>
                 </div>
-              </>
-            )}
-          </div>
+
+                <button
+                  type="submit"
+                  disabled={loginMutation.isPending}
+                  className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-200 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
+                >
+                  {loginMutation.isPending ? 'Logging in...' : 'Enter Quantize'}
+                </button>
+              </form>
+
+              <div className="mt-8">
+                <div className="relative flex items-center justify-center">
+                  <div className="border-t border-white/10 absolute w-full"></div>
+                  <div className="bg-transparent px-4 relative text-white/60 text-sm">
+                    quick access via
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-3 gap-3">
+                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors" onClick={handleIndependentGoogleAuth}>
+                    <Chrome size={18} />
+                  </button>
+                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors">
+                    <Twitter size={18} />
+                  </button>
+                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors">
+                    <Gamepad2 size={18} />
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Register Form with Gaming Style */
+            <>
+              <div className="mb-8 text-center">
+                <h2 className="text-3xl font-bold mb-2 relative group">
+                  <span className="absolute -inset-1 bg-gradient-to-r from-purple-600/30 via-pink-500/30 to-blue-500/30 blur-xl opacity-75 group-hover:opacity-100 transition-all duration-500 animate-pulse"></span>
+                  <span className="relative inline-block text-3xl font-bold mb-2 text-white">
+                    Join Quantize
+                  </span>
+                  <span className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300"></span>
+                </h2>
+                <p className="text-white/80 flex flex-col items-center space-y-1">
+                  <span className="relative group cursor-default">
+                    <span className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 to-pink-600/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+                    <span className="relative inline-block animate-pulse">Create your AI adventure</span>
+                  </span>
+                  <span className="text-xs text-white/50 animate-pulse">
+                    [Begin your journey with us]
+                  </span>
+                  <div className="flex space-x-2 text-xs text-white/40">
+                    <span className="animate-pulse">✨</span>
+                    <span className="animate-bounce">🚀</span>
+                    <span className="animate-pulse">🌟</span>
+                  </div>
+                </p>
+              </div>
+
+              <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
+                {error && (
+                  <Alert variant="destructive" data-testid="register-error">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="First name"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-purple-500/50 transition-colors"
+                      {...registerForm.register("firstName")}
+                      required
+                    />
+                    {registerForm.formState.errors.firstName && (
+                      <p className="text-sm text-destructive mt-1">{registerForm.formState.errors.firstName.message}</p>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Last name"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-purple-500/50 transition-colors"
+                      {...registerForm.register("lastName")}
+                    />
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <Mail className="text-white/60" size={18} />
+                  </div>
+                  <input
+                    type="email"
+                    placeholder="Email address"
+                    className="w-full pl-10 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-purple-500/50 transition-colors"
+                    {...registerForm.register("email")}
+                    required
+                  />
+                  {registerForm.formState.errors.email && (
+                    <p className="text-sm text-destructive mt-1">{registerForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <Lock className="text-white/60" size={18} />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    className="w-full pl-10 pr-10 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-purple-500/50 transition-colors"
+                    {...registerForm.register("password")}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white focus:outline-none transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                  {registerForm.watch("password") && (
+                    <div className="space-y-1 mt-2">
+                      <div className="text-xs text-white/60">Password requirements:</div>
+                      <div className="space-y-1">
+                        <div className={`flex items-center space-x-2 text-xs ${passwordStrength.hasMinLength ? 'text-green-500' : 'text-white/60'}`}>
+                          <CheckCircle className={`w-3 h-3 ${passwordStrength.hasMinLength ? 'text-green-500' : 'text-white/60'}`} />
+                          <span>At least 8 characters</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 text-xs ${passwordStrength.hasLowercase ? 'text-green-500' : 'text-white/60'}`}>
+                          <CheckCircle className={`w-3 h-3 ${passwordStrength.hasLowercase ? 'text-green-500' : 'text-white/60'}`} />
+                          <span>One lowercase letter</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 text-xs ${passwordStrength.hasUppercase ? 'text-green-500' : 'text-white/60'}`}>
+                          <CheckCircle className={`w-3 h-3 ${passwordStrength.hasUppercase ? 'text-green-500' : 'text-white/60'}`} />
+                          <span>One uppercase letter</span>
+                        </div>
+                        <div className={`flex items-center space-x-2 text-xs ${passwordStrength.hasNumber ? 'text-green-500' : 'text-white/60'}`}>
+                          <CheckCircle className={`w-3 h-3 ${passwordStrength.hasNumber ? 'text-green-500' : 'text-white/60'}`} />
+                          <span>One number</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {registerForm.formState.errors.password && (
+                    <p className="text-sm text-destructive mt-1">{registerForm.formState.errors.password.message}</p>
+                  )}
+                </div>
+
+                <div className="flex items-start gap-3 py-2">
+                  <Checkbox 
+                    id="agree" 
+                    checked={registerForm.watch("agree")} 
+                    onCheckedChange={(val) => registerForm.setValue("agree", val as true)} 
+                  />
+                  <label htmlFor="agree" className="text-sm text-white/80 leading-tight">
+                    I agree to the <a href="#" className="underline">Terms & Conditions</a>
+                  </label>
+                </div>
+                {registerForm.formState.errors.agree && (
+                  <p className="text-sm text-destructive">{registerForm.formState.errors.agree.message as string}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={registerMutation.isPending}
+                  className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-200 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
+                >
+                  {registerMutation.isPending ? 'Creating account...' : 'Join Quantize'}
+                </button>
+              </form>
+
+              <div className="mt-8">
+                <div className="relative flex items-center justify-center">
+                  <div className="border-t border-white/10 absolute w-full"></div>
+                  <div className="bg-transparent px-4 relative text-white/60 text-sm">
+                    quick access via
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-3 gap-3">
+                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors" onClick={handleIndependentGoogleAuth}>
+                    <Chrome size={18} />
+                  </button>
+                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors">
+                    <Twitter size={18} />
+                  </button>
+                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors">
+                    <Gamepad2 size={18} />
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
+      
+      <footer className="absolute bottom-4 left-0 right-0 text-center text-white/60 text-sm z-20">
+        © 2025 Quantize. All rights reserved.
+      </footer>
     </div>
   );
 }

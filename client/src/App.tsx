@@ -52,8 +52,8 @@ function Router() {
       <LoadingTransition />
       <AnimatedLayout>
         <div className="relative z-10 min-h-screen flex flex-col">
-          <Header />
-          <main className="flex-1 pt-12 md:pt-24">
+          {location !== '/' && <Header />}
+          <main className={`flex-1 ${location !== '/' ? 'pt-12 md:pt-24' : ''}`}>
             <Switch>
               <Route path="/" component={SpiralDemoPage} />
               <Route path="/home">
