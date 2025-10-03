@@ -34,8 +34,11 @@ export const handleIndependentGoogleAuth = async () => {
       console.log('User closed the popup');
     } else if (error.code === 'auth/popup-blocked') {
       alert('Popup was blocked. Please allow popups and try again.');
+    } else if (error.code === 'auth/unauthorized-domain') {
+      alert('This domain is not authorized for Google sign-in. Please contact support.');
     } else {
-      alert('Google sign-in failed. Please try again.');
+      console.error('Full error details:', error);
+      alert(`Google sign-in failed: ${error.message}. Please try again.`);
     }
     
     return { success: false, error: error.message };
