@@ -41,6 +41,7 @@ import WelcomeTransition from "@/pages/welcome-transition";
 import SearchTransition from "@/pages/search-transition";
 import FavoritesPage from "@/pages/favorites";
 import SpiralDemoPage from "@/pages/spiral-demo";
+import GlowingSearchDemoPage from "@/pages/glowing-search-demo";
 
 function Router() {
   const { isLoading, fromPage, toPage } = useLoading();
@@ -75,10 +76,11 @@ function Router() {
               <Route path="/results" component={ResultsPage} />
               <Route path="/favorites" component={FavoritesPage} />
               <Route path="/spiral-demo" component={SpiralDemoPage} />
+              <Route path="/glowing-search-demo" component={GlowingSearchDemoPage} />
               <Route component={NotFound} />
             </Switch>
           </main>
-          {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/spiral-demo' && <Footer showJoinUs={location === '/'} />}
+          {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/spiral-demo' && location !== '/glowing-search-demo' && <Footer showJoinUs={location === '/'} />}
         </div>
       </AnimatedLayout>
     </>
