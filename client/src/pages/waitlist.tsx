@@ -350,7 +350,7 @@ export default function WaitlistPage() {
             </div>
 
             <h1
-              className="text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight px-2"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight px-2"
               style={{ fontFamily: "Instrument Serif, serif" }}
             >
               When we're live, you won't miss Google, you'll wonder why you ever used it.
@@ -363,8 +363,8 @@ export default function WaitlistPage() {
               Where your questions meet the world's smartest solutions.
             </p>
 
-            <Card className="max-w-xl mx-auto bg-black/30 backdrop-blur-xl border-white/20 shadow-lg">
-              <CardContent className="p-6">
+            <Card className="max-w-xl mx-auto bg-black/30 backdrop-blur-xl border-white/20 shadow-lg md:max-w-xl sm:max-w-sm">
+              <CardContent className="p-4 sm:p-6">
                 <form onSubmit={handleSubmit} className="space-y-4 text-left">
                   <Label className="text-white text-sm font-medium">Join the waitlist</Label>
 

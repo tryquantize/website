@@ -36,7 +36,7 @@ const SpiralDemo = () => {
           ${startVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
         `}
       >
-        <h1 className="text-white text-8xl md:text-12xl font-bold mb-8 tracking-wide" style={{ fontFamily: 'Instrument Serif, serif' }}>
+        <h1 className="text-white text-4xl sm:text-6xl md:text-8xl lg:text-12xl font-bold mb-8 tracking-wide" style={{ fontFamily: 'Instrument Serif, serif' }}>
           Welcome to Quantize
         </h1>
         <Button 

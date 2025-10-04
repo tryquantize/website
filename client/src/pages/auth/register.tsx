@@ -89,7 +89,7 @@ export default function AuthPage() {
     },
     onSuccess: (data) => {
       login(data.user);
-      setLocation("/");
+      setLocation("/home");
     },
     onError: (error: any) => {
       setError(error.message || "Login failed. Please check your credentials.");
@@ -110,7 +110,7 @@ export default function AuthPage() {
     },
     onSuccess: (data) => {
       login(data.user);
-      setLocation("/");
+      setLocation("/home");
     },
     onError: (error: any) => {
       setError(error.message || "Registration failed. Please try again.");
