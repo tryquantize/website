@@ -286,7 +286,7 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={loginMutation.isPending}
-                  className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-200 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
+                  className="w-full py-3 rounded-lg bg-white hover:bg-gray-100 text-black font-medium transition-all duration-200 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-white/20 hover:shadow-white/40"
                 >
                   {loginMutation.isPending ? 'Logging in...' : 'Enter Quantize'}
                 </button>
@@ -448,7 +448,7 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={registerMutation.isPending}
-                  className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-200 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
+                  className="w-full py-3 rounded-lg bg-white hover:bg-gray-100 text-black font-medium transition-all duration-200 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-white/20 hover:shadow-white/40"
                 >
                   {registerMutation.isPending ? 'Creating account...' : 'Join Quantize'}
                 </button>

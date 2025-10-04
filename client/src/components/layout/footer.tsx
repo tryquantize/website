@@ -30,7 +30,7 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
             </p>
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-[#4B0082] via-[#8A2BE2] to-[#9370DB] hover:from-[#8A2BE2] hover:via-[#9370DB] hover:to-[#8A2BE2] text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-purple-500/40 transition-all duration-300 transform hover:scale-105"
+              className="bg-white hover:bg-gray-100 text-black px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-white/40 transition-all duration-300 transform hover:scale-105"
               onClick={() => navigateWithLoading('/onboarding')}
             >
               <Sparkles className="w-5 h-5 mr-2" />
@@ -54,7 +54,7 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
         <h3 className="font-bold text-lg bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">Quantize</h3>
               </div>
               <p className="text-white/80 text-sm">
-                The leading platform for discovering and connecting with innovative AI tools for your business needs.
+                The intelligent AI search engine that understands your questions and delivers precise answers.
               </p>
             </div>
 
@@ -81,9 +81,14 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-white transition-colors">
-                    Contact
-                  </Link>
+                  <a href="mailto:info@quantize.site" className="hover:text-white transition-colors">
+                    Contact: info@quantize.site
+                  </a>
+                </li>
+                <li>
+                  <a href="https://www.linkedin.com/company/tryquantize/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                    LinkedIn
+                  </a>
                 </li>
                 <li>
                   <Link href="/privacy" className="hover:text-white transition-colors">
@@ -100,7 +105,8 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
           </div>
 
           <div className="border-t border-white/10 mt-8 pt-8 text-center text-sm text-white/70">
-      <p>&copy; 2024 Quantize. All rights reserved.</p>
+            <p>&copy; 2025 Quantize. All rights reserved.</p>
+            <p className="mt-2">Made by Aditya Surana</p>
           </div>
         </div>
       </footer>

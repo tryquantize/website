@@ -840,7 +840,7 @@ export default function Home() {
          * Large, bold typography for maximum impact
          * Centered layout with generous spacing
          */}
-        <div className="text-center mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 px-2 sm:px-4 mt-16">
+        <div className="text-center mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 px-2 sm:px-4 mt-32 sm:mt-40 md:mt-48 lg:mt-56">
           {/* 
            * MAIN HEADLINE
            * Large, responsive text that scales from 3xl to 6xl
