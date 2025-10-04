@@ -28,15 +28,12 @@ import {
 } from "@/components/ui/select";
 import { useState as useReactState } from "react";
 import {
-  Clock,
   ArrowRight,
   User,
   Mail,
   CheckCircle2,
   Sparkles,
   Shield,
-  Sun,
-  Moon,
   Phone,
   Star,
   Zap,
@@ -50,17 +47,11 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { WaitlistService } from "@/lib/waitlist-service";
-import { useTheme } from "@/components/theme-provider";
+
 import { Header } from "@/components/layout/header";
 import WarpDriveShader from "@/components/ui/warp-drive-shader";
 
-interface CountdownTime {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  milliseconds: number;
-}
+
 
 export default function WaitlistPage() {
   const [name, setName] = useState("");
@@ -69,9 +60,9 @@ export default function WaitlistPage() {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [waitlistCount, setWaitlistCount] = useState(0);
-  const [countdown, setCountdown] = useState<CountdownTime>({ days: 14, hours: 23, minutes: 2, seconds: 33, milliseconds: 1 });
+
   const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
+
 
   const [searchTerm, setSearchTerm] = useReactState("");
   
@@ -146,9 +137,7 @@ export default function WaitlistPage() {
     country.code.includes(searchTerm)
   );
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
+
 
   // Pleasant guitar sound effect function
   const playGuitarSound = () => {
@@ -232,29 +221,7 @@ export default function WaitlistPage() {
     }
   };
 
-  // Countdown timer
-  useEffect(() => {
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + 14); // 14 days from now
-    targetDate.setHours(23, 2, 33, 1); // Set to specific time
 
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = targetDate.getTime() - now;
-
-      if (distance > 0) {
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        const milliseconds = Math.floor((distance % 1000) / 10); // Show centiseconds
-
-        setCountdown({ days, hours, minutes, seconds, milliseconds });
-      }
-    }, 10); // Update every 10ms for smooth milliseconds
-
-    return () => clearInterval(timer);
-  }, []);
 
   // Load waitlist count from Firebase with initial value of 100
   useEffect(() => {
@@ -327,27 +294,11 @@ export default function WaitlistPage() {
     <div className="min-h-screen relative">
       <WarpDriveShader />
       <Header />
-      {/* Theme Toggle Button - Top Right */}
-      <div className="absolute top-4 right-4 z-50">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleTheme}
-          className="w-9 h-9 px-0 bg-white/10 hover:bg-white/20 border border-white/20"
-        >
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        </Button>
-      </div>
+
       <div className="relative overflow-hidden">
         <div className="relative max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 pt-4 pb-16 text-center">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-4 sm:mb-6 inline-flex items-center justify-center bg-white text-black border border-gray-200 rounded-full px-2 sm:px-4 py-1 sm:py-2 min-w-[280px] sm:min-w-[400px] h-6 sm:h-8">
-              <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> 
-              <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
-                Coming in {countdown.days}D {countdown.hours}H {countdown.minutes}M {countdown.seconds}S
-              </span>
-            </div>
+
 
             <h1
               className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight px-2"
@@ -357,7 +308,7 @@ export default function WaitlistPage() {
             </h1>
 
             <p
-              className="text-sm sm:text-lg md:text-2xl lg:text-3xl mb-6 sm:mb-8 md:mb-10 max-w-3xl mx-auto bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-600 bg-clip-text text-transparent px-2"
+              className="text-lg sm:text-xl md:text-3xl lg:text-4xl mb-6 sm:mb-8 md:mb-10 max-w-3xl mx-auto bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-600 bg-clip-text text-transparent px-2"
               style={{ fontFamily: "Instrument Serif, serif" }}
             >
               Where your questions meet the world's smartest solutions.
@@ -445,7 +396,11 @@ export default function WaitlistPage() {
                   <Button
                     type="submit"
                     disabled={isSubmitting || !email || !name}
-                    className="w-full h-12 bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                    className={`w-full h-12 border transition-colors ${
+                      email && name 
+                        ? 'bg-white hover:bg-gray-100 text-black border-white' 
+                        : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+                    }`}
                   >
                     {isSubmitting ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
