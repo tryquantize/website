@@ -154,6 +154,7 @@ export function AnimatedCard({ tool, onClick }: AnimatedCardProps) {
             <AnimatedButton 
               variant="secondary" 
               size="sm"
+              interactive
               onClick={(e) => {
                 e.stopPropagation()
                 onClick?.()

@@ -90,11 +90,25 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
   const renderResponse = (response: string, responseCitations: Array<{id: number, title: string, url: string}> = [], isCompact = false) => {
     let processedResponse = response;
     
+    // Always limit to 100 words and make friendly
+    const words = response.split(' ');
+    const limitedWords = words.slice(0, 100);
+    const limitedResponse = limitedWords.join(' ');
+    
+    // Add friendly intro and ensure proper ending
+    const friendlyIntro = "Hey! Here's what I found for you: ";
+    processedResponse = friendlyIntro + limitedResponse;
+    
+    // Ensure it ends properly
+    if (!processedResponse.match(/[.!?]$/)) {
+      processedResponse += '.';
+    }
+    
     if (isCompact) {
-      // Truncate to first 2 sentences and add intro
-      const sentences = response.split(/[.!?]+/);
-      const firstTwoSentences = sentences.slice(0, 2).join('. ').trim();
-      processedResponse = `Here's what we found: ${firstTwoSentences}${firstTwoSentences.endsWith('.') ? '' : '.'}`;
+      // For compact view, make it even shorter
+      const sentences = processedResponse.split(/[.!?]+/);
+      const firstSentence = sentences.slice(0, 1).join('.').trim();
+      processedResponse = firstSentence + (firstSentence.endsWith('.') ? '' : '.');
     }
     
     const parts = processedResponse.split(/(\[\d+\])/);

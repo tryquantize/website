@@ -21,7 +21,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { handleIndependentGoogleAuth } from "@/lib/independent-google-auth";
-import { Bot, Eye, EyeOff, AlertCircle, CheckCircle, Mail, Lock, Chrome, Twitter, Gamepad2 } from "lucide-react";
+import { Bot, Eye, EyeOff, AlertCircle, CheckCircle, Mail, Lock } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebookF } from "react-icons/fa";
 import LoginPage from "@/components/ui/gaming-login";
@@ -300,15 +300,13 @@ export default function AuthPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-3 gap-3">
-                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors" onClick={handleIndependentGoogleAuth}>
-                    <Chrome size={18} />
-                  </button>
-                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors">
-                    <Twitter size={18} />
-                  </button>
-                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors">
-                    <Gamepad2 size={18} />
+                <div className="mt-6 flex justify-center">
+                  <button 
+                    className="flex items-center justify-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg text-gray-700 font-medium transition-all duration-200 shadow-sm hover:shadow-md" 
+                    onClick={handleIndependentGoogleAuth}
+                  >
+                    <FcGoogle size={20} />
+                    <span>Sign in with Google</span>
                   </button>
                 </div>
               </div>
@@ -464,15 +462,13 @@ export default function AuthPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-3 gap-3">
-                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors" onClick={handleIndependentGoogleAuth}>
-                    <Chrome size={18} />
-                  </button>
-                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors">
-                    <Twitter size={18} />
-                  </button>
-                  <button className="flex items-center justify-center p-2 bg-white/5 border border-white/10 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors">
-                    <Gamepad2 size={18} />
+                <div className="mt-6 flex justify-center">
+                  <button 
+                    className="flex items-center justify-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg text-gray-700 font-medium transition-all duration-200 shadow-sm hover:shadow-md" 
+                    onClick={handleIndependentGoogleAuth}
+                  >
+                    <FcGoogle size={20} />
+                    <span>Sign in with Google</span>
                   </button>
                 </div>
               </div>

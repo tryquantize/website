@@ -4,6 +4,8 @@ import { ExternalLink, Package, Heart } from "lucide-react";
 import { useFavorites } from "@/contexts/favorites-context";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
+import { GradientCardBase } from "@/components/ui/gradient-card-base";
+import { motion } from "framer-motion";
 
 interface Product {
   name: string;
@@ -33,13 +35,21 @@ export function ProductCards({ products }: ProductCardsProps) {
     <div className="mt-6">
       <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2" style={{scrollbarWidth: 'thin'}}>
         {products.map((product, index) => (
-          <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all rounded-lg p-4 min-w-[320px] h-[480px] flex-shrink-0">
-            <div className="space-y-3 h-full flex flex-col">
+          <GradientCardBase key={index} className="min-w-[320px] flex-shrink-0">
+            <div className="space-y-3 h-full flex flex-col p-4">
               <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <Package className="w-4 h-4 text-white" />
-                  </div>
+                <div className="flex items-center space-x-3">
+                  {/* Icon circle with gradient */}
+                  <motion.div
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(225deg, #171c2c 0%, #121624 100%)",
+                      boxShadow: "0 4px 8px -1px rgba(0, 0, 0, 0.2), inset 1px 1px 3px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.4)"
+                    }}
+                    whileHover={{ y: -1, boxShadow: "0 6px 12px -1px rgba(0, 0, 0, 0.3), inset 1px 1px 3px rgba(255, 255, 255, 0.15), inset -1px -1px 2px rgba(0, 0, 0, 0.5)" }}
+                  >
+                    <Package className="w-5 h-5 text-white" />
+                  </motion.div>
                   <div>
                     <h5 className="text-white text-base font-medium">{product.name}</h5>
                     <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{product.category}</span>
@@ -124,7 +134,7 @@ export function ProductCards({ products }: ProductCardsProps) {
                 </Button>
               </div>
             </div>
-          </div>
+          </GradientCardBase>
         ))}
       </div>
     </div>

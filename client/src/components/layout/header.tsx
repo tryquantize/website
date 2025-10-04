@@ -9,12 +9,12 @@
 
 import { Link, useLocation, useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/components/theme-provider";
+
 import { useAuth } from "@/lib/auth";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
-import { Moon, Sun, Search, Heart, Menu, X } from "lucide-react";
+import { Search, Heart, Menu, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
@@ -24,7 +24,7 @@ import { AnimatedButton } from "@/components/ui/animated-button";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 
 export function Header() {
-  const { theme, setTheme } = useTheme();
+
   const { user, isAuthenticated, logout } = useAuth();
   const { currentUser, signOut: firebaseSignOut } = useFirebaseAuth();
   const { navigateWithLoading } = useNavigation();
@@ -47,9 +47,7 @@ export function Header() {
     setIsScrolled(latest > 50);
   });
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
+
 
   const navVariants = {
     top: {
@@ -108,7 +106,7 @@ export function Header() {
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <Link href="/" className="flex items-center space-x-2" data-testid="logo-link">
+              <Link href="/home" className="flex items-center space-x-2" data-testid="logo-link">
                 <QuantizeLogo size={24} />
                 <h1 className="text-base font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent whitespace-nowrap">
                   Quantize
@@ -122,6 +120,7 @@ export function Header() {
                 <AnimatedButton 
                   size="sm" 
                   variant="secondary"
+                  interactive
                   onClick={() => setLocation('/favorites')}
                   icon={<Heart className="w-4 h-4" />}
                 >
@@ -131,6 +130,7 @@ export function Header() {
               <AnimatedButton 
                 size="sm" 
                 variant="primary"
+                interactive
                 onClick={async () => {
                   try {
                     await firebaseSignOut();
@@ -144,15 +144,7 @@ export function Header() {
                 Logout
               </AnimatedButton>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleTheme}
-                className="w-8 h-8 px-0 flex-shrink-0"
-              >
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              </Button>
+
             </div>
           </div>
         ) : (
@@ -162,7 +154,7 @@ export function Header() {
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <Link href="/" className="flex items-center space-x-1 sm:space-x-2 md:space-x-3" data-testid="logo-link">
+              <Link href="/home" className="flex items-center space-x-1 sm:space-x-2 md:space-x-3" data-testid="logo-link">
                 <QuantizeLogo size={20} className="sm:w-6 sm:h-6 md:w-8 md:h-8" />
                 <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
                   Quantize
@@ -171,15 +163,7 @@ export function Header() {
             </motion.div>
 
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleTheme}
-                className="w-8 h-8 sm:w-9 sm:h-9 px-0"
-              >
-                <Sun className="h-3 w-3 sm:h-4 sm:w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-3 w-3 sm:h-4 sm:w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              </Button>
+
 
               {currentUser ? (
                 <div className="flex items-center space-x-1 sm:space-x-2">
@@ -194,6 +178,7 @@ export function Header() {
                   <AnimatedButton 
                     variant="secondary" 
                     size="sm" 
+                    interactive
                     onClick={() => setLocation('/favorites')}
                     icon={<Heart className="w-3 h-3 sm:w-4 sm:h-4" />}
                     className="hidden sm:flex"
@@ -203,6 +188,7 @@ export function Header() {
                   <AnimatedButton 
                     variant="primary" 
                     size="sm" 
+                    interactive
                     onClick={handleFirebaseLogout}
                     className="text-xs sm:text-sm px-2 sm:px-3"
                   >
@@ -228,6 +214,7 @@ export function Header() {
                   <AnimatedButton 
                     size="sm" 
                     variant="secondary"
+                    interactive
                     onClick={() => navigateWithLoading('/auth')}
                     className="text-xs sm:text-sm px-2 sm:px-3"
                   >
@@ -237,6 +224,7 @@ export function Header() {
                   <AnimatedButton 
                     size="sm" 
                     variant="gradient"
+                    interactive
                     onClick={() => navigateWithLoading('/waitlist')}
                     className="text-xs sm:text-sm px-2 sm:px-3"
                   >

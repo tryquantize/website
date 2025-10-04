@@ -36,19 +36,16 @@ const SpiralDemo = () => {
           ${startVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
         `}
       >
-        <h1 className="text-white text-4xl md:text-6xl font-bold mb-8 tracking-wide" style={{ fontFamily: 'Instrument Serif, serif' }}>
+        <h1 className="text-white text-8xl md:text-12xl font-bold mb-8 tracking-wide" style={{ fontFamily: 'Instrument Serif, serif' }}>
           Welcome to Quantize
         </h1>
         <Button 
           onClick={navigateToHomePage}
-          glowing={true}
-          glowColor="#402fb5,#cf30aa"
-          glowIntensity="high"
           className="
-            text-white text-xl tracking-[0.2em] uppercase font-extralight
-            px-8 py-3 bg-black/50 border border-white/30 rounded-lg
+            text-black text-sm tracking-[0.2em] uppercase font-extralight
+            px-4 py-2 bg-white border border-white rounded-lg
             transition-all duration-700
-            hover:tracking-[0.3em] hover:bg-white/10
+            hover:tracking-[0.3em] hover:bg-white/90
           "
         >
           Enter

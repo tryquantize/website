@@ -52,7 +52,7 @@ import { useToast } from "@/hooks/use-toast";
 import { WaitlistService } from "@/lib/waitlist-service";
 import { useTheme } from "@/components/theme-provider";
 import { Header } from "@/components/layout/header";
-import { SpiralBackground } from "@/components/ui/spiral-background";
+import WarpDriveShader from "@/components/ui/warp-drive-shader";
 
 interface CountdownTime {
   days: number;
@@ -325,7 +325,7 @@ export default function WaitlistPage() {
 
   return (
     <div className="min-h-screen relative">
-      <SpiralBackground />
+      <WarpDriveShader />
       <Header />
       {/* Theme Toggle Button - Top Right */}
       <div className="absolute top-4 right-4 z-50">

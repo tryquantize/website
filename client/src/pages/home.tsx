@@ -8,7 +8,7 @@
 */
 
 // React hooks
-import { useEffect, useRef, useState } from "react";                                 // State management
+import { useEffect, useState } from "react";                                 // State management
 
 // Data fetching
 import { useQuery, useMutation } from "@tanstack/react-query";     // API data fetching and mutations
@@ -17,6 +17,7 @@ import { apiRequest } from "@/lib/queryClient";                    // API reques
 // Custom components
 import { SearchInterface } from "@/components/search-interface";    // Main search component with typewriter effect
 import { ToolCard } from "@/components/tool-card";                 // Individual tool display cards
+
 
 // UI components
 import { Button } from "@/components/ui/button";                   // Reusable button component
@@ -43,10 +44,13 @@ import { cn } from "@/lib/utils";                                 // Utility for
 import { useToast } from "@/hooks/use-toast";                     // Toast notifications
 import { useAuth } from "@/lib/auth";                              // Authentication state
 import { useNavigation } from "@/hooks/use-navigation";            // Navigation with loading transitions
-import { useMistScroll } from "@/hooks/use-mist-scroll";           // Mist fade on scroll
+
 import { WaitlistService } from "@/lib/waitlist-service";          // Waitlist service
 import { useTheme } from "@/components/theme-provider";            // Theme provider
 import { SpiralBackground } from "@/components/ui/spiral-background"; // Spiral animation background
+import TestimonialsColumns from "@/components/ui/testimonials-demo"; // Animated testimonials columns
+import AnimatedShaderBackground from "@/components/ui/animated-shader-background"; // Animated shader background
+import Featured_05 from "@/components/ui/globe-feature-section"; // Globe feature section
 
 // Types and schemas
 import { insertContactRequestSchema } from "@shared/schema";        // Contact form schema
@@ -802,8 +806,7 @@ export default function Home() {
     );
   }
 
-  const pageRef = useRef<HTMLDivElement | null>(null);
-  useMistScroll(pageRef, { selector: ".mist-target", intensityViewportFactor: 0.8 });
+
 
   return (
     /**
@@ -812,8 +815,8 @@ export default function Home() {
      * Full-height container with responsive padding
      * Uses container class for consistent max-width and centering
      */
-    <div ref={pageRef} className="min-h-screen relative">
-      <SpiralBackground />
+    <div className="min-h-screen relative">
+      <AnimatedShaderBackground />
       <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 relative z-10">
         {/* 
          * HERO SECTION WITH SEARCH
@@ -823,24 +826,11 @@ export default function Home() {
          * - Quick access button to browse all solutions
          * - Cosmic theme styling with purple accents
          */}
-        <div className="mb-8 sm:mb-12 md:mb-16 mist-target mist-lift">
+        <div className="mb-8 sm:mb-12 md:mb-16">
           {/* Main search interface component */}
           <SearchInterface onSearchResults={handleSearchResults} />
           
-          {/* 
-           * QUICK ACCESS BUTTON
-           * Secondary CTA for users who want to browse without searching
-           * Styled with cosmic theme colors and hover effects
-           */}
-          <div className="text-center mt-4 sm:mt-6 md:mt-8">
-            <Button
-              onClick={() => navigateWithLoading('/list')}           // Navigate with loading transition
-              variant="outline"
-              className="border-purple-400/40 text-white hover:bg-purple-500/20 hover:border-purple-400/60 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base lg:text-lg"
-            >
-              Browse All Solutions
-            </Button>
-          </div>
+
         </div>
 
         {/* 
@@ -850,7 +840,7 @@ export default function Home() {
          * Large, bold typography for maximum impact
          * Centered layout with generous spacing
          */}
-        <div className="text-center mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 mist-target mist-lift px-2 sm:px-4">
+        <div className="text-center mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 px-2 sm:px-4 mt-16">
           {/* 
            * MAIN HEADLINE
            * Large, responsive text that scales from 3xl to 6xl
@@ -870,6 +860,8 @@ export default function Home() {
           </p>
         </div>
 
+
+
         {/* Value Proposition Cards - removed as requested */}
 
         {/* Trust Signals - removed as requested */}
@@ -885,7 +877,7 @@ export default function Home() {
         {/* Stay Updated - removed as requested */}
 
         {/* FAQs Section */}
-        <div className="mb-24 mist-target">
+        <div className="mb-24">
           <div className="flex items-end justify-between mb-8">
             <div>
               <h3 className="text-4xl md:text-5xl font-bold text-white mb-2">Frequently Asked <span className="text-blue-400">Questions</span></h3>
@@ -914,11 +906,8 @@ export default function Home() {
         </div>
 
         {/* Testimonials Section */}
-        <div className="mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 mist-target px-2 sm:px-4">
-          <div className="text-center mb-6 sm:mb-8 md:mb-12">
-            <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-white mb-2 sm:mb-3">What Our Users Are Saying</h3>
-            <p className="text-xs sm:text-sm md:text-base text-white/70">Trusted by teams worldwide for speed, curation, and clarity.</p>
-          </div>
+        <div className="mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 px-2 sm:px-4">
+          <TestimonialsColumns />
 
           {/* Responsive grid - single column on mobile, 2 on tablet, 3 on desktop */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
@@ -963,6 +952,9 @@ export default function Home() {
             ))}
           </div>
         </div>
+
+        {/* Globe Feature Section */}
+        <Featured_05 />
 
         {/* Contact Dialog */}
         <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
@@ -1023,6 +1015,7 @@ export default function Home() {
                 <Button
                   type="button"
                   variant="outline"
+                  interactive
                   onClick={() => setContactDialogOpen(false)}
                   data-testid="contact-cancel-button"
                 >
@@ -1030,6 +1023,7 @@ export default function Home() {
                 </Button>
                 <Button
                   type="submit"
+                  interactive
                   disabled={contactMutation.isPending}
                   data-testid="contact-send-button"
                 >
@@ -1177,6 +1171,7 @@ export default function Home() {
 
                             <Button
                               type="submit"
+                              interactive
                               disabled={isSubmitting || !email || !name}
                               className="w-full h-12 bg-white/10 hover:bg-white/20 text-white border border-white/20"
                             >

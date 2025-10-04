@@ -158,6 +158,7 @@ export function AnimatedSearchBar({
               <AnimatedButton
                 variant="primary"
                 size="sm"
+                interactive
                 onClick={() => query.trim() && onSearch(query)}
                 disabled={!query.trim()}
                 className="px-4 py-2"

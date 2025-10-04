@@ -12,7 +12,7 @@ import { useLoading } from '@/contexts/loading-context';
 
 const getPageName = (path: string): string => {
   if (path === '/') return 'Home';
-  if (path === '/list') return 'Discovery';
+
   if (path === '/auth' || path === '/auth/register') return 'Get Started';
   if (path === '/waitlist') return 'Waitlist';
   if (path === '/dashboard') return 'Dashboard';

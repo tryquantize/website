@@ -940,6 +940,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
             key={index}
             variant="ghost"
             size="sm"
+            interactive
             onClick={() => handleSuggestionTileClick(suggestion)}
             className="text-xs rounded-md px-3 py-1 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm"
             data-testid={`suggestion-${index}`}
@@ -952,6 +953,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
           <AnimatedButton
             variant="gradient"
             size="sm"
+            interactive
             onClick={handleShowMore}
             className="text-xs rounded-md px-3 py-1"
           >
@@ -962,6 +964,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
           <AnimatedButton
             variant="secondary"
             size="sm"
+            interactive
             onClick={handleShowLess}
             className="text-xs rounded-md px-3 py-1"
           >

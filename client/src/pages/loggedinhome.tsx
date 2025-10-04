@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigation } from "@/hooks/use-navigation";
 import { useState } from "react";
 import { SpiralBackground } from "@/components/ui/spiral-background";
+import AnimatedShaderBackground from "@/components/ui/animated-shader-background";
 
 export default function LoggedInHome() {
   const { navigateWithLoading } = useNavigation();
@@ -14,23 +15,14 @@ export default function LoggedInHome() {
 
   return (
     <div className="min-h-screen relative">
-      <SpiralBackground />
+      <AnimatedShaderBackground />
       <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 relative z-10">
         {/* Hero Section with Custom Search Interface */}
         <div>
           <LoggedInSearchInterface onSearchResults={handleSearchResults} />
         </div>
         
-        {/* Browse All Solutions Button - Hidden initially, shown on scroll */}
-        <div className="hidden md:block text-center mt-8">
-          <Button
-            onClick={() => navigateWithLoading('/list')}
-            variant="outline"
-            className="border-purple-400/40 text-white hover:bg-purple-500/20 hover:border-purple-400/60 px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base lg:text-lg"
-          >
-            Browse All Solutions
-          </Button>
-        </div>
+
       </div>
       
       {/* Blank Footer */}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Search, Users, Shield, BarChart3, CheckCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import AnimatedShaderBackground from "@/components/ui/animated-shader-background";
 
 interface FlowStep {
   id: number;
@@ -14,31 +15,31 @@ const flowSteps: FlowStep[] = [
   {
     id: 1,
     title: "Understanding your requirements",
-    description: "Analyzing your search query and budget constraints",
+    description: "Analyzing your search query and specific business needs",
     icon: <Search className="w-5 h-5" />
   },
   {
     id: 2,
-    title: "Sourcing suppliers and manufacturers",
-    description: "Identifying Indian brands and trusted distributors in your category",
+    title: "Discovering AI solutions",
+    description: "Finding the best startups, tools, and products that match your criteria",
     icon: <Users className="w-5 h-5" />
   },
   {
     id: 3,
-    title: "Verifying credentials and certifications",
-    description: "Checking ISO certifications, reviews, and trust factors",
+    title: "Verifying quality and reliability",
+    description: "Checking reviews, ratings, and credibility of AI solutions",
     icon: <Shield className="w-5 h-5" />
   },
   {
     id: 4,
-    title: "Analyzing pricing and specifications",
-    description: "Comparing features, warranties, and value propositions",
+    title: "Comparing features and pricing",
+    description: "Analyzing capabilities, pricing models, and value propositions",
     icon: <BarChart3 className="w-5 h-5" />
   },
   {
     id: 5,
-    title: "Compiling final recommendations",
-    description: "Ranking options by fit score and preparing detailed insights",
+    title: "Delivering smart recommendations",
+    description: "Presenting the top AI solutions ranked by relevance and fit",
     icon: <CheckCircle className="w-5 h-5" />
   }
 ];
@@ -93,12 +94,13 @@ export default function SearchTransition() {
   }, [setLocation]);
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-8">
+    <div className="min-h-screen relative flex items-center justify-center p-8">
+      <AnimatedShaderBackground />
       <div className="max-w-3xl w-full">
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-white mb-4">Deep Research in Progress</h1>
           <p className="text-lg text-white/80">
-            Finding the best suppliers and products for: <span className="text-white">"{query}"</span>
+            Finding the best AI solutions for: <span className="text-white">"{query}"</span>
           </p>
         </div>
 

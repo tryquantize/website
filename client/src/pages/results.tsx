@@ -32,6 +32,7 @@ import { FavoritesNotification } from "@/components/favorites-notification";
 import { NotificationProvider } from "@/contexts/notification-context";
 import { enhancePrompt } from "@/lib/promptEnhancer";
 import { useToast } from "@/hooks/use-toast";
+import WarpDriveShader from "@/components/ui/warp-drive-shader";
 
 // Mock search results - in real app this would come from API
 const mockSearchResults = [
@@ -854,7 +855,8 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-screen pb-32 relative">
+      <WarpDriveShader />
       {/* Fixed Sidebar */}
       {showSidebar && (
         <ConversationSidebar 

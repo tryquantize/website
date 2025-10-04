@@ -1,5 +1,5 @@
 import { motion, HTMLMotionProps } from 'framer-motion'
-import { Loader2 } from 'lucide-react'
+import { Loader2, ArrowRight } from 'lucide-react'
 import { forwardRef } from 'react'
 
 interface AnimatedButtonProps extends HTMLMotionProps<"button"> {
@@ -8,6 +8,7 @@ interface AnimatedButtonProps extends HTMLMotionProps<"button"> {
   isLoading?: boolean
   icon?: React.ReactNode
   glowColor?: string
+  interactive?: boolean
 }
 
 export const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>(
@@ -18,6 +19,7 @@ export const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>
     isLoading = false,
     icon,
     glowColor = '#3b82f6',
+    interactive = false,
     className = '',
     ...props 
   }, ref) => {
@@ -121,6 +123,7 @@ export const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>
           disabled:opacity-50 disabled:cursor-not-allowed
           focus:outline-none focus:ring-2 focus:ring-blue-500/50
           transform-gpu perspective-1000
+          ${interactive ? 'group' : ''}
           ${className}
         `}
         variants={buttonVariants}
@@ -142,26 +145,39 @@ export const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>
           />
         )}
 
-        <div className="relative flex items-center justify-center gap-2">
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : icon ? (
-            <motion.div
-              initial={{ rotate: 0 }}
-              whileHover={{ rotate: 5 }}
-              transition={{ duration: 0.2 }}
+        {interactive ? (
+          <>
+            <span className="inline-block transition-all duration-300 group-hover:translate-x-2 group-hover:opacity-0">
+              {children}
+            </span>
+            <div className="absolute top-0 z-10 flex h-full w-full translate-x-8 items-center justify-center gap-2 opacity-0 transition-all duration-300 group-hover:-translate-x-1 group-hover:opacity-100">
+              <span>{children}</span>
+              <ArrowRight className="h-4 w-4" />
+            </div>
+            <div className="absolute left-[20%] top-[40%] h-2 w-2 scale-[1] rounded-lg bg-white/30 transition-all duration-300 group-hover:left-[0%] group-hover:top-[0%] group-hover:h-full group-hover:w-full group-hover:scale-[1.8] group-hover:bg-white/20"></div>
+          </>
+        ) : (
+          <div className="relative flex items-center justify-center gap-2">
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : icon ? (
+              <motion.div
+                initial={{ rotate: 0 }}
+                whileHover={{ rotate: 5 }}
+                transition={{ duration: 0.2 }}
+              >
+                {icon}
+              </motion.div>
+            ) : null}
+            
+            <motion.span
+              initial={{ opacity: 1 }}
+              animate={{ opacity: isLoading ? 0.7 : 1 }}
             >
-              {icon}
-            </motion.div>
-          ) : null}
-          
-          <motion.span
-            initial={{ opacity: 1 }}
-            animate={{ opacity: isLoading ? 0.7 : 1 }}
-          >
-            {children}
-          </motion.span>
-        </div>
+              {children}
+            </motion.span>
+          </div>
+        )}
 
         <motion.div
           className="absolute inset-0 bg-white/10 rounded-full"

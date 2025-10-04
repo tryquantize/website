@@ -15,7 +15,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
-import { BackgroundParticles } from "@/components/background-particles";
+
 import { LoadingProvider, useLoading } from "@/contexts/loading-context";
 import { LoadingTransition } from "@/components/loading-transition";
 import { FirebaseAuthProvider, useFirebaseAuth } from "@/contexts/firebase-auth-context";
@@ -31,7 +31,7 @@ import ProductsPage from "@/pages/Products";
 import Dashboard from "@/pages/dashboard";
 import Admin from "@/pages/admin";
 import Register from "@/pages/auth/register";
-import ListPage from "@/pages/list-new";
+
 import ResultsPage from "@/pages/results";
 import WaitlistPage from "@/pages/waitlist";
 import WaitlistAdminPage from "@/pages/waitlist-admin";
@@ -72,7 +72,7 @@ function Router() {
               <Route path="/waitlist" component={WaitlistPage} />
               <Route path="/waitlist-admin" component={WaitlistAdminPage} />
               <Route path="/onboarding" component={OnboardingPage} />
-              <Route path="/list" component={ListPage} />
+
               <Route path="/search-transition" component={SearchTransition} />
               <Route path="/results" component={ResultsPage} />
               <Route path="/favorites" component={FavoritesPage} />
@@ -97,7 +97,7 @@ function App() {
               <LoadingProvider>
                 <TooltipProvider>
                   <Toaster />
-                  <BackgroundParticles />
+
                   <Router />
                   <Analytics />
                 </TooltipProvider>
