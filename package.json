@@ -4,14 +4,14 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "node cleanup.js && NODE_ENV=development yarn tsx api/index.ts",
-    "build": "node cleanup.js && vite build",
+    "dev": "node tools/scripts/cleanup.js && NODE_ENV=development yarn tsx apps/api/index.ts",
+    "build": "node tools/scripts/cleanup.js && vite build --config tools/config/vite.config.ts",
     "vercel-build": "yarn build",
-    "start": "node api/index.ts",
+    "start": "node apps/api/index.ts",
     "check": "tsc",
-    "clean": "node cleanup.js",
-    "launch": "./launch.sh",
-    "setup": "yarn install && cd ai_service && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+    "clean": "node tools/scripts/cleanup.js",
+    "launch": "./tools/scripts/dev.sh",
+    "setup": "yarn install && cd apps/ai-service && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
   },
   "dependencies": {
     "@headlessui/react": "2.2.7",
