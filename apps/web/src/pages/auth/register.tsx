@@ -283,13 +283,13 @@ export default function AuthPage() {
                   </a>
                 </div>
 
-                <button
+                <Button
                   type="submit"
                   disabled={loginMutation.isPending}
-                  className="w-full py-3 rounded-lg bg-white hover:bg-gray-100 text-black font-medium transition-all duration-200 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-white/20 hover:shadow-white/40"
+                  className="w-full bg-white hover:bg-gray-100 text-black font-medium"
                 >
                   {loginMutation.isPending ? 'Logging in...' : 'Enter Quantize'}
-                </button>
+                </Button>
               </form>
 
               <div className="mt-8">
@@ -301,13 +301,13 @@ export default function AuthPage() {
                 </div>
 
                 <div className="mt-6 flex justify-center">
-                  <button 
-                    className="flex items-center justify-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg text-gray-700 font-medium transition-all duration-200 shadow-sm hover:shadow-md" 
+                  <Button 
+                    className="flex items-center justify-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium" 
                     onClick={handleIndependentGoogleAuth}
                   >
                     <FcGoogle size={20} />
                     <span>Sign in with Google</span>
-                  </button>
+                  </Button>
                 </div>
               </div>
             </>
@@ -445,13 +445,13 @@ export default function AuthPage() {
                   <p className="text-sm text-destructive">{registerForm.formState.errors.agree.message as string}</p>
                 )}
 
-                <button
+                <Button
                   type="submit"
                   disabled={registerMutation.isPending}
-                  className="w-full py-3 rounded-lg bg-white hover:bg-gray-100 text-black font-medium transition-all duration-200 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-white/20 hover:shadow-white/40"
+                  className="w-full bg-white hover:bg-gray-100 text-black font-medium"
                 >
                   {registerMutation.isPending ? 'Creating account...' : 'Join Quantize'}
-                </button>
+                </Button>
               </form>
 
               <div className="mt-8">
@@ -463,13 +463,13 @@ export default function AuthPage() {
                 </div>
 
                 <div className="mt-6 flex justify-center">
-                  <button 
-                    className="flex items-center justify-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg text-gray-700 font-medium transition-all duration-200 shadow-sm hover:shadow-md" 
+                  <Button 
+                    className="flex items-center justify-center gap-3 px-6 py-3 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium" 
                     onClick={handleIndependentGoogleAuth}
                   >
                     <FcGoogle size={20} />
                     <span>Sign in with Google</span>
-                  </button>
+                  </Button>
                 </div>
               </div>
             </>

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { ExternalLink, Star, Bookmark } from 'lucide-react'
-import { AnimatedButton } from './animated-button'
+import { Button } from './button'
 
 interface AnimatedCardProps {
   tool: {
@@ -151,17 +151,16 @@ export function AnimatedCard({ tool, onClick }: AnimatedCardProps) {
               <p className="text-white font-semibold">{tool.pricing}</p>
             </div>
 
-            <AnimatedButton 
+            <Button 
               variant="secondary" 
               size="sm"
-              interactive
               onClick={(e) => {
                 e.stopPropagation()
                 onClick?.()
               }}
             >
               Learn More
-            </AnimatedButton>
+            </Button>
           </div>
 
           <motion.div

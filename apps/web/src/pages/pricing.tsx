@@ -78,7 +78,7 @@ export function PricingPage() {
         />
         
         {/* Testimonials Section */}
-        <section className="py-16 px-4">
+        <section className="py-8 px-2">
           <TestimonialsColumns />
         </section>
       </div>

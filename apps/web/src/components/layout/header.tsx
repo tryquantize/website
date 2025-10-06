@@ -27,7 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { QuantizeLogo } from "@/components/quantize-logo";
-import { AnimatedButton } from "@/components/ui/animated-button";
+
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 
 export function Header() {
@@ -148,20 +148,18 @@ export function Header() {
             <div className="flex items-center space-x-4 ml-auto">
               <span className="text-white/80">Welcome, {currentUser?.displayName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'User'}</span>
               {currentUser && (
-                <AnimatedButton 
+                <Button 
                   size="sm" 
-                  variant="secondary"
-                  interactive
+                  variant="outline"
                   onClick={() => setLocation('/favorites')}
-                  icon={<Heart className="w-4 h-4" />}
+                  className="border-white/20 text-white hover:bg-white/10"
                 >
+                  <Heart className="w-4 h-4 mr-2" />
                   Favorites
-                </AnimatedButton>
+                </Button>
               )}
-              <AnimatedButton 
+              <Button 
                 size="sm" 
-                variant="primary"
-                interactive
                 onClick={async () => {
                   try {
                     await firebaseSignOut();
@@ -171,9 +169,10 @@ export function Header() {
                     console.error('Logout failed:', error);
                   }
                 }}
+                className="bg-blue-600 text-white hover:bg-blue-700"
               >
                 Logout
-              </AnimatedButton>
+              </Button>
 
 
             </div>

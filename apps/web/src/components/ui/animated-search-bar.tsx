@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Mic, Sparkles } from 'lucide-react'
 import { useState, useRef } from 'react'
-import { AnimatedButton } from './animated-button'
+import { Button } from './button'
 
 interface AnimatedSearchBarProps {
   onSearch: (query: string) => void
@@ -155,16 +155,14 @@ export function AnimatedSearchBar({
                 <Mic className="w-4 h-4" />
               </motion.button>
 
-              <AnimatedButton
-                variant="primary"
+              <Button
                 size="sm"
-                interactive
                 onClick={() => query.trim() && onSearch(query)}
                 disabled={!query.trim()}
-                className="px-4 py-2"
+                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700"
               >
                 Search
-              </AnimatedButton>
+              </Button>
             </div>
           </div>
         </div>

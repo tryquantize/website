@@ -14,7 +14,7 @@ import { Star, Bookmark, ExternalLink } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
-import { AnimatedButton } from "@/components/ui/animated-button";
+
 import { motion } from "framer-motion";
 import { useState } from "react";
 import type { AiTool } from "@shared/schemas/schema";
@@ -221,24 +221,24 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
           
           <div className="flex space-x-2">
             {tool.websiteUrl && (
-              <AnimatedButton
+              <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleVisitWebsite}
                 data-testid="visit-website-button"
-                icon={<ExternalLink className="w-4 h-4" />}
               >
+                <ExternalLink className="w-4 h-4 mr-2" />
                 Visit
-              </AnimatedButton>
+              </Button>
             )}
-            <AnimatedButton
-              variant="primary"
+            <Button
               size="sm"
               onClick={handleContact}
               data-testid="contact-button"
+              className="bg-blue-600 text-white hover:bg-blue-700"
             >
               Contact
-            </AnimatedButton>
+            </Button>
           </div>
         </div>
 

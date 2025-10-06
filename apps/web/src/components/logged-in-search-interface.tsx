@@ -645,10 +645,10 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
         {visibleSuggestions.map((suggestion, index) => (
           <Button
             key={index}
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => handleSuggestionTileClick(suggestion)}
-            className="text-xs rounded-md px-3 py-1 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm transition-all"
+            className="text-xs rounded-md px-3 py-1 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm text-white"
           >
             <Sparkles className="w-3 h-3 mr-2" />
             {suggestion}
@@ -656,20 +656,20 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
         ))}
         {hasMoreSuggestions && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handleShowMore}
-            className="text-xs rounded-md px-3 py-1 border-white/30 bg-white/5 text-white hover:bg-white/10 hover:border-white/60"
+            className="text-xs rounded-md px-3 py-1 text-black bg-white hover:bg-gray-100 border border-white"
           >
             See more
           </Button>
         )}
         {visibleCount > quickSuggestions.length && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handleShowLess}
-            className="text-xs rounded-md px-3 py-1 border-white/30 bg-white/5 text-white hover:bg-white/10 hover:border-white/60"
+            className="text-xs rounded-md px-3 py-1 text-black bg-white hover:bg-gray-100 border border-white"
           >
             See less
           </Button>
