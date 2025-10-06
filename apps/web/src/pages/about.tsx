@@ -3,7 +3,6 @@ import AboutUsSection from "@/components/ui/about-us-section";
 import TeamSection from "@/components/ui/team-section";
 import { FeaturesSectionWithHoverEffects } from "@/components/ui/feature-section-with-hover-effects";
 import { ShuffleHero } from "@/components/ui/shuffle-grid";
-import { Footer } from "@/components/layout/footer";
 
 
 export default function AboutPage() {
@@ -20,7 +19,6 @@ export default function AboutPage() {
         </div>
 
         <ShuffleHero />
-        <Footer />
       </div>
     </div>
   );

@@ -1,0 +1,23 @@
+{
+  "name": "Quantize - AI Search Engine",
+  "short_name": "Quantize",
+  "description": "The intelligent AI search engine that understands your questions and delivers precise answers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#8B5CF6",
+  "icons": [
+    {
+      "src": "/quantizenobg.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/quantizenobg.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

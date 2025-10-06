@@ -111,20 +111,20 @@ export default function LandingPage() {
         <RaycastBackground />
       </div>
       {/* Hero Section */}
-      <section className="relative w-full h-[85vh] flex items-center justify-center z-10 -mt-16">
+      <section className="relative w-full min-h-[80vh] sm:h-[85vh] flex items-center justify-center z-10 -mt-12 sm:-mt-16 px-4">
         <Hero />
       </section>
 
       {/* Content Sections */}
       <div className="relative z-10 bg-black/80 backdrop-blur-sm">
-        <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 pb-0">
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pb-0">
           {/* Hero Text Section */}
-          <section className="text-center py-32">
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-4 sm:mb-6 md:mb-8 leading-tight">
+          <section className="text-center py-16 sm:py-24 md:py-32">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 sm:mb-6 md:mb-8 leading-tight px-2">
               The Future of Search is Here with <span className="text-blue-400">Quantize</span>
             </h2>
             
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-white/80 max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10 lg:mb-12 leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/80 max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10 lg:mb-12 leading-relaxed px-4">
               Experience AI-powered search that understands context, provides intelligent insights, and delivers exactly what you're looking for. Built for the next generation of knowledge discovery.
             </p>
           </section>
@@ -132,41 +132,41 @@ export default function LandingPage() {
 
 
           {/* FAQs Section */}
-          <section className="mb-24">
-            <div className="flex items-end justify-between mb-8">
+          <section className="mb-16 sm:mb-20 md:mb-24">
+            <div className="text-center mb-8 sm:mb-12">
               <div>
-                <h3 className="text-4xl md:text-5xl font-bold text-white mb-2">Frequently Asked <span className="text-blue-400">Questions</span></h3>
-                <p className="text-white/70 max-w-xl">Find answers to common questions about our platform, how we curate tools, and what's coming next.</p>
+                <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 px-4">Frequently Asked <span className="text-blue-400">Questions</span></h3>
+                <p className="text-white/70 max-w-2xl mx-auto px-4 text-sm sm:text-base">Find answers to common questions about our platform, how we curate tools, and what's coming next.</p>
               </div>
             </div>
-            <div className="relative">
-              <Carousel className="px-2" opts={{ align: "start", loop: true, dragFree: true }} setApi={setFaqApi}>
-                <CarouselContent>
+            <div className="relative px-4">
+              <Carousel className="" opts={{ align: "start", loop: true, dragFree: true }} setApi={setFaqApi}>
+                <CarouselContent className="-ml-2 md:-ml-4">
                   {faqs.map((item, idx) => (
-                    <CarouselItem key={idx} className="md:basis-1/3 lg:basis-1/4">
+                    <CarouselItem key={idx} className="pl-2 md:pl-4 basis-[85%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                       <div
-                        className="rounded-2xl p-6 md:p-6 h-full bg-white/10 backdrop-blur-md border border-white/10 text-white/90"
+                        className="rounded-2xl p-4 sm:p-6 h-full bg-white/10 backdrop-blur-md border border-white/10 text-white/90"
                         style={{ minHeight: 180 }}
                       >
-                        <h4 className="text-lg font-semibold mb-3 leading-snug text-white">{item.question}</h4>
+                        <h4 className="text-base sm:text-lg font-semibold mb-3 leading-snug text-white">{item.question}</h4>
                         <p className="text-sm leading-relaxed text-white/80">{item.answer}</p>
                       </div>
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious className="-top-12 left-auto right-12 md:right-14 bg-white/10 border-white/20 text-white hover:bg-white/20" />
-                <CarouselNext className="-top-12 right-3 md:right-5 bg-white text-black hover:bg-white/90" />
+                <CarouselPrevious className="hidden sm:flex -top-12 left-auto right-12 md:right-14 bg-white/10 border-white/20 text-white hover:bg-white/20" />
+                <CarouselNext className="hidden sm:flex -top-12 right-3 md:right-5 bg-white text-black hover:bg-white/90" />
               </Carousel>
             </div>
           </section>
 
           {/* Feature Carousel Section */}
-          <section className="mb-16 sm:mb-20 md:mb-24 lg:mb-28 xl:mb-32">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+          <section className="mb-16 sm:mb-20 md:mb-24 lg:mb-28 xl:mb-32 px-4">
+            <div className="text-center mb-8 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 px-2">
                 How <span className="text-blue-400">Quantize</span> Works
               </h2>
-              <p className="text-lg text-white/70 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-white/70 max-w-2xl mx-auto px-4">
                 Discover the power of AI-driven search in four simple steps
               </p>
             </div>
@@ -184,7 +184,7 @@ export default function LandingPage() {
           </section>
 
           {/* Testimonials Section */}
-          <section className="mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 px-2 sm:px-4">
+          <section className="mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 px-4">
             <TestimonialsColumns />
           </section>
 

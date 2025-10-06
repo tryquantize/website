@@ -683,10 +683,10 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         : 'max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[70vh]'
     }`}>
       {/* Centered hero */}
-      <div className={`text-center transition-all duration-1000 ease-out ${
+      <div className={`text-center transition-all duration-1000 ease-out px-4 ${
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'mb-0 opacity-100 scale-100 translate-y-0'
       }`}>
-        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight px-2 sm:px-4 text-center" style={{ fontFamily: 'Instrument Serif, serif' }}>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight text-center" style={{ fontFamily: 'Instrument Serif, serif' }}>
           <span className="text-white block">
             Ask, Discover.
           </span>
@@ -697,7 +697,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
             </span>
           </span>
         </h1>
-        <p className="text-sm sm:text-lg md:text-xl lg:text-2xl xl:text-3xl italic text-white mb-4 sm:mb-6 max-w-2xl mx-auto leading-relaxed px-2 sm:px-4 text-center" style={{ fontFamily: 'Instrument Serif, serif' }}>
+        <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl italic text-white mb-4 sm:mb-6 max-w-2xl mx-auto leading-relaxed text-center" style={{ fontFamily: 'Instrument Serif, serif' }}>
           Where your questions meet the world's smartest solutions.
         </p>
       </div>
@@ -706,13 +706,13 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
       <div className={`transition-all duration-1500 ease-out ${
         isSearching 
           ? 'opacity-0 scale-90 pointer-events-none'
-          : 'w-full max-w-4xl mx-auto mb-6 sm:mb-8 px-2 sm:px-4 transform translate-y-0 opacity-100 scale-100'
+          : 'w-full max-w-4xl mx-auto mb-6 sm:mb-8 px-4 transform translate-y-0 opacity-100 scale-100'
       }`}>
-        <div className={`relative rounded-[16px] sm:rounded-[20px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[65px] sm:h-[75px] md:h-[85px] ${
+        <div className={`relative rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[70px] sm:h-[75px] md:h-[85px] ${
           isSearching ? 'transform scale-95' : 'transform scale-100'
         }`}>
           {/* Search input area - mobile optimized */}
-          <div className="relative px-2 sm:px-4 flex items-center h-[35px] sm:h-[40px] md:h-[45px]">
+          <div className="relative px-4 sm:px-6 flex items-center h-[40px] sm:h-[40px] md:h-[45px]">
             {/* Undo button (only show if there's history) */}
             {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
               <TooltipProvider>
@@ -721,9 +721,9 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     <button
                       aria-label="Undo prompt enhancement"
                       onClick={handleUndo}
-                      className="absolute right-20 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition"
+                      className="absolute right-[72px] sm:right-20 top-1/2 -translate-y-1/2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition"
                     >
-                      <Undo className="h-3 w-3" />
+                      <Undo className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top">
@@ -741,12 +741,12 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     aria-label="Enhance search prompt"
                     onClick={handlePromptEnhancement}
                     disabled={!query.trim() || isEnhancing || searchMutation.isPending}
-                    className="absolute right-12 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute right-[40px] sm:right-12 top-1/2 -translate-y-1/2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isEnhancing ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
                     ) : (
-                      <Sparkles className="h-3 w-3" />
+                      <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     )}
                   </button>
                 </TooltipTrigger>
@@ -764,13 +764,13 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               aria-label="Search"
               onClick={handleSearch}
               disabled={!query.trim() || searchMutation.isPending || isEnhancing}
-              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
+              className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
               data-testid="search-button"
             >
               {searchMutation.isPending ? (
-                <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Search className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               )}
             </button>
 
@@ -784,13 +784,13 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               disabled={isEnhancing}
-              className="h-8 sm:h-9 md:h-10 w-full border-0 bg-transparent shadow-none text-xs sm:text-sm md:text-base lg:text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-10 sm:pr-12 md:pr-16 lg:pr-20 flex items-center disabled:opacity-70"
+              className="h-9 sm:h-10 md:h-11 w-full border-0 bg-transparent shadow-none text-sm sm:text-base md:text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-16 sm:pr-20 md:pr-24 flex items-center disabled:opacity-70"
               data-testid="search-input"
             />
           </div>
 
           {/* Bottom row - Icons - mobile optimized */}
-          <div className="relative border-t border-white/10 px-2 sm:px-4 py-1 sm:py-2 h-[30px] sm:h-[35px] md:h-[40px]">
+          <div className="relative border-t border-white/10 px-4 sm:px-6 py-2 h-[30px] sm:h-[35px] md:h-[40px]">
             <div className="flex items-center justify-between">
               {/* Left - Brain icon with dropdown and selected model */}
               <div className="relative flex items-center space-x-2">
@@ -831,7 +831,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                   )}
                 </div>
                 
-                <span className="text-xs text-white/70 hidden md:inline">{selectedModel || "GPT-4o Mini"}</span>
+                <span className="text-xs text-white/70 hidden sm:inline truncate max-w-[120px]">{selectedModel || "GPT-4o Mini"}</span>
               </div>
 
               {/* Right - Filter buttons */}
@@ -932,7 +932,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
       </div>
 
       {/* Quick Suggestions - Hidden on mobile initially, shown on scroll */}
-      <div className={`${showMobileSuggestions ? 'flex md:flex' : 'hidden md:flex'} flex-wrap justify-center gap-2 mt-2 transition-all duration-1000 ease-out ${
+      <div className={`${showMobileSuggestions ? 'flex md:flex' : 'hidden md:flex'} flex-wrap justify-center gap-2 mt-4 px-4 transition-all duration-1000 ease-out ${
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
       }`}>
         {visibleSuggestions.map((suggestion, index) => (
@@ -942,7 +942,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
             size="sm"
             interactive
             onClick={() => handleSuggestionTileClick(suggestion)}
-            className="text-xs rounded-md px-3 py-1 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm"
+            className="text-xs sm:text-sm rounded-lg px-3 py-2 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm min-h-[36px] touch-manipulation"
             data-testid={`suggestion-${index}`}
             icon={<Sparkles className="w-3 h-3" />}
           >
@@ -955,7 +955,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
             size="sm"
             interactive
             onClick={handleShowMore}
-            className="text-xs rounded-md px-3 py-1"
+            className="text-xs sm:text-sm rounded-lg px-3 py-2 min-h-[36px] touch-manipulation"
           >
             See more
           </AnimatedButton>
@@ -966,7 +966,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
             size="sm"
             interactive
             onClick={handleShowLess}
-            className="text-xs rounded-md px-3 py-1"
+            className="text-xs sm:text-sm rounded-lg px-3 py-2 min-h-[36px] touch-manipulation"
           >
             See less
           </AnimatedButton>

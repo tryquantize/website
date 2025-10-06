@@ -14,7 +14,7 @@ export default function ContactPage() {
       
       <div className="relative z-10 pt-20">
         {/* Contact Form Section */}
-        <section className="py-20 px-4">
+        <section className="py-12 sm:py-16 md:py-20 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-white">
               <Contact2 
@@ -30,13 +30,13 @@ export default function ContactPage() {
         </section>
         
         {/* Testimonials Section */}
-        <section className="py-20 px-4">
+        <section className="py-12 sm:py-16 md:py-20 px-4">
           <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
               What Our <span className="bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">Users Say</span>
             </h2>
             
-            <p className="text-xl text-white/80 mb-12">
+            <p className="text-lg sm:text-xl text-white/80 mb-8 sm:mb-12 px-4">
               Join thousands of researchers, students, and professionals who trust Quantize for their search needs.
             </p>
             

@@ -55,16 +55,16 @@ export default function FeaturesSection() {
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {features.map((feature, index) => (
           <div
             key={index}
-            className="group p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-300"
+            className="group p-4 sm:p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-300"
           >
             <div className="mb-4">
-              <feature.icon className="w-8 h-8 text-blue-400 group-hover:text-blue-300 transition-colors" />
+              <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 group-hover:text-blue-300 transition-colors" />
             </div>
-            <h4 className="text-lg font-semibold text-white mb-3">{feature.title}</h4>
+            <h4 className="text-base sm:text-lg font-semibold text-white mb-3">{feature.title}</h4>
             <p className="text-white/70 text-sm leading-relaxed">{feature.description}</p>
           </div>
         ))}

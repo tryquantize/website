@@ -177,7 +177,7 @@ export default function AboutUsSection() {
             <Bot className="w-4 h-4" />
             DISCOVER OUR STORY
           </motion.span>
-          <h2 className="text-4xl md:text-5xl font-light mb-4 text-center">About Quantize</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center text-white">About Quantize</h2>
           <motion.div
             className="w-24 h-1 bg-gradient-to-r from-purple-500 to-blue-600"
             initial={{ width: 0 }}
@@ -186,7 +186,7 @@ export default function AboutUsSection() {
           />
         </motion.div>
 
-        <motion.p className="text-center max-w-2xl mx-auto mb-16 text-white/80" variants={itemVariants}>
+        <motion.p className="text-center max-w-2xl mx-auto mb-16 text-white" variants={itemVariants}>
           We are revolutionizing the way people search and discover information. With cutting-edge AI technology and 
           intuitive design, Quantize transforms complex queries into precise, actionable insights that empower users 
           to find exactly what they need, when they need it.
@@ -373,12 +373,12 @@ function ServiceItem({ icon, secondaryIcon, title, description, variants, delay,
           {icon}
           {secondaryIcon}
         </motion.div>
-        <h3 className="text-xl font-medium text-white group-hover:text-purple-400 transition-colors duration-300">
+        <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors duration-300">
           {title}
         </h3>
       </motion.div>
       <motion.p
-        className="text-sm text-white/80 leading-relaxed pl-12"
+        className="text-sm text-white leading-relaxed pl-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: delay + 0.4 }}

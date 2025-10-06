@@ -133,9 +133,9 @@ export function Header() {
         variants={navVariants}
         animate={isScrolled ? 'scrolled' : 'top'}
       >
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         {isResultsPage ? (
-          <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16 md:h-18">
             <motion.div
               className="flex items-center space-x-2 flex-shrink-0"
               whileHover={{ scale: 1.05 }}
@@ -183,7 +183,8 @@ export function Header() {
             </div>
           </div>
         ) : (
-          <div className="container relative mx-auto min-h-20 flex gap-4 flex-row lg:grid lg:grid-cols-3 items-center">
+          <div className="container relative mx-auto min-h-16 sm:min-h-20 flex items-center justify-between">
+            {/* Desktop Navigation */}
             <div className="justify-start items-center gap-4 lg:flex hidden flex-row">
               <NavigationMenu className="flex justify-start items-start">
                 <NavigationMenuList className="flex justify-start gap-4 flex-row">
@@ -242,15 +243,19 @@ export function Header() {
                 </NavigationMenuList>
               </NavigationMenu>
             </div>
-            <div className="flex lg:justify-center">
+            
+            {/* Logo - Center on desktop, left on mobile */}
+            <div className="flex lg:justify-center lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
               <Link href="/home" className="flex items-center space-x-2" data-testid="logo-link">
-                <QuantizeLogo size={24} />
-                <h1 className="font-semibold text-lg bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
+                <QuantizeLogo size={20} className="sm:w-6 sm:h-6" />
+                <h1 className="font-semibold text-base sm:text-lg bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
                   Quantize
                 </h1>
               </Link>
             </div>
-            <div className="flex justify-end w-full gap-4">
+            
+            {/* Desktop Auth Buttons */}
+            <div className="hidden lg:flex justify-end gap-4">
               {currentUser || (isAuthenticated && user) ? (
                 <>
                   <Button 
@@ -285,89 +290,90 @@ export function Header() {
                 </>
               )}
             </div>
-            <div className="flex w-12 shrink lg:hidden items-end justify-end">
-              <Button variant="ghost" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white">
-                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden">
+              <Button variant="ghost" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white p-1.5 sm:p-2">
+                {isMobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
               </Button>
+              
+              {/* Mobile Dropdown Menu */}
               {isMobileMenuOpen && (
-                <div className="absolute top-20 border-t flex flex-col w-full right-0 bg-black/95 backdrop-blur-md shadow-lg py-6 container gap-6 border-white/10 rounded-b-lg">
-                  {navigationItems.map((item) => (
-                    <div key={item.title} className="space-y-3">
-                      {item.href ? (
-                        <Link
-                          href={item.href}
-                          className="flex justify-between items-center text-white py-2 px-3 rounded-lg hover:bg-white/10 transition-colors"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <span className="text-lg font-medium">{item.title}</span>
-                          <MoveRight className="w-5 h-5 text-white/60" />
-                        </Link>
-                      ) : (
-                        <>
-                          <p className="text-lg font-medium text-white px-3">{item.title}</p>
-                          <div className="ml-4 space-y-2">
+                <div className="absolute top-full left-0 right-0 bg-black/95 backdrop-blur-md border-t border-white/10 shadow-lg z-50">
+                  <div className="container mx-auto py-4 space-y-1 px-4">
+                    {navigationItems.map((item) => (
+                      <div key={item.title}>
+                        {item.href ? (
+                          <Link
+                            href={item.href}
+                            className="block px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {item.title}
+                          </Link>
+                        ) : (
+                          <>
+                            <div className="px-4 py-2 text-white/60 text-sm font-medium">{item.title}</div>
                             {item.items?.map((subItem) => (
                               <Link
                                 key={subItem.title}
                                 href={subItem.href}
-                                className="flex justify-between items-center text-white/80 py-2 px-3 rounded-lg hover:bg-white/10 transition-colors"
+                                className="block px-6 py-2 text-white/80 hover:bg-white/10 transition-colors"
                                 onClick={() => setIsMobileMenuOpen(false)}
                               >
-                                <span className="text-base">{subItem.title}</span>
-                                <MoveRight className="w-4 h-4 text-white/50" />
+                                {subItem.title}
                               </Link>
                             ))}
-                          </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                    
+                    <div className="border-t border-white/10 mt-4 pt-4 space-y-1">
+                      {currentUser || (isAuthenticated && user) ? (
+                        <>
+                          <button 
+                            className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                            onClick={() => {
+                              setLocation('/favorites');
+                              setIsMobileMenuOpen(false);
+                            }}
+                          >
+                            Favorites
+                          </button>
+                          <button 
+                            className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                            onClick={() => {
+                              handleFirebaseLogout();
+                              setIsMobileMenuOpen(false);
+                            }}
+                          >
+                            Logout
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button 
+                            className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                            onClick={() => {
+                              navigateWithLoading('/auth');
+                              setIsMobileMenuOpen(false);
+                            }}
+                          >
+                            Sign in
+                          </button>
+                          <button 
+                            className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                            onClick={() => {
+                              navigateWithLoading('/waitlist');
+                              setIsMobileMenuOpen(false);
+                            }}
+                          >
+                            Join the Waitlist
+                          </button>
                         </>
                       )}
                     </div>
-                  ))}
-                  <div className="border-t border-white/10 pt-4 space-y-3">
-                    {currentUser || (isAuthenticated && user) ? (
-                      <>
-                        <Button 
-                          variant="outline" 
-                          className="w-full border-white/20 text-white/70 hover:text-white hover:bg-white/10"
-                          onClick={() => {
-                            setLocation('/favorites');
-                            setIsMobileMenuOpen(false);
-                          }}
-                        >
-                          Favorites
-                        </Button>
-                        <Button 
-                          className="w-full bg-blue-600 hover:bg-blue-700"
-                          onClick={() => {
-                            handleFirebaseLogout();
-                            setIsMobileMenuOpen(false);
-                          }}
-                        >
-                          Logout
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button 
-                          variant="outline" 
-                          className="w-full border-white/20 text-white/70 hover:text-white hover:bg-white/10"
-                          onClick={() => {
-                            navigateWithLoading('/auth');
-                            setIsMobileMenuOpen(false);
-                          }}
-                        >
-                          Sign in
-                        </Button>
-                        <Button 
-                          className="w-full bg-blue-600 hover:bg-blue-700"
-                          onClick={() => {
-                            navigateWithLoading('/waitlist');
-                            setIsMobileMenuOpen(false);
-                          }}
-                        >
-                          Join the Waitlist
-                        </Button>
-                      </>
-                    )}
                   </div>
                 </div>
               )}
