@@ -17,29 +17,7 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
   const { navigateWithLoading } = useNavigation();
   return (
     <>
-      {/* Join Us Section - only on home page */}
-      {showJoinUs && (
-        <div className="bg-background py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-black/40 rounded-2xl p-8 border border-white/20 backdrop-blur-sm">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Ready to Transform Your Business?
-            </h2>
-            <p className="text-white text-lg mb-8 max-w-2xl mx-auto">
-              Join thousands of startups, companies, and freelancers discovering the perfect AI solutions to accelerate growth and innovation.
-            </p>
-            <Button 
-              size="lg" 
-              className="bg-white hover:bg-gray-100 text-black px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-white/40 transition-all duration-300 transform hover:scale-105"
-              onClick={() => navigateWithLoading('/onboarding')}
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Enterprise Login
-            </Button>
-          </div>
-        </div>
-        </div>
-      )}
+     
 
       {/* Footer */}
       <footer className="bg-transparent border-t border-white/10 py-12">

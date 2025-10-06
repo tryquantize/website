@@ -373,30 +373,66 @@ export default function ResultsPage() {
     setIsInitialLoading(true);
     setContentItems([]);
 
-    // Add loading item
-    setContentItems([{
-      id: `loading-${Date.now()}`,
-      type: 'loading',
-      data: { query }
-    }]);
-
-    // Get current selectedTypes from URL if not set in state yet
-    const params = new URLSearchParams(window.location.search);
-    const types = params.get('types');
-    const currentSelectedTypes = types ? types.split(',').filter(t => t.trim()) : Array.from(selectedTypes);
+    // Check for cached results from search transition
+    const cachedResults = sessionStorage.getItem('searchResults');
+    let data;
     
-    console.log('Performing search with types:', currentSelectedTypes);
+    if (cachedResults) {
+      // Use cached results and clear them
+      data = JSON.parse(cachedResults);
+      sessionStorage.removeItem('searchResults');
+    } else {
+      // Add loading item only if no cached results
+      setContentItems([{
+        id: `loading-${Date.now()}`,
+        type: 'loading',
+        data: { query }
+      }]);
+
+      // Get current selectedTypes from URL if not set in state yet
+      const params = new URLSearchParams(window.location.search);
+      const types = params.get('types');
+      const currentSelectedTypes = types ? types.split(',').filter(t => t.trim()) : Array.from(selectedTypes);
+      
+      console.log('Performing search with types:', currentSelectedTypes);
+
+      try {
+        const response = await apiRequest("POST", "/api/search", {
+          query,
+          context: {},
+          selectedModel,
+          selectedTypes: currentSelectedTypes
+        });
+        
+        data = await response.json();
+      } catch (error) {
+        console.error('Search failed:', error);
+        // Fallback to mock data
+        const filteredResults = mockSearchResults.filter(result => 
+          result.name.toLowerCase().includes(query.toLowerCase()) ||
+          result.description.toLowerCase().includes(query.toLowerCase()) ||
+          result.category.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        data = {
+          query,
+          aiResponse: "AI search is currently unavailable. Showing traditional search results.",
+          suggestions: [
+            `Best alternatives for ${query}`,
+            `Free tools for ${query}`,
+            `Enterprise solutions for ${query}`,
+            `Open source ${query} tools`,
+            `Getting started with ${query}`
+          ],
+          companies: [],
+          citations: [],
+          traditionalResults: filteredResults,
+          aiPowered: false
+        };
+      }
+    }
 
     try {
-      const response = await apiRequest("POST", "/api/search", {
-        query,
-        context: {},
-        selectedModel,
-        selectedTypes: currentSelectedTypes
-      });
-      
-      const data = await response.json();
-      
       const newCompanies = data.companies || [];
       // For initial search, show all companies
       const updatedAllCompanies = newCompanies;
@@ -446,55 +482,6 @@ export default function ResultsPage() {
             aiResponse: data.aiResponse,
             suggestions: data.suggestions,
             companies: updatedAllCompanies
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Search failed:', error);
-      // Fallback to mock data
-      const filteredResults = mockSearchResults.filter(result => 
-        result.name.toLowerCase().includes(query.toLowerCase()) ||
-        result.description.toLowerCase().includes(query.toLowerCase()) ||
-        result.category.toLowerCase().includes(query.toLowerCase())
-      );
-      
-      const fallbackResult: SearchResult = {
-        query,
-        aiResponse: "AI search is currently unavailable. Showing traditional search results.",
-        suggestions: [
-          `Best alternatives for ${query}`,
-          `Free tools for ${query}`,
-          `Enterprise solutions for ${query}`,
-          `Open source ${query} tools`,
-          `Getting started with ${query}`
-        ],
-        companies: [],
-        citations: [],
-        traditionalResults: filteredResults,
-        aiPowered: false,
-        timestamp: Date.now()
-      };
-
-      setContentItems([
-        {
-          id: `result-${Date.now()}`,
-          type: 'result',
-          data: fallbackResult
-        }
-      ]);
-      
-      // Add to conversation history
-      if (conversationId || currentConversationId) {
-        const msgId = conversationId || currentConversationId;
-        if (msgId) {
-          addMessageToConversation(msgId, {
-            id: `msg-${Date.now()}`,
-            type: 'response',
-            content: fallbackResult.aiResponse,
-            timestamp: Date.now(),
-            aiResponse: fallbackResult.aiResponse,
-            suggestions: fallbackResult.suggestions,
-            companies: []
           });
         }
       }

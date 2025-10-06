@@ -5,17 +5,17 @@ export default function HeroSection() {
     <section className={"container mx-auto px-6 py-16 " + styles.hero}>
       <div className="max-w-3xl">
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-          Discover the right AI tools for your business
+          The Future of Search is Here with <span className="text-blue-400">Quantize</span>
         </h1>
         <p className="text-white/80 text-lg mb-8">
-          Search, compare, and evaluate AI products with a beautiful, fast interface.
+          Experience AI-powered search that understands context, provides intelligent insights, and delivers exactly what you're looking for.
         </p>
         <div className="flex gap-3">
           <a href="/products" className="px-5 py-3 bg-primary text-primary-foreground rounded-md">
-            Explore Products
+            Try Quantize
           </a>
           <a href="/onboarding" className="px-5 py-3 border border-border rounded-md">
-            Get Started
+            Join Waitlist
           </a>
         </div>
       </div>

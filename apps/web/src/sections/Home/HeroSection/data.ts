@@ -1,9 +1,9 @@
 export const heroData = {
-  title: "Discover the right AI tools for your business",
-  subtitle: "Search, compare, and evaluate AI products with a beautiful, fast interface.",
+  title: "The Future of Search is Here with Quantize",
+  subtitle: "Experience AI-powered search that understands context, provides intelligent insights, and delivers exactly what you're looking for.",
   ctas: [
-    { href: "/products", label: "Explore Products" },
-    { href: "/onboarding", label: "Get Started" },
+    { href: "/products", label: "Try Quantize" },
+    { href: "/onboarding", label: "Join Waitlist" },
   ],
 };
 

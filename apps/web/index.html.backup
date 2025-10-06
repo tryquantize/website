@@ -3,9 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>Quantize - An AI search engine that quantizes infinite informations</title>
+    <title>Quantize - Ask, Discover, Find the right Solutions</title>
     <meta name="description" content="The intelligent AI search engine that understands your questions and delivers precise answers. Search smarter, not harder with Quantize." />
-    
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -33,3 +32,5 @@
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>
 </html>
+
+

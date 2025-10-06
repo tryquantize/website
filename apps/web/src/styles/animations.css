@@ -112,3 +112,40 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* SLIDE-IN ANIMATIONS */
+@keyframes slide-in-from-top {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.slide-in-from-top-2 {
+  animation-name: slide-in-from-top;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+.duration-300 {
+  animation-duration: 300ms;
+}

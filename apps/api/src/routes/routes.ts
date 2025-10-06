@@ -173,6 +173,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Research streaming endpoint (for future real-time logs)
+  app.get("/api/research/stream", async (req, res) => {
+    const { q: query, types } = req.query;
+    
+    if (!query) {
+      return res.status(400).json({ message: "Query parameter required" });
+    }
+
+    // Set up Server-Sent Events
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control'
+    });
+
+    // Send initial connection confirmation
+    res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
+
+    // Simulate research process (replace with real AI service integration)
+    const simulateResearch = async () => {
+      const logs = [
+        {
+          delay: 500,
+          data: {
+            type: 'reasoning',
+            title: 'Reasoning',
+            content: `**Analyzing query**: "${query}"\n\nI need to search for AI tools and solutions that match this query.`
+          }
+        },
+        {
+          delay: 800,
+          data: {
+            type: 'tool_call',
+            title: 'Calling tool: web_search',
+            content: `Searching for: "${query}" AI tools`,
+            toolName: 'web_search'
+          }
+        },
+        {
+          delay: 1200,
+          data: {
+            type: 'tool_result',
+            title: 'Tool Executed',
+            content: JSON.stringify({ results_found: 15, status: 'success' }),
+            toolName: 'web_search',
+            success: true
+          }
+        }
+      ];
+
+      for (const { delay, data } of logs) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      }
+
+      // Send completion signal
+      res.write(`data: ${JSON.stringify({ type: 'complete' })}\n\n`);
+      res.end();
+    };
+
+    simulateResearch().catch(() => res.end());
+
+    // Handle client disconnect
+    req.on('close', () => {
+      res.end();
+    });
+  });
+
   // Search routes
   app.post("/api/search", async (req, res) => {
     try {

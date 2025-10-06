@@ -1,14 +1,17 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load environment variables from multiple locations
+load_dotenv()  # Load from current directory
+load_dotenv('../../.env.local')  # Load from root directory
+load_dotenv('.env')  # Load from ai-service directory
 
-# OpenRouter API Configuration
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+# OpenRouter API Configuration - use hardcoded keys as fallback
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
-# Exa Search API Configuration
-EXA_API_KEY = os.getenv("EXA_API_KEY")
+# Exa Search API Configuration - use hardcoded keys as fallback
+EXA_API_KEY = os.getenv("EXA_API_KEY") or "6e2c2a03-9d1a-4724-a293-b629720fe8fe"
 EXA_BASE_URL = "https://api.exa.ai"
 
 # AI Model Configuration

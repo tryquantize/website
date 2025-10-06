@@ -74,8 +74,8 @@ class AISearchAgent:
             # Extract companies from the web search results
             companies = self.extract_companies(web_search_results, model_to_use, selected_types)
             
-            # Skip enrichment for faster response
-            # companies = self.enrichment_agent.enrich_company_data(companies, query)
+            # Enrich company data with additional details
+            companies = self.enrichment_agent.enrich_company_data(companies, query)
             
             return {
                 "query": query,

@@ -1,0 +1,253 @@
+// React hooks
+import { useEffect, useState } from "react";
+
+// UI components
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
+import { Button } from "@/components/ui/button";
+import { SpiralAnimation } from "@/components/ui/spiral-animation";
+
+// Components
+import TestimonialsColumns from "@/components/ui/testimonials-demo";
+import Featured_05 from "@/components/ui/globe-feature-section";
+
+export default function LandingPage() {
+  const [startVisible, setStartVisible] = useState(false);
+  
+  // Handle navigation to home page
+  const navigateToHomePage = () => {
+    window.location.href = "https://quantize.site/home";
+  };
+
+  // Handle navigation to login with redirect
+  const navigateToLogin = () => {
+    window.location.href = "https://quantize.site/auth?redirect=/home";
+  };
+
+  // Handle navigation to onboarding page
+  const navigateToOnboarding = () => {
+    window.location.href = "/onboarding";
+  };
+  
+  // Fade in the buttons after page loads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setStartVisible(true);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // FAQ CONTENT
+  const faqs: { question: string; answer: string }[] = [
+    {
+      question: "What makes Quantize different from other AI directories?",
+      answer: "We curate, not crawl. Listings are verified by humans and organized for real buyer workflows — compare, shortlist, and take action fast.",
+    },
+    {
+      question: "Does Quantize support unique use cases or custom needs?",
+      answer: "Yes. Filter by industry, team size, pricing model, and integrations. You can also contact vendors directly from the platform.",
+    },
+    {
+      question: "How do you keep listings accurate and up to date?",
+      answer: "Vendors maintain their profiles and our team audits changes weekly. Popular tools are refreshed more frequently.",
+    },
+    {
+      question: "Is there a cost to use Quantize?",
+      answer: "Browsing is free. We may offer premium research packs and expert consultations for power users.",
+    },
+    {
+      question: "Can teams collaborate inside Quantize?",
+      answer: "Saved lists and shared notes are coming with early access. Join the waitlist to try it first.",
+    },
+    {
+      question: "How do I contact a vendor through Quantize?",
+      answer: "Open a tool card and use the contact form to send a message directly to the vendor's team.",
+    },
+    {
+      question: "Do you cover both free and paid tools?",
+      answer: "Absolutely. Filter by pricing model to explore free, freemium, or paid options across categories.",
+    },
+    {
+      question: "Can I save and share shortlists with my team?",
+      answer: "Team lists and shared notes are in early access. Join the waitlist to get it first.",
+    },
+    {
+      question: "Which industries are best represented?",
+      answer: "We're strong in marketing, sales, productivity, data, and customer support — with new industries added weekly.",
+    },
+    {
+      question: "How often are new tools added?",
+      answer: "We review and add tools every week, prioritizing quality and demand from our community.",
+    },
+  ];
+
+  // Auto-scrolling FAQ carousel
+  const [faqApi, setFaqApi] = useState<CarouselApi | null>(null);
+  useEffect(() => {
+    if (!faqApi) return;
+    let stop = false;
+    const cycle = () => {
+      if (stop) return;
+      faqApi.scrollNext();
+      if (!faqApi.canScrollNext()) {
+        faqApi.scrollTo(0);
+      }
+    };
+    const id = setInterval(cycle, 3000);
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
+  }, [faqApi]);
+
+  return (
+    <div className="relative w-full min-h-screen bg-black overflow-hidden">
+      {/* Spiral Animation Background */}
+      <div className="fixed inset-0 w-full h-full z-0">
+        <SpiralAnimation />
+      </div>
+      {/* Hero Section */}
+      <section className="relative w-full h-screen flex items-center justify-center z-10">
+        <div 
+          className={`
+            transition-all duration-1500 ease-out text-center
+            ${startVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+          `}
+        >
+          <h1 className="text-white text-4xl sm:text-6xl md:text-8xl lg:text-12xl font-bold mb-8 tracking-wide" style={{ fontFamily: 'Instrument Serif, serif' }}>
+            Welcome to Quantize
+          </h1>
+          <div className="flex gap-4 justify-center">
+            <Button 
+              onClick={navigateToHomePage}
+              className="
+                text-black text-sm tracking-[0.2em] uppercase font-extralight
+                px-6 py-2 bg-white border border-white rounded-lg
+                transition-all duration-700
+                hover:tracking-[0.3em] hover:bg-white/90
+              "
+            >
+              Try for free
+            </Button>
+            <Button 
+              onClick={navigateToLogin}
+              variant="outline"
+              className="
+                text-white text-sm tracking-[0.2em] uppercase font-extralight
+                px-6 py-2 bg-transparent border border-white rounded-lg
+                transition-all duration-700
+                hover:tracking-[0.3em] hover:bg-white/10
+              "
+            >
+              Login
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Content Sections */}
+      <div className="relative z-10 bg-black/80 backdrop-blur-sm">
+        <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8 pb-0">
+          {/* Hero Text Section */}
+          <section className="text-center py-32">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-4 sm:mb-6 md:mb-8 leading-tight">
+              The Future of Search is Here with <span className="text-blue-400">Quantize</span>
+            </h2>
+            
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-white/80 max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10 lg:mb-12 leading-relaxed">
+              Experience AI-powered search that understands context, provides intelligent insights, and delivers exactly what you're looking for. Built for the next generation of knowledge discovery.
+            </p>
+          </section>
+
+          {/* FAQs Section */}
+          <section className="mb-24">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <h3 className="text-4xl md:text-5xl font-bold text-white mb-2">Frequently Asked <span className="text-blue-400">Questions</span></h3>
+                <p className="text-white/70 max-w-xl">Find answers to common questions about our platform, how we curate tools, and what's coming next.</p>
+              </div>
+            </div>
+            <div className="relative">
+              <Carousel className="px-2" opts={{ align: "start", loop: true, dragFree: true }} setApi={setFaqApi}>
+                <CarouselContent>
+                  {faqs.map((item, idx) => (
+                    <CarouselItem key={idx} className="md:basis-1/3 lg:basis-1/4">
+                      <div
+                        className="rounded-2xl p-6 md:p-6 h-full bg-white/10 backdrop-blur-md border border-white/10 text-white/90"
+                        style={{ minHeight: 180 }}
+                      >
+                        <h4 className="text-lg font-semibold mb-3 leading-snug text-white">{item.question}</h4>
+                        <p className="text-sm leading-relaxed text-white/80">{item.answer}</p>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="-top-12 left-auto right-12 md:right-14 bg-white/10 border-white/20 text-white hover:bg-white/20" />
+                <CarouselNext className="-top-12 right-3 md:right-5 bg-white text-black hover:bg-white/90" />
+              </Carousel>
+            </div>
+          </section>
+
+          {/* Testimonials Section */}
+          <section className="mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 px-2 sm:px-4">
+            <TestimonialsColumns />
+          </section>
+
+          {/* Globe Feature Section */}
+          <section>
+            <Featured_05 />
+          </section>
+
+          {/* Footer Section */}
+          <footer className="relative mt-24 pt-16 pb-0 overflow-hidden">
+            {/* Spiral Animation Background */}
+            <div className="absolute inset-0 w-full h-full z-0">
+              <SpiralAnimation />
+            </div>
+            <div className="relative z-10 bg-black/60 backdrop-blur-sm rounded-3xl p-8">
+              <div className="max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                  {/* Company Info */}
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-4">Quantize</h3>
+                    <p className="text-white/80 text-sm leading-relaxed">
+                      The intelligent AI search engine that understands your questions and delivers precise answers.
+                    </p>
+                  </div>
+                  
+                  {/* Navigation */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-4">Navigation</h4>
+                    <ul className="space-y-2 text-white/70 text-sm">
+                      <li><a href="/home" className="hover:text-white transition-colors">Home</a></li>
+                      <li><a href="/company" className="hover:text-white transition-colors">Company</a></li>
+                      <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
+                      <li><button onClick={navigateToOnboarding} className="hover:text-white transition-colors text-left">Enterprise Login</button></li>
+                    </ul>
+                  </div>
+                  
+                  {/* Contact & Legal */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-4">Contact</h4>
+                    <ul className="space-y-2 text-white/70 text-sm">
+                      <li><a href="mailto:info@quantize.site" className="hover:text-white transition-colors">info@quantize.site</a></li>
+                      <li><a href="#" className="hover:text-white transition-colors">LinkedIn</a></li>
+                      <li><a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                      <li><a href="/terms" className="hover:text-white transition-colors">Terms of Service</a></li>
+                    </ul>
+                  </div>
+                </div>
+                
+                {/* Bottom Bar */}
+                <div className="border-t border-white/20 pt-6 flex flex-col sm:flex-row justify-between items-center text-white/60 text-sm">
+                  <p>© 2025 Quantize. All rights reserved.</p>
+                  <p className="mt-2 sm:mt-0">Made by <span className="text-blue-400">Aditya Surana</span></p>
+                </div>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </div>
+  );
+}

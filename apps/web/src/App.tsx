@@ -40,7 +40,7 @@ import LoggedInHome from "@/pages/loggedinhome";
 import WelcomeTransition from "@/pages/welcome-transition";
 import SearchTransition from "@/pages/search-transition";
 import FavoritesPage from "@/pages/favorites";
-import SpiralDemoPage from "@/pages/spiral-demo";
+import LandingPage from "@/pages/landingpage";
 import GlowingSearchDemoPage from "@/pages/glowing-search-demo";
 
 function Router() {
@@ -52,10 +52,10 @@ function Router() {
       <LoadingTransition />
       <AnimatedLayout>
         <div className="relative z-10 min-h-screen flex flex-col">
-          {location !== '/' && <Header />}
-          <main className={`flex-1 ${location !== '/' ? 'pt-12 md:pt-24' : ''}`}>
+          <Header />
+          <main className="flex-1 pt-12 md:pt-24">
             <Switch>
-              <Route path="/" component={SpiralDemoPage} />
+              <Route path="/" component={LandingPage} />
               <Route path="/home">
                 {() => {
                   const { currentUser } = useFirebaseAuth();
@@ -80,7 +80,7 @@ function Router() {
               <Route component={NotFound} />
             </Switch>
           </main>
-          {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/' && location !== '/glowing-search-demo' && <Footer showJoinUs={location === '/home'} />}
+          {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/glowing-search-demo' && location !== '/home' && <Footer showJoinUs={location === '/'} />}
         </div>
       </AnimatedLayout>
     </>
