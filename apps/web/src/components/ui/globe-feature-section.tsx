@@ -24,7 +24,7 @@ export default function Featured_05() {
           </h1>
           <Button 
             onClick={handleJoinToday}
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2 text-sm font-semibold text-background transition hover:bg-black"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 px-5 py-2 text-sm font-semibold text-black transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             Join Today <ArrowRight className="h-4 w-4" />
           </Button>

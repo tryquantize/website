@@ -367,13 +367,13 @@ function ServiceItem({ icon, secondaryIcon, title, description, variants, delay,
         transition={{ duration: 0.6, delay: delay + 0.2 }}
       >
         <motion.div
-          className="text-purple-400 bg-purple-400/10 p-3 rounded-lg transition-colors duration-300 group-hover:bg-purple-400/20 relative"
+          className="text-black bg-white p-3 rounded-lg transition-colors duration-300 group-hover:bg-gray-100 relative shadow-md"
           whileHover={{ rotate: [0, -10, 10, -5, 0], transition: { duration: 0.5 } }}
         >
           {icon}
-          {secondaryIcon}
+          {secondaryIcon && <div className="text-gray-600">{secondaryIcon}</div>}
         </motion.div>
-        <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors duration-300">
+        <h3 className="text-xl font-bold text-white group-hover:text-gray-300 transition-colors duration-300">
           {title}
         </h3>
       </motion.div>
@@ -442,7 +442,7 @@ function StatCounter({ icon, value, label, suffix, delay }: StatCounterProps) {
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
     >
       <motion.div
-        className="w-14 h-14 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 text-purple-400 group-hover:bg-purple-500/20 transition-colors duration-300"
+        className="w-14 h-14 rounded-full bg-white flex items-center justify-center mb-4 text-black group-hover:bg-gray-100 transition-colors duration-300 shadow-md"
         whileHover={{ rotate: 360, transition: { duration: 0.8 } }}
       >
         {icon}
@@ -452,7 +452,7 @@ function StatCounter({ icon, value, label, suffix, delay }: StatCounterProps) {
         <span>{suffix}</span>
       </motion.div>
       <p className="text-white/70 text-sm mt-1">{label}</p>
-      <motion.div className="w-10 h-0.5 bg-purple-400 mt-3 group-hover:w-16 transition-all duration-300" />
+      <motion.div className="w-10 h-0.5 bg-white mt-3 group-hover:w-16 transition-all duration-300" />
     </motion.div>
   );
 }

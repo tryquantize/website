@@ -1,4 +1,6 @@
 import { Pricing } from "@/components/ui/pricing";
+import TestimonialsColumns from "@/components/ui/testimonials-demo";
+import { Component as AnimatedBackground } from "@/components/ui/raycast-animated-black-background";
 
 const quantizePlans = [
   {
@@ -61,12 +63,25 @@ const quantizePlans = [
 
 export function PricingPage() {
   return (
-    <div className="min-h-screen bg-black">
-      <Pricing 
-        plans={quantizePlans}
-        title="Unlock the Power of AI Search"
-        description="Choose the plan that fits your search needs\nAll plans include access to our advanced AI search engine and comprehensive web integration."
-      />
+    <div className="min-h-screen bg-black relative">
+      {/* Animated Background */}
+      <div className="fixed inset-0 z-0">
+        <AnimatedBackground />
+      </div>
+      
+      {/* Content */}
+      <div className="relative z-10">
+        <Pricing 
+          plans={quantizePlans}
+          title="Unlock the Power of AI Search"
+          description="Choose the plan that fits your search needs\nAll plans include access to our advanced AI search engine and comprehensive web integration."
+        />
+        
+        {/* Testimonials Section */}
+        <section className="py-16 px-4">
+          <TestimonialsColumns />
+        </section>
+      </div>
     </div>
   );
 }

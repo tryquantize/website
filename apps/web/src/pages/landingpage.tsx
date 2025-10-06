@@ -1,5 +1,5 @@
 // React hooks
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 // UI components
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
@@ -12,7 +12,124 @@ import TestimonialsColumns from "@/components/ui/testimonials-demo";
 import Featured_05 from "@/components/ui/globe-feature-section";
 import FeaturesSection from "@/components/ui/features-section";
 import { FeatureCarousel, type ImageSet } from "@/components/ui/animated-feature-carousel";
+import { motion, useInView } from "framer-motion";
 
+
+// Story Cards Component with animations
+function StoryCardsGrid() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true, amount: 0.1 });
+
+  const storyCards = [
+    {
+      icon: "🔍",
+      title: "The Problem",
+      content: "Google search is a disaster. You spend hours trying to find a product, startup, or service, and what do you get? SEO spam. Paid ads. Generic blog lists written by people who've never used the tools they're ranking."
+    },
+    {
+      icon: "🤖",
+      title: "Current Solutions Fall Short",
+      content: "Even 'smart' tools like Perplexity just skim the surface. You might find something promising… then you're dumped into an endless maze of forms, demos, and 'contact us' pages just to get a simple answer."
+    },
+    {
+      icon: "📢",
+      title: "Discovery Arbitrage",
+      content: "The current discovery process is a joke. Great companies and incredible products are buried because they can't win the SEO or ad-spend war. Meanwhile, users waste hours sifting through noise, only to settle for whoever shouts the loudest."
+    },
+    {
+      icon: "⚡",
+      title: "Our Solution",
+      content: "We're fixing this. Me and Yashwardhan Sable are building Quantize, an AI-powered search engine that connects you instantly to the exact product, company, startup, solution or freelancer you need."
+    },
+    {
+      icon: "🎯",
+      title: "Instant Connection",
+      content: "No more 20 irrelevant links. No more guessing which landing page is worth your time. Type in what you're looking for, and our system surfaces the best-fit solutions, with one click, you can chat with the company, get a quote, use the product directly, or talk to a real human."
+    },
+    {
+      icon: "⚖️",
+      title: "Leveling the Playing Field",
+      content: "This isn't just about convenience. It's about fixing a massive discovery arbitrage. It's about giving visibility back to the companies doing great work, not just the ones gaming the algorithm."
+    },
+    {
+      icon: "✨",
+      title: "The Vision",
+      content: "Imagine replacing three hours of Googling and second-guessing with one clear, custom-fit recommendation, and an instant path to action."
+    },
+    {
+      icon: "🧠",
+      title: "Intelligence First",
+      content: "We're not here to 'index the web.' We're here to weaponize intelligence for search. To make finding a tool, startup, product, or solution feel like magic."
+    },
+    {
+      icon: "🏆",
+      title: "Merit-Based Discovery",
+      content: "And to finally give visibility back to the companies doing great work, not just the ones who know how to game the algorithm."
+    }
+  ];
+
+  const getRandomDirection = (index: number) => {
+    const directions = [
+      { x: -100, y: -50, rotate: -15 },
+      { x: 100, y: -30, rotate: 10 },
+      { x: -80, y: 60, rotate: 12 },
+      { x: 120, y: 40, rotate: -8 },
+      { x: -60, y: -80, rotate: 18 },
+      { x: 90, y: 70, rotate: -12 },
+      { x: -110, y: 30, rotate: 15 },
+      { x: 70, y: -60, rotate: -10 },
+      { x: -40, y: 90, rotate: 8 }
+    ];
+    return directions[index % directions.length];
+  };
+
+  return (
+    <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      {storyCards.map((card, index) => {
+        const direction = getRandomDirection(index);
+        return (
+          <motion.div
+            key={index}
+            className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white"
+            initial={{
+              opacity: 0,
+              x: direction.x,
+              y: direction.y,
+              rotate: direction.rotate,
+              scale: 0.8
+            }}
+            animate={isInView ? {
+              opacity: 1,
+              x: 0,
+              y: 0,
+              rotate: 0,
+              scale: 1
+            } : {}}
+            transition={{
+              duration: 0.8,
+              delay: index * 0.1,
+              ease: [0.25, 0.46, 0.45, 0.94],
+              type: "spring",
+              stiffness: 100,
+              damping: 15
+            }}
+            whileHover={{
+              scale: 1.02,
+              y: -5,
+              transition: { duration: 0.2 }
+            }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-2xl">{card.icon}</span>
+              <h4 className="font-semibold text-lg text-blue-400">{card.title}</h4>
+            </div>
+            <p className="text-sm leading-relaxed text-white/90">{card.content}</p>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const [startVisible, setStartVisible] = useState(false);
@@ -126,7 +243,7 @@ export default function LandingPage() {
             </h2>
             
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/80 max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10 lg:mb-12 leading-relaxed px-4">
-              Experience AI-powered search that understands context, provides intelligent insights, and delivers exactly what you're looking for. Built for the next generation of knowledge discovery.
+              An AI Search Engine that Quantizes infinite information
             </p>
           </section>
 
@@ -143,79 +260,7 @@ export default function LandingPage() {
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">🔍</span>
-                    <h4 className="font-semibold text-lg text-blue-400">The Problem</h4>
-                  </div>
-                  <p className="text-sm leading-relaxed text-white/90">Google search is a disaster. You spend hours trying to find a product, startup, or service, and what do you get? SEO spam. Paid ads. Generic blog lists written by people who've never used the tools they're ranking.</p>
-                </div>
-                
-                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">🤖</span>
-                    <h4 className="font-semibold text-lg text-blue-400">Current Solutions Fall Short</h4>
-                  </div>
-                  <p className="text-sm leading-relaxed text-white/90">Even 'smart' tools like Perplexity just skim the surface. You might find something promising… then you're dumped into an endless maze of forms, demos, and 'contact us' pages just to get a simple answer.</p>
-                </div>
-                
-                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">📢</span>
-                    <h4 className="font-semibold text-lg text-blue-400">Discovery Arbitrage</h4>
-                  </div>
-                  <p className="text-sm leading-relaxed text-white/90">The current discovery process is a joke. Great companies and incredible products are buried because they can't win the SEO or ad-spend war. Meanwhile, users waste hours sifting through noise, only to settle for whoever shouts the loudest.</p>
-                </div>
-                
-                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">⚡</span>
-                    <h4 className="font-semibold text-lg text-blue-400">Our Solution</h4>
-                  </div>
-                  <p className="text-sm leading-relaxed text-white/90">We're fixing this. Me and Yashwardhan Sable are building Quantize, an AI-powered search engine that connects you instantly to the exact product, company, startup, solution or freelancer you need.</p>
-                </div>
-                
-                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">🎯</span>
-                    <h4 className="font-semibold text-lg text-blue-400">Instant Connection</h4>
-                  </div>
-                  <p className="text-sm leading-relaxed text-white/90">No more 20 irrelevant links. No more guessing which landing page is worth your time. Type in what you're looking for, and our system surfaces the best-fit solutions, with one click, you can chat with the company, get a quote, use the product directly, or talk to a real human.</p>
-                </div>
-                
-                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">⚖️</span>
-                    <h4 className="font-semibold text-lg text-blue-400">Leveling the Playing Field</h4>
-                  </div>
-                  <p className="text-sm leading-relaxed text-white/90">This isn't just about convenience. It's about fixing a massive discovery arbitrage. It's about giving visibility back to the companies doing great work, not just the ones gaming the algorithm.</p>
-                </div>
-                
-                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">✨</span>
-                    <h4 className="font-semibold text-lg text-blue-400">The Vision</h4>
-                  </div>
-                  <p className="text-sm leading-relaxed text-white/90">Imagine replacing three hours of Googling and second-guessing with one clear, custom-fit recommendation, and an instant path to action.</p>
-                </div>
-                
-                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">🧠</span>
-                    <h4 className="font-semibold text-lg text-blue-400">Intelligence First</h4>
-                  </div>
-                  <p className="text-sm leading-relaxed text-white/90">We're not here to 'index the web.' We're here to weaponize intelligence for search. To make finding a tool, startup, product, or solution feel like magic.</p>
-                </div>
-                
-                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">🏆</span>
-                    <h4 className="font-semibold text-lg text-blue-400">Merit-Based Discovery</h4>
-                  </div>
-                  <p className="text-sm leading-relaxed text-white/90">And to finally give visibility back to the companies doing great work, not just the ones who know how to game the algorithm.</p>
-                </div>
-              </div>
+              <StoryCardsGrid />
             </div>
           </section>
 

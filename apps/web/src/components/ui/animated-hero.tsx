@@ -23,13 +23,10 @@ function Hero() {
             <ParticleTextEffect words={["Welcome", "to", "intelligent", "Search"]} />
 
             <p className="text-base sm:text-lg md:text-xl leading-relaxed tracking-tight text-white/80 max-w-2xl text-center font-bold px-4">
-              Experience AI-powered search that understands context, provides intelligent insights, and delivers exactly what you're looking for. Built for the next generation of knowledge discovery.
+              An AI Search Engine that Quantizes infinite information
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Button size="lg" className="gap-4 w-full sm:w-auto" variant="outline" onClick={navigateToLogin}>
-              Login <PhoneCall className="w-4 h-4" />
-            </Button>
             <Button size="lg" className="gap-4 bg-white text-black hover:bg-white/90 w-full sm:w-auto" onClick={navigateToHomePage}>
               Try for free <MoveRight className="w-4 h-4" />
             </Button>

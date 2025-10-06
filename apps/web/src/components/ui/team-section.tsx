@@ -30,7 +30,7 @@ export default function TeamSection() {
     {
       name: "Aditya Surana",
       designation: "Co-Founder & CEO",
-      description: "IIT BHU Computer Science graduate with a passion for revolutionizing information discovery through AI.",
+      description: "IIT BHU Physics graduate with a passion for revolutionizing information discovery through AI.",
       secondLine: "Leading product vision, strategic partnerships, and driving the future of intelligent search technology.",
       thirdLine: "Previously worked on ML research projects and has deep expertise in search algorithms and user experience design.",
       image: "/headshot.png",
@@ -99,7 +99,10 @@ export default function TeamSection() {
               key={member.name}
               className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 group hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-lg hover:shadow-xl"
               variants={itemVariants}
-              whileHover={{ y: -8, transition: { duration: 0.2 } }}
+              whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+              transition={{ duration: 0.6, delay: index * 0.2, ease: "easeOut" }}
             >
               <div className="flex flex-col items-center text-center">
                 <motion.div
@@ -133,7 +136,7 @@ export default function TeamSection() {
                     href={member.twitter}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-black/20 border border-white/20 flex items-center justify-center text-white hover:bg-black/40 hover:border-white/40 transition-all duration-300"
+                    className="w-10 h-10 rounded-full bg-white/10 border border-white/30 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -145,7 +148,7 @@ export default function TeamSection() {
                     href={member.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-black/20 border border-white/20 flex items-center justify-center text-white hover:bg-black/40 hover:border-white/40 transition-all duration-300"
+                    className="w-10 h-10 rounded-full bg-white/10 border border-white/30 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                   >

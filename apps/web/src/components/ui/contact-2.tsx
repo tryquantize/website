@@ -24,7 +24,7 @@ export const Contact2 = ({
   linkedin,
 }: Contact2Props) => {
   return (
-    <section className="py-32">
+    <section className="py-8">
       <div className="container">
         <div className="mx-auto flex max-w-screen-xl flex-col justify-between gap-10 lg:flex-row lg:gap-20">
           <div className="mx-auto flex max-w-sm flex-col justify-between gap-10">
@@ -38,36 +38,22 @@ export const Contact2 = ({
               <h3 className="mb-6 text-center text-2xl font-semibold lg:text-left text-white">
                 Contact Details
               </h3>
-              <ul className="space-y-3 text-white/90">
-                <li className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-purple-400" />
-                  <span className="font-bold">Phone: </span>
-                  {phone}
-                </li>
-                <li className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-purple-400" />
-                  <span className="font-bold">Email: </span>
-                  <a href={`mailto:${email}`} className="underline text-purple-400 hover:text-purple-300">
-                    {email}
-                  </a>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Globe className="w-5 h-5 text-purple-400" />
-                  <span className="font-bold">Web: </span>
-                  <a href={web.url} target="_blank" className="underline text-purple-400 hover:text-purple-300">
-                    {web.label}
-                  </a>
-                </li>
+              <div className="flex gap-4">
+                <a href={`tel:${phone}`} className="w-12 h-12 rounded-full bg-white/10 border border-white/30 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 group">
+                  <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                </a>
+                <a href={`mailto:${email}`} className="w-12 h-12 rounded-full bg-white/10 border border-white/30 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 group">
+                  <Mail className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                </a>
+                <a href={web.url} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white/10 border border-white/30 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 group">
+                  <Globe className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                </a>
                 {linkedin && (
-                  <li className="flex items-center gap-3">
-                    <Linkedin className="w-5 h-5 text-purple-400" />
-                    <span className="font-bold">LinkedIn: </span>
-                    <a href={linkedin.url} target="_blank" className="underline text-purple-400 hover:text-purple-300">
-                      {linkedin.label}
-                    </a>
-                  </li>
+                  <a href={linkedin.url} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white/10 border border-white/30 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 group">
+                    <Linkedin className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  </a>
                 )}
-              </ul>
+              </div>
             </div>
           </div>
           <div className="mx-auto flex max-w-screen-md flex-col gap-6 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-10">

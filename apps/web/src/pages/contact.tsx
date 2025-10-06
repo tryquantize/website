@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Component as RaycastAnimatedBackground } from "@/components/ui/raycast-animated-purple-background";
 
 import { Contact2 } from "@/components/ui/contact-2";
+import Featured_05 from "@/components/ui/globe-feature-section";
 
 export default function ContactPage() {
   return (
@@ -14,7 +15,7 @@ export default function ContactPage() {
       
       <div className="relative z-10 pt-20">
         {/* Contact Form Section */}
-        <section className="py-12 sm:py-16 md:py-20 px-4">
+        <section className="py-2 sm:py-3 md:py-4 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-white">
               <Contact2 
@@ -27,6 +28,11 @@ export default function ContactPage() {
               />
             </div>
           </div>
+        </section>
+
+        {/* Globe Feature Section */}
+        <section className="px-4">
+          <Featured_05 />
         </section>
 
       </div>

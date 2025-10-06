@@ -8,9 +8,10 @@
 */
 
 import { Link } from "wouter";
-import { Bot, Sparkles } from "lucide-react";
+import { Bot, Sparkles, Linkedin, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigation } from "@/hooks/use-navigation";
+import { QuantizeLogo } from "@/components/quantize-logo";
 
 
 export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
@@ -26,14 +27,20 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
             {/* Company info */}
             <div>
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-primary-foreground" />
-                </div>
-        <h3 className="font-bold text-lg bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">Quantize</h3>
+                <QuantizeLogo size={32} />
+                <h3 className="font-bold text-lg bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">Quantize</h3>
               </div>
               <p className="text-white/80 text-sm">
-                The intelligent AI search engine that understands your questions and delivers precise answers.
+                An AI Search Engine that Quantizes infinite information.
               </p>
+              <div className="flex gap-4 mt-4">
+                <a href="https://www.linkedin.com/company/tryquantize/" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300">
+                  <Linkedin className="w-4 h-4" />
+                </a>
+                <a href="https://x.com/theadityasurana" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300">
+                  <Twitter className="w-4 h-4" />
+                </a>
+              </div>
             </div>
 
             {/* Navigation */}
@@ -45,7 +52,16 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
                     Home
                   </Link>
                 </li>
-
+                <li>
+                  <Link href="/home" className="hover:text-white transition-colors">
+                    Search
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/pricing" className="hover:text-white transition-colors">
+                    Pricing
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -59,14 +75,9 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
                   </Link>
                 </li>
                 <li>
-                  <a href="mailto:info@quantize.site" className="hover:text-white transition-colors">
-                    Contact: info@quantize.site
-                  </a>
-                </li>
-                <li>
-                  <a href="https://www.linkedin.com/company/tryquantize/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                    LinkedIn
-                  </a>
+                  <Link href="/contact" className="hover:text-white transition-colors">
+                    Contact Us
+                  </Link>
                 </li>
                 <li>
                   <Link href="/privacy" className="hover:text-white transition-colors">

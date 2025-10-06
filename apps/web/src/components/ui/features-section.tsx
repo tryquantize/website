@@ -70,7 +70,9 @@ export default function FeaturesSection() {
             style={{ transitionDelay: `${index * 100}ms` }}
           >
             <div className="mb-4">
-              <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 group-hover:text-blue-300 transition-colors" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center group-hover:bg-gray-100 group-hover:border-gray-300 transition-all duration-300 shadow-md">
+                <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-black group-hover:scale-110 transition-transform" />
+              </div>
             </div>
             <h4 className="text-base sm:text-lg font-semibold text-white mb-3">{feature.title}</h4>
             <p className="text-white/70 text-sm leading-relaxed">{feature.description}</p>
