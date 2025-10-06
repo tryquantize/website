@@ -9,12 +9,19 @@
 
 import { Link, useLocation, useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
-
+import {
+    NavigationMenu,
+    NavigationMenuContent,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+    NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 import { useAuth } from "@/lib/auth";
 import { useNavigation } from "@/hooks/use-navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
-import { Search, Heart, Menu, X } from "lucide-react";
+import { Search, Heart, Menu, X, MoveRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
@@ -24,6 +31,45 @@ import { AnimatedButton } from "@/components/ui/animated-button";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 
 export function Header() {
+  const navigationItems = [
+    {
+      title: "Home",
+      href: "/home",
+      description: "",
+    },
+    {
+      title: "Product",
+      description: "Discover AI-powered search capabilities and features.",
+      items: [
+        {
+          title: "Search",
+          href: "/home",
+        },
+        {
+          title: "Features",
+          href: "/about",
+        },
+        {
+          title: "Pricing",
+          href: "/pricing",
+        },
+      ],
+    },
+    {
+      title: "Company",
+      description: "Learn more about Quantize and our mission.",
+      items: [
+        {
+          title: "About us",
+          href: "/about",
+        },
+        {
+          title: "Contact us",
+          href: "/contact",
+        },
+      ],
+    },
+  ];
 
   const { user, isAuthenticated, logout } = useAuth();
   const { currentUser, signOut: firebaseSignOut } = useFirebaseAuth();
@@ -73,18 +119,7 @@ export function Header() {
     tap: { scale: 0.95 }
   };
 
-  const mobileMenuVariants = {
-    closed: {
-      opacity: 0,
-      height: 0,
-      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
-    },
-    open: {
-      opacity: 1,
-      height: 'auto',
-      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
-    }
-  };
+
 
   // Don't render header on welcome transition page
   if (isWelcomeTransitionPage) {
@@ -148,89 +183,146 @@ export function Header() {
             </div>
           </div>
         ) : (
-          <div className="flex justify-between items-center h-12 sm:h-14 md:h-16">
-            <motion.div
-              className="flex items-center space-x-2 sm:space-x-3"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Link href="/home" className="flex items-center space-x-1 sm:space-x-2 md:space-x-3" data-testid="logo-link">
-                <QuantizeLogo size={20} className="sm:w-6 sm:h-6 md:w-8 md:h-8" />
-                <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
+          <div className="container relative mx-auto min-h-20 flex gap-4 flex-row lg:grid lg:grid-cols-3 items-center">
+            <div className="justify-start items-center gap-4 lg:flex hidden flex-row">
+              <NavigationMenu className="flex justify-start items-start">
+                <NavigationMenuList className="flex justify-start gap-4 flex-row">
+                  {navigationItems.map((item) => (
+                    <NavigationMenuItem key={item.title}>
+                      {item.href ? (
+                        <>
+                          <NavigationMenuLink asChild>
+                            <Link href={item.href}>
+                              <Button variant="ghost" className="text-white/70 hover:text-white">
+                                {item.title}
+                              </Button>
+                            </Link>
+                          </NavigationMenuLink>
+                        </>
+                      ) : (
+                        <>
+                          <NavigationMenuTrigger className="font-medium text-sm text-white/70 hover:text-white bg-transparent">
+                            {item.title}
+                          </NavigationMenuTrigger>
+                          <NavigationMenuContent className="!w-[450px] p-4 bg-black/90 backdrop-blur-md border border-white/10">
+                            <div className="flex flex-col lg:grid grid-cols-2 gap-4">
+                              <div className="flex flex-col h-full justify-between">
+                                <div className="flex flex-col">
+                                  <p className="text-base text-white">{item.title}</p>
+                                  <p className="text-white/60 text-sm">
+                                    {item.description}
+                                  </p>
+                                </div>
+                                <Button size="sm" className="mt-10 bg-blue-600 hover:bg-blue-700">
+                                  Join the Waitlist
+                                </Button>
+                              </div>
+                              <div className="flex flex-col text-sm h-full justify-end">
+                                {item.items?.map((subItem) => (
+                                  <NavigationMenuLink
+                                    asChild
+                                    key={subItem.title}
+                                  >
+                                    <Link
+                                      href={subItem.href}
+                                      className="flex flex-row justify-between items-center hover:bg-white/10 py-2 px-4 rounded text-white/70 hover:text-white"
+                                    >
+                                      <span>{subItem.title}</span>
+                                      <MoveRight className="w-4 h-4 text-white/40" />
+                                    </Link>
+                                  </NavigationMenuLink>
+                                ))}
+                              </div>
+                            </div>
+                          </NavigationMenuContent>
+                        </>
+                      )}
+                    </NavigationMenuItem>
+                  ))}
+                </NavigationMenuList>
+              </NavigationMenu>
+            </div>
+            <div className="flex lg:justify-center">
+              <Link href="/home" className="flex items-center space-x-2" data-testid="logo-link">
+                <QuantizeLogo size={24} />
+                <h1 className="font-semibold text-lg bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
                   Quantize
                 </h1>
               </Link>
-            </motion.div>
-
-            <div className="flex items-center space-x-2 sm:space-x-4">
-
-
-              {currentUser ? (
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                    <AvatarFallback className="text-xs">
-                      {currentUser.displayName?.charAt(0).toUpperCase() || currentUser.email?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden md:block text-sm font-medium">
-                    {currentUser.displayName || currentUser.email}
-                  </span>
-                  <AnimatedButton 
-                    variant="secondary" 
-                    size="sm" 
-                    interactive
+            </div>
+            <div className="flex justify-end w-full gap-4">
+              {currentUser || (isAuthenticated && user) ? (
+                <>
+                  <Button 
+                    variant="outline" 
+                    className="border-white/20 text-white/70 hover:text-white hover:bg-white/10"
                     onClick={() => setLocation('/favorites')}
-                    icon={<Heart className="w-3 h-3 sm:w-4 sm:h-4" />}
-                    className="hidden sm:flex"
                   >
-                    <span className="hidden md:inline">Favorites</span>
-                  </AnimatedButton>
-                  <AnimatedButton 
-                    variant="primary" 
-                    size="sm" 
-                    interactive
+                    Favorites
+                  </Button>
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700"
                     onClick={handleFirebaseLogout}
-                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    Logout
-                  </AnimatedButton>
-                </div>
-              ) : isAuthenticated && user ? (
-                <div className="flex items-center space-x-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="text-xs">
-                      {user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="hidden sm:block text-sm font-medium">
-                    {user.name || user.email}
-                  </span>
-                  <Button variant="ghost" size="sm" onClick={() => { logout(); setLocation('/'); }}>
                     Logout
                   </Button>
-                </div>
+                </>
               ) : (
-                <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
-                  <AnimatedButton 
-                    size="sm" 
-                    variant="secondary"
-                    interactive
+                <>
+                  <Button 
+                    variant="outline" 
+                    className="border-white/20 text-white/70 hover:text-white hover:bg-white/10"
                     onClick={() => navigateWithLoading('/auth')}
-                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <span className="hidden sm:inline">Get Started</span>
-                    <span className="sm:hidden">Login</span>
-                  </AnimatedButton>
-                  <AnimatedButton 
-                    size="sm" 
-                    variant="gradient"
-                    interactive
+                    Sign in
+                  </Button>
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700"
                     onClick={() => navigateWithLoading('/waitlist')}
-                    className="text-xs sm:text-sm px-2 sm:px-3"
                   >
-                    <span className="hidden sm:inline">Join the Waitlist</span>
-                    <span className="sm:hidden">Join</span>
-                  </AnimatedButton>
+                    Join the Waitlist
+                  </Button>
+                </>
+              )}
+            </div>
+            <div className="flex w-12 shrink lg:hidden items-end justify-end">
+              <Button variant="ghost" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white">
+                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
+              {isMobileMenuOpen && (
+                <div className="absolute top-20 border-t flex flex-col w-full right-0 bg-black/90 backdrop-blur-md shadow-lg py-4 container gap-8 border-white/10">
+                  {navigationItems.map((item) => (
+                    <div key={item.title}>
+                      <div className="flex flex-col gap-2">
+                        {item.href ? (
+                          <Link
+                            href={item.href}
+                            className="flex justify-between items-center text-white"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <span className="text-lg">{item.title}</span>
+                            <MoveRight className="w-4 h-4 stroke-1 text-white/60" />
+                          </Link>
+                        ) : (
+                          <p className="text-lg text-white">{item.title}</p>
+                        )}
+                        {item.items &&
+                          item.items.map((subItem) => (
+                            <Link
+                              key={subItem.title}
+                              href={subItem.href}
+                              className="flex justify-between items-center text-white/70"
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              <span>
+                                {subItem.title}
+                              </span>
+                              <MoveRight className="w-4 h-4 stroke-1" />
+                            </Link>
+                          ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

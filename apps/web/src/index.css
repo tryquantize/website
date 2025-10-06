@@ -149,6 +149,10 @@
     @apply border-border;
   }
 
+  html, #root {
+    height: 100%;
+  }
+
   /* Invert everything in light mode: white background, black stars, black text */
   html.light {
     filter: invert(1) hue-rotate(180deg);
@@ -170,8 +174,9 @@
     /* Position relative to allow absolute positioning of cosmic elements */
     position: relative;
     
-    /* Prevent horizontal scrolling for clean layout */
-    overflow-x: hidden;
+    /* Prevent all scrolling on body */
+    overflow: hidden;
+    height: 100vh;
   }
 
   /* 
@@ -375,6 +380,28 @@
     100% { background-position: -1200px 800px; }
   }
 
+  /* 
+   * MARQUEE ANIMATIONS
+   * For 3D testimonials component
+   */
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+
   /* Flickering text animation */
   @keyframes flicker {
     0%, 100% { opacity: 1; }
@@ -515,6 +542,18 @@
       opacity: 1;                                      /* Fully opaque */
       transform: translateY(0);                        /* At final position */
     }
+  }
+
+  /* 
+   * MARQUEE ANIMATION UTILITIES
+   * For 3D testimonials component
+   */
+  .animate-marquee {
+    animation: marquee var(--duration) infinite linear;
+  }
+
+  .animate-marquee-vertical {
+    animation: marquee-vertical var(--duration) linear infinite;
   }
 
   /*

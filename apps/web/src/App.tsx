@@ -42,6 +42,9 @@ import SearchTransition from "@/pages/search-transition";
 import FavoritesPage from "@/pages/favorites";
 import LandingPage from "@/pages/landingpage";
 import GlowingSearchDemoPage from "@/pages/glowing-search-demo";
+import AboutPage from "@/pages/about";
+import ContactPage from "@/pages/contact";
+import { PricingPage } from "@/pages/pricing";
 
 function Router() {
   const { isLoading, fromPage, toPage } = useLoading();
@@ -51,36 +54,43 @@ function Router() {
     <>
       <LoadingTransition />
       <AnimatedLayout>
-        <div className="relative z-10 min-h-screen flex flex-col">
+        <div className="relative z-10 h-screen flex flex-col">
           <Header />
-          <main className="flex-1 pt-12 md:pt-24">
-            <Switch>
-              <Route path="/" component={LandingPage} />
-              <Route path="/home">
-                {() => {
-                  const { currentUser } = useFirebaseAuth();
-                  return currentUser ? <LoggedInHome /> : <Home />;
-                }}
-              </Route>
-              <Route path="/loggedinhome" component={LoggedInHome} />
-              <Route path="/welcome-transition" component={WelcomeTransition} />
-              <Route path="/products" component={ProductsPage} />
-              <Route path="/dashboard" component={Dashboard} />
-              <Route path="/admin" component={Admin} />
-              <Route path="/auth" component={Register} />
-              <Route path="/auth/register" component={Register} />
-              <Route path="/waitlist" component={WaitlistPage} />
-              <Route path="/waitlist-admin" component={WaitlistAdminPage} />
-              <Route path="/onboarding" component={OnboardingPage} />
+          <main className="flex-1 pt-12 md:pt-24 overflow-y-auto">
+            <div className="min-h-full flex flex-col">
+              <div className="flex-1">
+                <Switch>
+                  <Route path="/" component={LandingPage} />
+                  <Route path="/home">
+                    {() => {
+                      const { currentUser } = useFirebaseAuth();
+                      return currentUser ? <LoggedInHome /> : <Home />;
+                    }}
+                  </Route>
+                  <Route path="/loggedinhome" component={LoggedInHome} />
+                  <Route path="/welcome-transition" component={WelcomeTransition} />
+                  <Route path="/products" component={ProductsPage} />
+                  <Route path="/dashboard" component={Dashboard} />
+                  <Route path="/admin" component={Admin} />
+                  <Route path="/auth" component={Register} />
+                  <Route path="/auth/register" component={Register} />
+                  <Route path="/waitlist" component={WaitlistPage} />
+                  <Route path="/waitlist-admin" component={WaitlistAdminPage} />
+                  <Route path="/onboarding" component={OnboardingPage} />
 
-              <Route path="/search-transition" component={SearchTransition} />
-              <Route path="/results" component={ResultsPage} />
-              <Route path="/favorites" component={FavoritesPage} />
-              <Route path="/glowing-search-demo" component={GlowingSearchDemoPage} />
-              <Route component={NotFound} />
-            </Switch>
+                  <Route path="/search-transition" component={SearchTransition} />
+                  <Route path="/results" component={ResultsPage} />
+                  <Route path="/favorites" component={FavoritesPage} />
+                  <Route path="/glowing-search-demo" component={GlowingSearchDemoPage} />
+                  <Route path="/about" component={AboutPage} />
+                  <Route path="/contact" component={ContactPage} />
+                  <Route path="/pricing" component={PricingPage} />
+                  <Route component={NotFound} />
+                </Switch>
+              </div>
+              {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/glowing-search-demo' && location !== '/home' && <Footer showJoinUs={location === '/'} />}
+            </div>
           </main>
-          {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/glowing-search-demo' && location !== '/home' && <Footer showJoinUs={location === '/'} />}
         </div>
       </AnimatedLayout>
     </>

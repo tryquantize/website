@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 // UI components
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
-import { SpiralAnimation } from "@/components/ui/spiral-animation";
+import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
 
 // Components
 import TestimonialsColumns from "@/components/ui/testimonials-demo";
 import Featured_05 from "@/components/ui/globe-feature-section";
+import FeaturesSection from "@/components/ui/features-section";
+import { FeatureCarousel, type ImageSet } from "@/components/ui/animated-feature-carousel";
+
 
 export default function LandingPage() {
   const [startVisible, setStartVisible] = useState(false);
@@ -102,9 +105,9 @@ export default function LandingPage() {
 
   return (
     <div className="relative w-full min-h-screen bg-black overflow-hidden">
-      {/* Spiral Animation Background */}
+      {/* Raycast Animation Background */}
       <div className="fixed inset-0 w-full h-full z-0">
-        <SpiralAnimation />
+        <RaycastBackground />
       </div>
       {/* Hero Section */}
       <section className="relative w-full h-screen flex items-center justify-center z-10">
@@ -159,6 +162,8 @@ export default function LandingPage() {
             </p>
           </section>
 
+
+
           {/* FAQs Section */}
           <section className="mb-24">
             <div className="flex items-end justify-between mb-8">
@@ -188,10 +193,36 @@ export default function LandingPage() {
             </div>
           </section>
 
+          {/* Feature Carousel Section */}
+          <section className="mb-16 sm:mb-20 md:mb-24 lg:mb-28 xl:mb-32">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+                How <span className="text-blue-400">Quantize</span> Works
+              </h2>
+              <p className="text-lg text-white/70 max-w-2xl mx-auto">
+                Discover the power of AI-driven search in four simple steps
+              </p>
+            </div>
+            <FeatureCarousel
+              image={{
+                alt: "Quantize AI Search Interface",
+                step1img1: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1740&auto=format&fit=crop",
+                step1img2: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1740&auto=format&fit=crop",
+                step2img1: "https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=1740&auto=format&fit=crop",
+                step2img2: "https://images.unsplash.com/photo-1504639725590-34d0984388bd?q=80&w=1674&auto=format&fit=crop",
+                step3img: "https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=1740&auto=format&fit=crop",
+                step4img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1742&auto=format&fit=crop",
+              }}
+            />
+          </section>
+
           {/* Testimonials Section */}
           <section className="mb-8 sm:mb-12 md:mb-16 lg:mb-20 xl:mb-24 px-2 sm:px-4">
             <TestimonialsColumns />
           </section>
+
+          {/* Features Section */}
+          <FeaturesSection />
 
           {/* Globe Feature Section */}
           <section>
@@ -200,9 +231,9 @@ export default function LandingPage() {
 
           {/* Footer Section */}
           <footer className="relative mt-24 pt-16 pb-0 overflow-hidden">
-            {/* Spiral Animation Background */}
+            {/* Raycast Animation Background */}
             <div className="absolute inset-0 w-full h-full z-0">
-              <SpiralAnimation />
+              <RaycastBackground />
             </div>
             <div className="relative z-10 bg-black/60 backdrop-blur-sm rounded-3xl p-8">
               <div className="max-w-6xl mx-auto">

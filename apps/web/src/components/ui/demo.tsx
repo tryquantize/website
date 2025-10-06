@@ -1,5 +1,5 @@
-import { GradientCard } from "@/components/ui/gradient-card"
+import { Component } from "@/components/ui/raycast-animated-black-background";
 
-export const Demo = () => {
-    return <GradientCard />
+export default function DemoOne() {
+  return <Component />;
 }
