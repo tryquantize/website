@@ -334,46 +334,46 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
       
       {/* Follow-up Search */}
       <div className="border-t border-white/10 p-3">
-        <div className="relative rounded-[20px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-lg overflow-visible" style={{height: '65px'}}>
-          {/* Search input area */}
-          <div className="relative px-3 flex items-center" style={{height: '35px'}}>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-1">
-              {/* Prompt enhancer button */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      aria-label="Enhance search prompt"
-                      disabled={!followUpQuery.trim() || isEnhancing}
-                      className="flex h-5 w-5 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isEnhancing ? (
-                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-2.5 w-2.5" />
-                      )}
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p>Enhance prompt</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              
-              <button
-                aria-label="Search"
-                onClick={handleFollowUpSearch}
-                disabled={!followUpQuery.trim() || isLoadingFollowUp}
-                className="flex h-5 w-5 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
-              >
-                {isLoadingFollowUp ? (
-                  <div className="w-2.5 h-2.5 border border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Search className="h-2.5 w-2.5" />
-                )}
-              </button>
-            </div>
+        <div className="relative rounded-[16px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[75px]">
+          {/* Search input area - mobile optimized */}
+          <div className="relative px-3 flex items-center h-[42px]">
+            {/* Prompt enhancer button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    aria-label="Enhance search prompt"
+                    disabled={!followUpQuery.trim() || isEnhancing}
+                    className="absolute right-[28px] top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isEnhancing ? (
+                      <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-2.5 w-2.5" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Enhance prompt</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            {/* Search button */}
+            <button
+              aria-label="Search"
+              onClick={handleFollowUpSearch}
+              disabled={!followUpQuery.trim() || isLoadingFollowUp}
+              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
+            >
+              {isLoadingFollowUp ? (
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Search className="h-3 w-3" />
+              )}
+            </button>
 
+            {/* Input */}
             <Input
               type="text"
               placeholder="Ask a follow-up question..."
@@ -386,14 +386,14 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                 }
               }}
               disabled={isEnhancing}
-              className="h-8 w-full border-0 bg-transparent shadow-none text-sm placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-16 flex items-center disabled:opacity-70"
+              className="h-9 w-full border-0 bg-transparent shadow-none text-sm placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-14 flex items-center disabled:opacity-70"
             />
           </div>
 
-          {/* Bottom row - Icons */}
-          <div className="relative border-t border-white/10 px-3 py-1.5" style={{height: '30px'}}>
+          {/* Bottom row - Icons - mobile optimized */}
+          <div className="relative border-t border-white/10 px-3 py-0.5 h-[25px]">
             <div className="flex items-center justify-between">
-              {/* Left - Brain icon with dropdown */}
+              {/* Left - Brain icon with dropdown and selected model */}
               <div className="relative flex items-center space-x-1">
                 <div className="relative">
                   <button
@@ -401,7 +401,7 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                       e.stopPropagation();
                       setShowModelDropdown(!showModelDropdown);
                     }}
-                    className={`flex h-4 w-4 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 ${
+                    className={`flex h-4 w-4 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 aspect-square ${
                       selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
                     }`}
                   >
@@ -432,17 +432,18 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                   )}
                 </div>
                 
-                <span className="text-xs text-white/70">{selectedModel}</span>
+                <span className="text-xs text-white/70 truncate max-w-[80px]">{selectedModel}</span>
               </div>
 
               {/* Right - Filter buttons */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <TooltipProvider>
+                  {/* Company */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-4 w-4 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          `h-4 w-4 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square ` +
                           (selectedTypes.has('company')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -455,11 +456,12 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                     </TooltipTrigger>
                     <TooltipContent>Company</TooltipContent>
                   </Tooltip>
+                  {/* Freelancer */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-4 w-4 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          `h-4 w-4 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square ` +
                           (selectedTypes.has('freelancer')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -472,11 +474,12 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                     </TooltipTrigger>
                     <TooltipContent>Freelancer</TooltipContent>
                   </Tooltip>
+                  {/* Product */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-4 w-4 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          `h-4 w-4 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square ` +
                           (selectedTypes.has('product')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')

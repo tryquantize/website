@@ -22,7 +22,7 @@ import { AnimatedSearchBar } from "@/components/ui/animated-search-bar"; // Enha
 import { LoadingSpinner } from "@/components/ui/loading-spinner";    // Premium loading animations
 
 // Icons from Lucide React
-import { Search, Lightbulb, Sparkles, Wrench, Building2, Package, User, Clock, TrendingUp, Brain, ChevronDown, Loader2, Undo } from "lucide-react";
+import { Search, Lightbulb, Sparkles, Wrench, Building2, Package, User, TrendingUp, Brain, ChevronDown, Loader2, Undo } from "lucide-react";
 
 // Data fetching and API
 import { useMutation } from "@tanstack/react-query";               // React Query for API calls
@@ -45,80 +45,7 @@ interface SearchInterfaceProps {
   onSearchResults?: (results: any) => void;                        // Callback for search results
 }
 
-/**
- * SEARCH SUGGESTIONS DATABASE
- * 
- * Comprehensive list of AI-related search suggestions
- * In production, this would come from an API endpoint
- * Organized by categories and use cases for better user experience
- * 
- * Categories include:
- * - Content creation and marketing
- * - Business automation
- * - Customer service
- * - Data analysis and insights
- * - Development tools
- * - Industry-specific solutions
- */
-const searchSuggestions = [
-  "AI-powered lead generation for B2B sales",
-  "AI content creation tools for social media",
-  "Customer service automation",
-  "Automated video editing for short-form content",
-  "AI email assistant for busy professionals",
-  "Voice-based AI receptionist for local businesses",
-  "Predictive analytics for e-commerce growth",
-  "AI copywriting tool for ad agencies",
-  "Customer support chatbot for e-commerce stores",
-  "AI-driven sales forecasting for retail",
-  "Automated podcast editing software",
-  "AI resume screening tool for HR teams",
-  "Machine learning fraud detection for fintech",
-  "Voice cloning software for content creators",
-  "AI-powered SEO optimization tool",
-  "Automated data entry assistant for accountants",
-  "Predictive inventory management system",
-  "AI transcription and meeting notes generator",
-  "Automated social media scheduling tool",
-  "AI-based health diagnostics platform",
-  "Natural language query analytics tool",
-  "AI video upscaling tool for filmmakers",
-  "Automated influencer discovery platform",
-  "AI brand logo generator for startups",
-  "Speech-to-text API for call centers",
-  "AI music composition tool for YouTubers",
-  "Automated real estate listing optimizer",
-  "AI-powered grammar and style checker",
-  "Predictive churn analysis tool for SaaS companies",
-  "AI-powered survey analysis platform",
-  "Automated invoice processing system",
-  "AI-generated blog writing assistant",
-  "Chatbot for appointment booking for salons",
-  "AI customer sentiment analysis tool",
-  "Automated video subtitle generator",
-  "AI call summarization tool for sales teams",
-  "Intelligent email spam filter",
-  "AI ad creative generator for Facebook ads",
-  "Automated job description writer",
-  "AI-powered market research platform",
-  "Predictive lead scoring tool for CRM",
-  "AI content repurposing tool for podcasts",
-  "Automated UX feedback analyzer",
-  "AI code completion assistant for developers",
-  "Intelligent resume builder",
-  "AI-powered language translation service",
-  "Automated video testimonial generator",
-  "AI lead enrichment tool for B2B",
-  "Predictive demand forecasting for manufacturing",
-  "AI-powered social listening tool",
-  "Automated academic research summarizer",
-  "AI-based plagiarism detection for writers",
-  "Intelligent ad targeting platform",
-  "AI-powered pricing optimization for hotels",
-  "Automated event scheduling assistant",
-  "AI meeting scheduling bot for enterprises",
-  "AI-driven contract review tool for lawyers"
-];
+
 
 /**
  * SEARCH INTERFACE COMPONENT
@@ -160,10 +87,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
   // TYPE FILTER STATE
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set()); // Selected content types
   
-  // SUGGESTIONS STATE
-  const [showSuggestions, setShowSuggestions] = useState(false);   // Whether to show suggestion dropdown
-  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]); // Filtered suggestions
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1); // Keyboard navigation index
+
   
   // ANIMATION STATES
   const [isSearching, setIsSearching] = useState(false);           // Full-screen search animation
@@ -360,34 +284,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     return () => clearTimeout(timeout);
   }, [currentPhraseIndex]);                                       // Re-run when phrase index changes
 
-  /**
-   * LIVE SEARCH SUGGESTIONS FILTERING
-   * 
-   * Filters the suggestions array based on user input in real-time
-   * Provides instant feedback and helps users discover relevant searches
-   * 
-   * FEATURES:
-   * - Case-insensitive matching
-   * - Limits to 8 suggestions for clean UI
-   * - Resets keyboard navigation when suggestions change
-   * - Hides dropdown when no query or no matches
-   */
-  useEffect(() => {
-    if (query.trim().length > 0) {
-      // Filter suggestions that contain the query (case-insensitive)
-      const filtered = searchSuggestions.filter(suggestion =>
-        suggestion.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 8);                                              // Limit to 8 suggestions
-      
-      setFilteredSuggestions(filtered);                          // Update filtered list
-      setShowSuggestions(filtered.length > 0);                   // Show dropdown if matches found
-      setSelectedSuggestionIndex(-1);                            // Reset keyboard selection
-    } else {
-      // No query - hide suggestions
-      setShowSuggestions(false);
-      setFilteredSuggestions([]);
-    }
-  }, [query]);                                                   // Re-run when query changes
+
 
   /**
    * SEARCH API MUTATION
@@ -450,11 +347,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
   /**
    * KEYBOARD NAVIGATION HANDLER
    * 
-   * Provides full keyboard support with authentication check:
-   * - Enter: Execute search (selected suggestion or current query)
-   * - Arrow Down: Move to next suggestion
-   * - Arrow Up: Move to previous suggestion
-   * - Escape: Close suggestions dropdown
+   * Provides keyboard support with authentication check:
+   * - Enter: Execute search
    * - Ctrl/Cmd + E: Enhance prompt
    * - Ctrl/Cmd + Z: Undo enhancement
    * 
@@ -476,65 +370,25 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
       handleUndo();
       return;
     }
+    
     // ENTER KEY: Execute search
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();                                         // Prevent form submission
+      e.preventDefault();
       
       // Check if user is logged in
       if (!user) {
-        const queryToStore = selectedSuggestionIndex >= 0 && filteredSuggestions[selectedSuggestionIndex] 
-          ? filteredSuggestions[selectedSuggestionIndex] 
-          : query.trim();
-        if (queryToStore) {
-          localStorage.setItem('pending-search-query', queryToStore);
+        if (query.trim()) {
+          localStorage.setItem('pending-search-query', query.trim());
           setLocation('/auth');
         }
         return;
       }
       
-      // If a suggestion is selected, use it
-      if (selectedSuggestionIndex >= 0 && filteredSuggestions[selectedSuggestionIndex]) {
-        const selectedQuery = filteredSuggestions[selectedSuggestionIndex];
-        const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
-        setLocation(`/results?q=${encodeURIComponent(selectedQuery)}${typesParam}`);
-      } else {
-        // No suggestion selected, use current query
-        handleSearch();
-      }
-      setShowSuggestions(false);                                  // Hide suggestions
-      
-    // ARROW DOWN: Move to next suggestion
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();                                         // Prevent cursor movement
-      setSelectedSuggestionIndex(prev => 
-        prev < filteredSuggestions.length - 1 ? prev + 1 : prev  // Don't go past last item
-      );
-      
-    // ARROW UP: Move to previous suggestion
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();                                         // Prevent cursor movement
-      setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1); // -1 means no selection
-      
-    // ESCAPE: Close suggestions
-    } else if (e.key === "Escape") {
-      setShowSuggestions(false);                                  // Hide dropdown
-      setSelectedSuggestionIndex(-1);                            // Clear selection
+      handleSearch();
     }
   };
 
-  /**
-   * SUGGESTION CLICK HANDLER
-   * 
-   * Handles mouse clicks on suggestion items:
-   * 1. Updates search bar with suggestion
-   * 2. Hides suggestions dropdown
-   * User must then click search or press Enter to proceed
-   */
-  const handleSuggestionClick = (suggestion: string) => {
-    setQuery(suggestion);                                         // Update query display
-    setShowSuggestions(false);                                    // Hide suggestions
-    // Note: User must now click search or press Enter to proceed
-  };
+
 
   /**
    * SUGGESTION TILE CLICK HANDLER
@@ -544,7 +398,6 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
    */
   const handleSuggestionTileClick = (suggestion: string) => {
     setQuery(suggestion);                                         // Update query in search bar
-    setShowSuggestions(false);                                    // Hide any open suggestions
     // Note: User must now click search or press Enter to proceed
   };
 
@@ -682,38 +535,38 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         ? 'max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[70vh]'
         : 'max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[70vh]'
     }`}>
-      {/* Centered hero */}
-      <div className={`text-center transition-all duration-1000 ease-out px-4 ${
+      {/* Centered hero - Mobile optimized */}
+      <div className={`text-center transition-all duration-1000 ease-out px-4 sm:px-6 ${
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'mb-0 opacity-100 scale-100 translate-y-0'
       }`}>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight text-center" style={{ fontFamily: 'Instrument Serif, serif' }}>
+        <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 sm:mb-4 md:mb-6 leading-tight text-center" style={{ fontFamily: 'Instrument Serif, serif' }}>
           <span className="text-white block">
             Ask, Discover.
           </span>
-          <span className="text-white block mt-2">
+          <span className="text-white block mt-1 sm:mt-2">
             Find the right&nbsp;
-            <span className="flicker-text text-white inline-block w-[6ch] sm:w-[7ch] md:w-[8ch] text-left align-baseline">
+            <span className="flicker-text text-white inline-block w-[5ch] xs:w-[6ch] sm:w-[7ch] md:w-[8ch] text-left align-baseline">
               {flickerWord}
             </span>
           </span>
         </h1>
-        <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl italic text-white mb-4 sm:mb-6 max-w-2xl mx-auto leading-relaxed text-center" style={{ fontFamily: 'Instrument Serif, serif' }}>
+        <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl italic text-white mb-3 sm:mb-4 md:mb-6 max-w-2xl mx-auto leading-relaxed text-center px-2" style={{ fontFamily: 'Instrument Serif, serif' }}>
           Where your questions meet the world's smartest solutions.
         </p>
       </div>
 
-      {/* Glassmorphism Search Bar */}
+      {/* Glassmorphism Search Bar - Mobile optimized */}
       <div className={`transition-all duration-1500 ease-out ${
         isSearching 
           ? 'opacity-0 scale-90 pointer-events-none'
-          : 'w-full max-w-4xl mx-auto mb-6 sm:mb-8 px-4 transform translate-y-0 opacity-100 scale-100'
+          : 'w-full max-w-4xl mx-auto mb-4 sm:mb-6 md:mb-8 px-3 sm:px-4 transform translate-y-0 opacity-100 scale-100'
       }`}>
-        <div className={`relative rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[90px] sm:h-[100px] md:h-[110px] ${
+        <div className={`relative rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[80px] xs:h-[85px] sm:h-[90px] md:h-[100px] lg:h-[110px] ${
           isSearching ? 'transform scale-95' : 'transform scale-100'
         }`}>
           {/* Search input area - mobile optimized */}
-          <div className="relative px-4 sm:px-6 flex items-center h-[50px] sm:h-[55px] md:h-[60px]">
-            {/* Undo button (only show if there's history) */}
+          <div className="relative px-3 xs:px-4 sm:px-6 flex items-center h-[48px] xs:h-[50px] sm:h-[55px] md:h-[60px]">
+            {/* Undo button (only show if there's history) - Mobile optimized */}
             {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
               <TooltipProvider>
                 <Tooltip>
@@ -721,9 +574,9 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     <button
                       aria-label="Undo prompt enhancement"
                       onClick={handleUndo}
-                      className="absolute right-[72px] sm:right-20 top-1/2 -translate-y-1/2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition"
+                      className="absolute right-[80px] xs:right-[88px] sm:right-24 top-1/2 -translate-y-1/2 flex h-7 w-7 xs:h-8 xs:w-8 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition touch-manipulation"
                     >
-                      <Undo className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <Undo className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top">
@@ -733,7 +586,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               </TooltipProvider>
             )}
             
-            {/* Prompt enhancer button */}
+            {/* Prompt enhancer button - Mobile optimized */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -741,12 +594,12 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     aria-label="Enhance search prompt"
                     onClick={handlePromptEnhancement}
                     disabled={!query.trim() || isEnhancing || searchMutation.isPending}
-                    className="absolute right-[40px] sm:right-12 top-1/2 -translate-y-1/2 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute right-[44px] xs:right-[48px] sm:right-16 top-1/2 -translate-y-1/2 flex h-7 w-7 xs:h-8 xs:w-8 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                   >
                     {isEnhancing ? (
-                      <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
+                      <Loader2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5 animate-spin" />
                     ) : (
-                      <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <Sparkles className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                     )}
                   </button>
                 </TooltipTrigger>
@@ -759,58 +612,56 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               </Tooltip>
             </TooltipProvider>
             
-            {/* Search button */}
+            {/* Search button - Mobile optimized */}
             <button
               aria-label="Search"
               onClick={handleSearch}
               disabled={!query.trim() || searchMutation.isPending || isEnhancing}
-              className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
+              className="absolute right-2 xs:right-3 sm:right-4 top-1/2 -translate-y-1/2 flex h-8 w-8 xs:h-9 xs:w-9 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50 touch-manipulation"
               data-testid="search-button"
             >
               {searchMutation.isPending ? (
-                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <Search className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-4 sm:w-4" />
               )}
             </button>
 
-            {/* Input */}
+            {/* Input - Mobile optimized */}
             <Input
               type="text"
               placeholder={placeholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               disabled={isEnhancing}
-              className="h-11 sm:h-12 md:h-14 w-full border-0 bg-transparent shadow-none text-base sm:text-lg md:text-xl placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-16 sm:pr-20 md:pr-24 flex items-center disabled:opacity-70"
+              className="h-10 xs:h-11 sm:h-12 md:h-14 w-full border-0 bg-transparent shadow-none text-sm xs:text-base sm:text-lg md:text-xl placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-16 xs:pr-20 sm:pr-24 md:pr-28 flex items-center disabled:opacity-70"
               data-testid="search-input"
             />
           </div>
 
           {/* Bottom row - Icons - mobile optimized */}
-          <div className="relative border-t border-white/10 px-4 sm:px-6 py-0.5 h-[28px] sm:h-[32px] md:h-[36px]">
+          <div className="relative border-t border-white/10 px-3 xs:px-4 sm:px-6 py-1 h-[30px] xs:h-[32px] sm:h-[34px] md:h-[36px]">
             <div className="flex items-center justify-between">
-              {/* Left - Brain icon with dropdown and selected model */}
-              <div className="relative flex items-center space-x-2">
+              {/* Left - Brain icon with dropdown and selected model - Mobile optimized */}
+              <div className="relative flex items-center space-x-1.5 sm:space-x-2">
                 <div className="relative">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowModelDropdown(!showModelDropdown);
                     }}
-                    className={`flex h-6 w-6 sm:h-6 sm:w-6 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 aspect-square ${
+                    className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 aspect-square touch-manipulation ${
                       selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
                     }`}
                   >
-                    <Brain className="h-3 w-3 sm:h-3 sm:w-3" />
+                    <Brain className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                   </button>
                   
                   {showModelDropdown && (
                     <>
                       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10000]" onClick={() => setShowModelDropdown(false)} />
-                      <div className="absolute top-8 left-0 z-[10001] bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl min-w-[200px] max-h-24 overflow-y-auto">
+                      <div className="absolute bottom-8 left-0 z-[10001] bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl min-w-[180px] xs:min-w-[200px] max-h-32 xs:max-h-36 overflow-y-auto">
                         {llmModels.map((model) => (
                           <button
                             key={model}
@@ -819,7 +670,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                               setSelectedModel(model);
                               setShowModelDropdown(false);
                             }}
-                            className={`w-full px-3 py-2 text-left text-xs hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                            className={`w-full px-2.5 xs:px-3 py-2 xs:py-2.5 text-left text-xs xs:text-sm hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg touch-manipulation ${
                               selectedModel === model ? 'bg-blue-600/20 text-blue-300' : 'text-white/80'
                             }`}
                           >
@@ -831,18 +682,18 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                   )}
                 </div>
                 
-                <span className="text-xs text-white/70 hidden sm:inline truncate max-w-[120px]">{selectedModel || "GPT-4o Mini"}</span>
+                <span className="text-xs text-white/70 hidden xs:inline sm:inline truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px]">{selectedModel || "GPT-4o Mini"}</span>
               </div>
 
-              {/* Right - Filter buttons */}
-              <div className="flex items-center gap-1.5 sm:gap-2.5">
+              {/* Right - Filter buttons - Mobile optimized */}
+              <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2.5">
                 <TooltipProvider>
                   {/* Company */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-6 w-6 sm:h-6 sm:w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square ` +
+                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square touch-manipulation ` +
                           (selectedTypes.has('company')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -850,7 +701,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                         aria-label="Company"
                         onClick={() => toggleType('company')}
                       >
-                        <Building2 className="h-3 w-3 sm:h-3 sm:w-3" />
+                        <Building2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Company</TooltipContent>
@@ -860,7 +711,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-6 w-6 sm:h-6 sm:w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square ` +
+                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square touch-manipulation ` +
                           (selectedTypes.has('freelancer')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -868,7 +719,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                         aria-label="Freelancer"
                         onClick={() => toggleType('freelancer')}
                       >
-                        <User className="h-3 w-3 sm:h-3 sm:w-3" />
+                        <User className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Freelancer</TooltipContent>
@@ -878,7 +729,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-6 w-6 sm:h-6 sm:w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square ` +
+                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square touch-manipulation ` +
                           (selectedTypes.has('product')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -886,7 +737,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                         aria-label="Product"
                         onClick={() => toggleType('product')}
                       >
-                        <Package className="h-3 w-3 sm:h-3 sm:w-3" />
+                        <Package className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Product</TooltipContent>
@@ -897,42 +748,21 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
           </div>
         </div>
 
-        {/* Search Suggestions Dropdown */}
-        {showSuggestions && (
-          <div className="absolute z-50 w-full max-w-4xl mt-2 bg-black/80 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden">
-            {filteredSuggestions.map((suggestion, index) => (
-              <button
-                key={index}
-                onClick={() => handleSuggestionClick(suggestion)}
-                className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors flex items-center space-x-3 ${
-                  index === selectedSuggestionIndex ? 'bg-white/10' : ''
-                }`}
-              >
-                <Clock className="w-4 h-4 text-white/60" />
-                <span className="text-white">{suggestion}</span>
-              </button>
-            ))}
-            {filteredSuggestions.length === 0 && query.trim().length > 0 && (
-              <div className="px-4 py-3 text-white/60 text-sm">
-                No suggestions found for "{query}"
-              </div>
-            )}
-          </div>
-        )}
+
         
-        {/* Enhancement feedback */}
+        {/* Enhancement feedback - Mobile optimized */}
         {isEnhancing && (
-          <div className="absolute top-full left-0 right-0 mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-blue-300 text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" />
+          <div className="absolute top-full left-0 right-0 mt-2 mx-2 xs:mx-0 p-2.5 xs:p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-blue-300 text-xs xs:text-sm">
+              <Loader2 className="w-3.5 h-3.5 xs:w-4 xs:h-4 animate-spin" />
               <span>Enhancing your search prompt...</span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Quick Suggestions - Hidden on mobile initially, shown on scroll */}
-      <div className={`${showMobileSuggestions ? 'flex md:flex' : 'hidden md:flex'} flex-wrap justify-center gap-2 mt-4 px-4 transition-all duration-1000 ease-out ${
+      {/* Quick Suggestions - Mobile optimized with better visibility */}
+      <div className={`${showMobileSuggestions ? 'flex md:flex' : 'hidden md:flex'} flex-wrap justify-center gap-1.5 xs:gap-2 mt-3 xs:mt-4 px-3 xs:px-4 transition-all duration-1000 ease-out ${
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
       }`}>
         {visibleSuggestions.map((suggestion, index) => (
@@ -941,11 +771,11 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
             variant="ghost"
             size="sm"
             onClick={() => handleSuggestionTileClick(suggestion)}
-            className="text-xs sm:text-sm rounded-lg px-3 py-2 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm min-h-[36px] text-white"
+            className="text-xs xs:text-sm rounded-lg px-2.5 xs:px-3 py-2 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm min-h-[32px] xs:min-h-[36px] text-white touch-manipulation"
             data-testid={`suggestion-${index}`}
           >
-            <Sparkles className="w-3 h-3 mr-2" />
-            {suggestion}
+            <Sparkles className="w-2.5 h-2.5 xs:w-3 xs:h-3 mr-1.5 xs:mr-2" />
+            <span className="truncate max-w-[120px] xs:max-w-none">{suggestion}</span>
           </Button>
         ))}
         {hasMoreSuggestions && (
@@ -953,7 +783,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
             variant="ghost"
             size="sm"
             onClick={handleShowMore}
-            className="text-xs sm:text-sm rounded-lg px-3 py-2 min-h-[36px] text-black bg-white hover:bg-gray-100 border border-white"
+            className="text-xs xs:text-sm rounded-lg px-2.5 xs:px-3 py-2 min-h-[32px] xs:min-h-[36px] text-black bg-white hover:bg-gray-100 border border-white touch-manipulation"
           >
             See more
           </Button>
@@ -963,22 +793,22 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
             variant="ghost"
             size="sm"
             onClick={handleShowLess}
-            className="text-xs sm:text-sm rounded-lg px-3 py-2 min-h-[36px] text-black bg-white hover:bg-gray-100 border border-white"
+            className="text-xs xs:text-sm rounded-lg px-2.5 xs:px-3 py-2 min-h-[32px] xs:min-h-[36px] text-black bg-white hover:bg-gray-100 border border-white touch-manipulation"
           >
             See less
           </Button>
         )}
       </div>
       
-      {/* Loading State - Centered on page */}
+      {/* Loading State - Mobile optimized */}
       {isSearching && (
-        <div className="fixed inset-0 flex flex-col items-center justify-center z-30 animate-fade-in">
-          <div className="relative mb-8">
+        <div className="fixed inset-0 flex flex-col items-center justify-center z-30 animate-fade-in px-4">
+          <div className="relative mb-6 xs:mb-8">
             <LoadingSpinner variant="orbit" size="lg" />
           </div>
-          <div className="text-center">
-            <p className="text-white text-2xl font-semibold mb-3">Searching for "{query}"...</p>
-            <p className="text-white/70 text-lg mb-6">Finding the best AI solutions for you</p>
+          <div className="text-center max-w-sm xs:max-w-md">
+            <p className="text-white text-lg xs:text-xl sm:text-2xl font-semibold mb-2 xs:mb-3 leading-tight">Searching for "{query}"...</p>
+            <p className="text-white/70 text-sm xs:text-base sm:text-lg mb-4 xs:mb-6">Finding the best AI solutions for you</p>
             <div className="flex items-center justify-center space-x-2">
               <LoadingSpinner variant="dots" size="sm" />
             </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Brain, Sparkles, Building2, User, Package, Clock, Mic, MicOff, Loader2, Undo } from "lucide-react";
+import { Search, Brain, Sparkles, Building2, User, Package, Mic, MicOff, Loader2, Undo } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
@@ -15,16 +15,7 @@ interface LoggedInSearchInterfaceProps {
   onSearchResults?: (results: any) => void;
 }
 
-const searchSuggestions = [
-  "AI-powered lead generation for B2B sales",
-  "AI content creation tools for social media",
-  "Customer service automation",
-  "Automated video editing for short-form content",
-  "AI email assistant for busy professionals",
-  "Voice-based AI receptionist for local businesses",
-  "Predictive analytics for e-commerce growth",
-  "AI copywriting tool for ad agencies",
-];
+
 
 export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInterfaceProps) {
   const [query, setQuery] = useState(() => {
@@ -42,9 +33,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const { currentUser } = useFirebaseAuth();
   const [, setLocation] = useLocation();
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+
   const [isSearching, setIsSearching] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [placeholder, setPlaceholder] = useState("");
@@ -225,21 +214,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     return () => clearTimeout(timeout);
   }, [currentPhraseIndex]);
 
-  // Filter suggestions
-  useEffect(() => {
-    if (query.trim().length > 0) {
-      const filtered = searchSuggestions.filter(suggestion =>
-        suggestion.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 8);
-      
-      setFilteredSuggestions(filtered);
-      setShowSuggestions(filtered.length > 0);
-      setSelectedSuggestionIndex(-1);
-    } else {
-      setShowSuggestions(false);
-      setFilteredSuggestions([]);
-    }
-  }, [query]);
+
 
   const searchMutation = useMutation({
     mutationFn: async (searchQuery: string) => {
@@ -262,7 +237,6 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const handleSearch = () => {
     if (!query.trim()) return;
     
-    setShowSuggestions(false);
     const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
     setLocation(`/search-transition?q=${encodeURIComponent(query)}${typesParam}`);
   };
@@ -286,38 +260,14 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      
-      if (selectedSuggestionIndex >= 0 && filteredSuggestions[selectedSuggestionIndex]) {
-        const selectedQuery = filteredSuggestions[selectedSuggestionIndex];
-        const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
-        setLocation(`/search-transition?q=${encodeURIComponent(selectedQuery)}${typesParam}`);
-      } else {
-        handleSearch();
-      }
-      setShowSuggestions(false);
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedSuggestionIndex(prev => 
-        prev < filteredSuggestions.length - 1 ? prev + 1 : prev
-      );
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
-    } else if (e.key === "Escape") {
-      setShowSuggestions(false);
-      setSelectedSuggestionIndex(-1);
+      handleSearch();
     }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
-    setLocation(`/search-transition?q=${encodeURIComponent(suggestion)}${typesParam}`);
-    setShowSuggestions(false);
-  };
+
 
   const handleSuggestionTileClick = (suggestion: string) => {
     setQuery(suggestion);
-    setShowSuggestions(false);
   };
 
   const quickSuggestions = [
@@ -402,131 +352,123 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-2 sm:px-4">
-      {/* Welcome Message - Centered */}
-      <div className={`text-center transition-all duration-1000 ease-out mb-6 ${
+    <div className="min-h-screen flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6">
+      {/* Welcome Message - Mobile optimized */}
+      <div className={`text-center transition-all duration-1000 ease-out mb-4 xs:mb-6 ${
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
       }`}>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight" style={{ fontFamily: 'Instrument Serif, serif' }}>
+        <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight px-2" style={{ fontFamily: 'Instrument Serif, serif' }}>
           <span className="text-white">{greeting}, what are you looking for today?</span>
         </h1>
       </div>
 
-      {/* Search Bar - Centered */}
-      <div className={`transition-all duration-1500 ease-out w-full max-w-4xl mx-auto ${
+      {/* Glassmorphism Search Bar - Mobile optimized */}
+      <div className={`transition-all duration-1500 ease-out w-full max-w-4xl mx-auto mb-4 xs:mb-6 sm:mb-8 px-3 xs:px-4 ${
         isSearching 
           ? 'opacity-0 scale-90 pointer-events-none'
           : 'transform translate-y-0 opacity-100 scale-100'
       }`}>
-        <div className={`relative rounded-[16px] sm:rounded-[20px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[85px] sm:h-[95px] md:h-[105px] ${
+        <div className={`relative rounded-[16px] xs:rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[80px] xs:h-[85px] sm:h-[90px] md:h-[100px] lg:h-[110px] ${
           isSearching ? 'transform scale-95' : 'transform scale-100'
         }`}>
-          <div className="relative px-2 sm:px-4 flex items-center h-[45px] sm:h-[50px] md:h-[55px]">
-            <div className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 flex items-center space-x-1 sm:space-x-2">
-              {/* Undo button */}
-              {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        aria-label="Undo prompt enhancement"
-                        onClick={handleUndo}
-                        className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition"
-                      >
-                        <Undo className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>Undo enhancement (Ctrl+Z)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              
-              {/* Prompt enhancer button */}
+          {/* Search input area - mobile optimized */}
+          <div className="relative px-3 xs:px-4 sm:px-6 flex items-center h-[48px] xs:h-[50px] sm:h-[55px] md:h-[60px]">
+            {/* Undo button (only show if there's history) - Mobile optimized */}
+            {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      aria-label="Enhance search prompt"
-                      onClick={handlePromptEnhancement}
-                      disabled={!query.trim() || isEnhancing || searchMutation.isPending}
-                      className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Undo prompt enhancement"
+                      onClick={handleUndo}
+                      className="absolute right-[80px] xs:right-[88px] sm:right-24 top-1/2 -translate-y-1/2 flex h-7 w-7 xs:h-8 xs:w-8 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/70 hover:bg-white/10 hover:text-white transition touch-manipulation"
                     >
-                      {isEnhancing ? (
-                        <Loader2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                      )}
+                      <Undo className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top">
-                    <p>Enhance your prompt (Ctrl+E)</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Make your search more detailed and specific
-                    </p>
+                    <p>Undo enhancement (Ctrl+Z)</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
-              <button
-                aria-label={isListening ? "Stop listening" : "Start voice input"}
-                onClick={isListening ? stopListening : startListening}
-                className={`flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full border transition ${
-                  isListening 
-                    ? 'bg-red-500/20 border-red-400/40 text-red-400' 
-                    : 'bg-white/5 border-white/20 text-white/90 hover:bg-white/10'
-                }`}
-              >
-                {isListening ? <MicOff className="h-3 w-3 sm:h-4 sm:w-4" /> : <Mic className="h-3 w-3 sm:h-4 sm:w-4" />}
-              </button>
-              <button
-                aria-label="Search"
-                onClick={handleSearch}
-                disabled={!query.trim() || searchMutation.isPending || isEnhancing}
-                className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
-              >
-                {searchMutation.isPending ? (
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Search className="h-3 w-3 sm:h-4 sm:w-4" />
-                )}
-              </button>
-            </div>
+            )}
+            
+            {/* Prompt enhancer button - Mobile optimized */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    aria-label="Enhance search prompt"
+                    onClick={handlePromptEnhancement}
+                    disabled={!query.trim() || isEnhancing || searchMutation.isPending}
+                    className="absolute right-[44px] xs:right-[48px] sm:right-16 top-1/2 -translate-y-1/2 flex h-7 w-7 xs:h-8 xs:w-8 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+                  >
+                    {isEnhancing ? (
+                      <Loader2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Enhance your prompt (Ctrl+E)</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Make your search more detailed and specific
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            {/* Search button - Mobile optimized */}
+            <button
+              aria-label="Search"
+              onClick={handleSearch}
+              disabled={!query.trim() || searchMutation.isPending || isEnhancing}
+              className="absolute right-2 xs:right-3 sm:right-4 top-1/2 -translate-y-1/2 flex h-8 w-8 xs:h-9 xs:w-9 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50 touch-manipulation"
+              data-testid="search-button"
+            >
+              {searchMutation.isPending ? (
+                <div className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Search className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-4 sm:w-4" />
+              )}
+            </button>
 
+            {/* Input - Mobile optimized */}
             <Input
               type="text"
               placeholder={placeholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               disabled={isEnhancing}
-              className="h-10 sm:h-11 md:h-12 w-full border-0 bg-transparent shadow-none text-sm sm:text-base md:text-lg lg:text-xl placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-20 sm:pr-24 md:pr-28 flex items-center disabled:opacity-70"
+              className="h-10 xs:h-11 sm:h-12 md:h-14 w-full border-0 bg-transparent shadow-none text-sm xs:text-base sm:text-lg md:text-xl placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-16 xs:pr-20 sm:pr-24 md:pr-28 flex items-center disabled:opacity-70"
+              data-testid="search-input"
             />
           </div>
 
-          <div className="relative border-t border-white/10 px-2 sm:px-4 py-1 sm:py-2 h-[40px] sm:h-[45px] md:h-[50px]">
+          {/* Bottom row - Icons - mobile optimized */}
+          <div className="relative border-t border-white/10 px-3 xs:px-4 sm:px-6 py-1 h-[30px] xs:h-[32px] sm:h-[34px] md:h-[36px]">
             <div className="flex items-center justify-between">
-              <div className="relative flex items-center space-x-2">
+              {/* Left - Brain icon with dropdown and selected model - Mobile optimized */}
+              <div className="relative flex items-center space-x-1.5 sm:space-x-2">
                 <div className="relative">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowModelDropdown(!showModelDropdown);
                     }}
-                    className={`flex h-3 w-3 sm:h-3.5 sm:w-3.5 items-center justify-center hover:text-white/80 transition-colors rounded-sm border border-white/20 bg-white/5 ${
+                    className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 aspect-square touch-manipulation ${
                       selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
                     }`}
                   >
-                    <Brain className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                    <Brain className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                   </button>
                   
                   {showModelDropdown && (
                     <>
                       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10000]" onClick={() => setShowModelDropdown(false)} />
-                      <div className="absolute top-8 left-0 z-[10001] bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl min-w-[200px] max-h-24 overflow-y-auto">
+                      <div className="absolute top-8 left-0 z-[10001] bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl min-w-[180px] xs:min-w-[200px] max-h-32 xs:max-h-36 overflow-y-auto">
                         {llmModels.map((model) => (
                           <button
                             key={model}
@@ -535,7 +477,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                               setSelectedModel(model);
                               setShowModelDropdown(false);
                             }}
-                            className={`w-full px-3 py-2 text-left text-xs hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                            className={`w-full px-2.5 xs:px-3 py-2 xs:py-2.5 text-left text-xs xs:text-sm hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg touch-manipulation ${
                               selectedModel === model ? 'bg-blue-600/20 text-blue-300' : 'text-white/80'
                             }`}
                           >
@@ -547,16 +489,18 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                   )}
                 </div>
                 
-                <span className="text-xs text-white/70 hidden md:inline">{selectedModel || "GPT-4o Mini"}</span>
+                <span className="text-xs text-white/70 hidden xs:inline sm:inline truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px]">{selectedModel || "GPT-4o Mini"}</span>
               </div>
 
-              <div className="flex items-center gap-1.5 sm:gap-2.5">
+              {/* Right - Filter buttons - Mobile optimized */}
+              <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2.5">
                 <TooltipProvider>
+                  {/* Company */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-sm border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square touch-manipulation ` +
                           (selectedTypes.has('company')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -564,16 +508,17 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                         aria-label="Company"
                         onClick={() => toggleType('company')}
                       >
-                        <Building2 className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                        <Building2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Company</TooltipContent>
                   </Tooltip>
+                  {/* Freelancer */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-sm border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square touch-manipulation ` +
                           (selectedTypes.has('freelancer')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -581,16 +526,17 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                         aria-label="Freelancer"
                         onClick={() => toggleType('freelancer')}
                       >
-                        <User className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                        <User className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Freelancer</TooltipContent>
                   </Tooltip>
+                  {/* Product */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-sm border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square touch-manipulation ` +
                           (selectedTypes.has('product')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -598,7 +544,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                         aria-label="Product"
                         onClick={() => toggleType('product')}
                       >
-                        <Package className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                        <Package className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Product</TooltipContent>
@@ -609,37 +555,21 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
           </div>
         </div>
         
-        {/* Enhancement feedback */}
+        {/* Enhancement feedback - Mobile optimized */}
         {isEnhancing && (
-          <div className="absolute top-full left-0 right-0 mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-blue-300 text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" />
+          <div className="absolute top-full left-0 right-0 mt-2 mx-2 xs:mx-0 p-2.5 xs:p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-blue-300 text-xs xs:text-sm">
+              <Loader2 className="w-3.5 h-3.5 xs:w-4 xs:h-4 animate-spin" />
               <span>Enhancing your search prompt...</span>
             </div>
           </div>
         )}
 
-        {/* Search Suggestions Dropdown */}
-        {showSuggestions && (
-          <div className="absolute z-50 w-full max-w-4xl mt-2 bg-black/80 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden">
-            {filteredSuggestions.map((suggestion, index) => (
-              <button
-                key={index}
-                onClick={() => handleSuggestionClick(suggestion)}
-                className={`w-full px-4 py-3 text-left hover:bg-white/10 transition-colors flex items-center space-x-3 ${
-                  index === selectedSuggestionIndex ? 'bg-white/10' : ''
-                }`}
-              >
-                <Clock className="w-4 h-4 text-white/60" />
-                <span className="text-white">{suggestion}</span>
-              </button>
-            ))}
-          </div>
-        )}
+
       </div>
 
-      {/* Quick Suggestions - Hidden initially on mobile, shown on scroll */}
-      <div className={`${showScrollSuggestions ? 'flex' : 'hidden md:flex'} flex-wrap justify-center gap-2 mt-4 transition-all duration-1000 ease-out ${
+      {/* Quick Suggestions - Mobile optimized */}
+      <div className={`${showScrollSuggestions ? 'flex' : 'hidden md:flex'} flex-wrap justify-center gap-1.5 xs:gap-2 mt-3 xs:mt-4 px-3 xs:px-4 transition-all duration-1000 ease-out ${
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
       }`}>
         {visibleSuggestions.map((suggestion, index) => (
@@ -648,10 +578,10 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
             variant="ghost"
             size="sm"
             onClick={() => handleSuggestionTileClick(suggestion)}
-            className="text-xs rounded-md px-3 py-1 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm text-white"
+            className="text-xs xs:text-sm rounded-lg px-2.5 xs:px-3 py-2 border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm min-h-[32px] xs:min-h-[36px] text-white touch-manipulation"
           >
-            <Sparkles className="w-3 h-3 mr-2" />
-            {suggestion}
+            <Sparkles className="w-2.5 h-2.5 xs:w-3 xs:h-3 mr-1.5 xs:mr-2" />
+            <span className="truncate max-w-[120px] xs:max-w-none">{suggestion}</span>
           </Button>
         ))}
         {hasMoreSuggestions && (
@@ -659,7 +589,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
             variant="ghost"
             size="sm"
             onClick={handleShowMore}
-            className="text-xs rounded-md px-3 py-1 text-black bg-white hover:bg-gray-100 border border-white"
+            className="text-xs xs:text-sm rounded-lg px-2.5 xs:px-3 py-2 min-h-[32px] xs:min-h-[36px] text-black bg-white hover:bg-gray-100 border border-white touch-manipulation"
           >
             See more
           </Button>
@@ -669,27 +599,27 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
             variant="ghost"
             size="sm"
             onClick={handleShowLess}
-            className="text-xs rounded-md px-3 py-1 text-black bg-white hover:bg-gray-100 border border-white"
+            className="text-xs xs:text-sm rounded-lg px-2.5 xs:px-3 py-2 min-h-[32px] xs:min-h-[36px] text-black bg-white hover:bg-gray-100 border border-white touch-manipulation"
           >
             See less
           </Button>
         )}
       </div>
       
-      {/* Loading State */}
+      {/* Loading State - Mobile optimized */}
       {isSearching && (
-        <div className="fixed inset-0 flex flex-col items-center justify-center z-30 animate-fade-in">
-          <div className="relative">
-            <div className="w-24 h-24 border-4 border-white/20 border-t-white/60 border-r-white/40 rounded-full animate-spin mb-8" style={{animationDuration: '1s'}}></div>
-            <div className="absolute inset-0 w-24 h-24 border-4 border-transparent border-b-white/50 border-l-white/30 rounded-full animate-spin mb-8" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+        <div className="fixed inset-0 flex flex-col items-center justify-center z-30 animate-fade-in px-4">
+          <div className="relative mb-6 xs:mb-8">
+            <div className="w-20 h-20 xs:w-24 xs:h-24 border-4 border-white/20 border-t-white/60 border-r-white/40 rounded-full animate-spin" style={{animationDuration: '1s'}}></div>
+            <div className="absolute inset-0 w-20 h-20 xs:w-24 xs:h-24 border-4 border-transparent border-b-white/50 border-l-white/30 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
           </div>
-          <div className="text-center">
-            <p className="text-white text-2xl font-semibold mb-3">Searching for "{query}"...</p>
-            <p className="text-white/70 text-lg mb-6">Finding the best AI solutions for you</p>
+          <div className="text-center max-w-sm xs:max-w-md">
+            <p className="text-white text-lg xs:text-xl sm:text-2xl font-semibold mb-2 xs:mb-3 leading-tight">Searching for "{query}"...</p>
+            <p className="text-white/70 text-sm xs:text-base sm:text-lg mb-4 xs:mb-6">Finding the best AI solutions for you</p>
             <div className="flex items-center justify-center space-x-2">
-              <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-              <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
-              <div className="w-3 h-3 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '400ms'}}></div>
+              <div className="w-2.5 h-2.5 xs:w-3 xs:h-3 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+              <div className="w-2.5 h-2.5 xs:w-3 xs:h-3 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
+              <div className="w-2.5 h-2.5 xs:w-3 xs:h-3 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '400ms'}}></div>
             </div>
           </div>
         </div>

@@ -6,18 +6,11 @@ import { Button } from './button'
 interface AnimatedSearchBarProps {
   onSearch: (query: string) => void
   placeholder?: string
-  suggestions?: string[]
 }
 
 export function AnimatedSearchBar({ 
   onSearch, 
-  placeholder = "Describe what you're looking for...",
-  suggestions = [
-    "AI tools for e-commerce",
-    "Customer service chatbots", 
-    "Content generation tools",
-    "Marketing automation"
-  ]
+  placeholder = "Describe what you're looking for..."
 }: AnimatedSearchBarProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [query, setQuery] = useState('')
@@ -168,38 +161,7 @@ export function AnimatedSearchBar({
         </div>
       </div>
 
-      <AnimatePresence>
-        {isFocused && !query && (
-          <motion.div
-            className="absolute top-full left-0 right-0 mt-4 p-4 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <p className="text-white/60 text-sm mb-3">Try searching for:</p>
-            <div className="flex flex-wrap gap-2">
-              {suggestions.map((suggestion, i) => (
-                <motion.button
-                  key={suggestion}
-                  className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white/80 text-sm hover:bg-white/10 hover:border-white/20"
-                  onClick={() => {
-                    setQuery(suggestion)
-                    inputRef.current?.focus()
-                  }}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {suggestion}
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
     </motion.div>
   )
 }
