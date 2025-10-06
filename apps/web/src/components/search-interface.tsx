@@ -708,11 +708,11 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
           ? 'opacity-0 scale-90 pointer-events-none'
           : 'w-full max-w-4xl mx-auto mb-6 sm:mb-8 px-4 transform translate-y-0 opacity-100 scale-100'
       }`}>
-        <div className={`relative rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[70px] sm:h-[75px] md:h-[85px] ${
+        <div className={`relative rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[90px] sm:h-[100px] md:h-[110px] ${
           isSearching ? 'transform scale-95' : 'transform scale-100'
         }`}>
           {/* Search input area - mobile optimized */}
-          <div className="relative px-4 sm:px-6 flex items-center h-[40px] sm:h-[40px] md:h-[45px]">
+          <div className="relative px-4 sm:px-6 flex items-center h-[50px] sm:h-[55px] md:h-[60px]">
             {/* Undo button (only show if there's history) */}
             {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
               <TooltipProvider>
@@ -784,13 +784,13 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               disabled={isEnhancing}
-              className="h-9 sm:h-10 md:h-11 w-full border-0 bg-transparent shadow-none text-sm sm:text-base md:text-lg placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-16 sm:pr-20 md:pr-24 flex items-center disabled:opacity-70"
+              className="h-11 sm:h-12 md:h-14 w-full border-0 bg-transparent shadow-none text-base sm:text-lg md:text-xl placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-16 sm:pr-20 md:pr-24 flex items-center disabled:opacity-70"
               data-testid="search-input"
             />
           </div>
 
           {/* Bottom row - Icons - mobile optimized */}
-          <div className="relative border-t border-white/10 px-4 sm:px-6 py-2 h-[30px] sm:h-[35px] md:h-[40px]">
+          <div className="relative border-t border-white/10 px-4 sm:px-6 py-2 h-[40px] sm:h-[45px] md:h-[50px]">
             <div className="flex items-center justify-between">
               {/* Left - Brain icon with dropdown and selected model */}
               <div className="relative flex items-center space-x-2">
@@ -800,11 +800,11 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                       e.stopPropagation();
                       setShowModelDropdown(!showModelDropdown);
                     }}
-                    className={`flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 ${
+                    className={`flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 ${
                       selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
                     }`}
                   >
-                    <Brain className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                    <Brain className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                   </button>
                   
                   {showModelDropdown && (
@@ -842,7 +842,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-5 w-5 sm:h-6 sm:w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          `h-4 w-4 sm:h-5 sm:w-5 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
                           (selectedTypes.has('company')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -850,7 +850,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                         aria-label="Company"
                         onClick={() => toggleType('company')}
                       >
-                        <Building2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                        <Building2 className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Company</TooltipContent>
@@ -860,7 +860,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-5 w-5 sm:h-6 sm:w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          `h-4 w-4 sm:h-5 sm:w-5 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
                           (selectedTypes.has('freelancer')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -868,7 +868,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                         aria-label="Freelancer"
                         onClick={() => toggleType('freelancer')}
                       >
-                        <User className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                        <User className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Freelancer</TooltipContent>
@@ -878,7 +878,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-5 w-5 sm:h-6 sm:w-6 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
+                          `h-4 w-4 sm:h-5 sm:w-5 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 ` +
                           (selectedTypes.has('product')
                             ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
                             : 'bg-white/5 border-white/20 text-white/90')
@@ -886,7 +886,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                         aria-label="Product"
                         onClick={() => toggleType('product')}
                       >
-                        <Package className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                        <Package className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Product</TooltipContent>
@@ -951,11 +951,11 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         ))}
         {hasMoreSuggestions && (
           <AnimatedButton
-            variant="gradient"
+            variant="ghost"
             size="sm"
             interactive
             onClick={handleShowMore}
-            className="text-xs sm:text-sm rounded-lg px-3 py-2 min-h-[36px] touch-manipulation"
+            className="text-xs sm:text-sm rounded-lg px-3 py-2 min-h-[36px] touch-manipulation text-white border-white/30 bg-white/5 hover:border-white/60 hover:bg-white/10 backdrop-blur-sm"
           >
             See more
           </AnimatedButton>

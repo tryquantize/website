@@ -1,4 +1,5 @@
 import { Search, Zap, DollarSign, Shield, BarChart3, Headphones, Lock, Code } from "lucide-react";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const features = [
   {
@@ -44,8 +45,10 @@ const features = [
 ];
 
 export default function FeaturesSection() {
+  const { ref, isVisible } = useScrollAnimation(0.1);
+
   return (
-    <section className="mb-24">
+    <section ref={ref} className="mb-24">
       <div className="text-center mb-16">
         <h3 className="text-4xl md:text-5xl font-bold text-white mb-4">
           Why Choose <span className="text-blue-400">Quantize</span>
@@ -59,7 +62,12 @@ export default function FeaturesSection() {
         {features.map((feature, index) => (
           <div
             key={index}
-            className="group p-4 sm:p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-300"
+            className={`group p-4 sm:p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-700 transform ${
+              isVisible 
+                ? 'translate-y-0 opacity-100' 
+                : 'translate-y-8 opacity-0'
+            }`}
+            style={{ transitionDelay: `${index * 100}ms` }}
           >
             <div className="mb-4">
               <feature.icon className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 group-hover:text-blue-300 transition-colors" />

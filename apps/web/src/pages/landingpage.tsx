@@ -110,6 +110,7 @@ export default function LandingPage() {
       <div className="fixed inset-0 w-full h-full z-0">
         <RaycastBackground />
       </div>
+      
       {/* Hero Section */}
       <section className="relative w-full min-h-[80vh] sm:h-[85vh] flex items-center justify-center z-10 -mt-12 sm:-mt-16 px-4">
         <Hero />
@@ -129,15 +130,100 @@ export default function LandingPage() {
             </p>
           </section>
 
-
+          {/* Quantize Story Section */}
+          <section className="my-20 relative">
+            <div className="container z-10 mx-auto px-4">
+              <div className="text-center mb-12">
+                <div className="border border-white/20 py-2 px-6 rounded-lg bg-white/10 backdrop-blur-md text-white inline-block mb-6">Our Story</div>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
+                  Why We Built <span className="text-blue-400">Quantize</span>
+                </h2>
+                <p className="text-white/70 text-lg max-w-3xl mx-auto">
+                  The journey from frustration to solution - discover the story behind Quantize and our mission to revolutionize search.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">🔍</span>
+                    <h4 className="font-semibold text-lg text-blue-400">The Problem</h4>
+                  </div>
+                  <p className="text-sm leading-relaxed text-white/90">Google search is a disaster. You spend hours trying to find a product, startup, or service, and what do you get? SEO spam. Paid ads. Generic blog lists written by people who've never used the tools they're ranking.</p>
+                </div>
+                
+                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">🤖</span>
+                    <h4 className="font-semibold text-lg text-blue-400">Current Solutions Fall Short</h4>
+                  </div>
+                  <p className="text-sm leading-relaxed text-white/90">Even 'smart' tools like Perplexity just skim the surface. You might find something promising… then you're dumped into an endless maze of forms, demos, and 'contact us' pages just to get a simple answer.</p>
+                </div>
+                
+                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">📢</span>
+                    <h4 className="font-semibold text-lg text-blue-400">Discovery Arbitrage</h4>
+                  </div>
+                  <p className="text-sm leading-relaxed text-white/90">The current discovery process is a joke. Great companies and incredible products are buried because they can't win the SEO or ad-spend war. Meanwhile, users waste hours sifting through noise, only to settle for whoever shouts the loudest.</p>
+                </div>
+                
+                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">⚡</span>
+                    <h4 className="font-semibold text-lg text-blue-400">Our Solution</h4>
+                  </div>
+                  <p className="text-sm leading-relaxed text-white/90">We're fixing this. Me and Yashwardhan Sable are building Quantize, an AI-powered search engine that connects you instantly to the exact product, company, startup, solution or freelancer you need.</p>
+                </div>
+                
+                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">🎯</span>
+                    <h4 className="font-semibold text-lg text-blue-400">Instant Connection</h4>
+                  </div>
+                  <p className="text-sm leading-relaxed text-white/90">No more 20 irrelevant links. No more guessing which landing page is worth your time. Type in what you're looking for, and our system surfaces the best-fit solutions, with one click, you can chat with the company, get a quote, use the product directly, or talk to a real human.</p>
+                </div>
+                
+                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">⚖️</span>
+                    <h4 className="font-semibold text-lg text-blue-400">Leveling the Playing Field</h4>
+                  </div>
+                  <p className="text-sm leading-relaxed text-white/90">This isn't just about convenience. It's about fixing a massive discovery arbitrage. It's about giving visibility back to the companies doing great work, not just the ones gaming the algorithm.</p>
+                </div>
+                
+                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">✨</span>
+                    <h4 className="font-semibold text-lg text-blue-400">The Vision</h4>
+                  </div>
+                  <p className="text-sm leading-relaxed text-white/90">Imagine replacing three hours of Googling and second-guessing with one clear, custom-fit recommendation, and an instant path to action.</p>
+                </div>
+                
+                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">🧠</span>
+                    <h4 className="font-semibold text-lg text-blue-400">Intelligence First</h4>
+                  </div>
+                  <p className="text-sm leading-relaxed text-white/90">We're not here to 'index the web.' We're here to weaponize intelligence for search. To make finding a tool, startup, product, or solution feel like magic.</p>
+                </div>
+                
+                <div className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-2xl">🏆</span>
+                    <h4 className="font-semibold text-lg text-blue-400">Merit-Based Discovery</h4>
+                  </div>
+                  <p className="text-sm leading-relaxed text-white/90">And to finally give visibility back to the companies doing great work, not just the ones who know how to game the algorithm.</p>
+                </div>
+              </div>
+            </div>
+          </section>
 
           {/* FAQs Section */}
           <section className="mb-16 sm:mb-20 md:mb-24">
             <div className="text-center mb-8 sm:mb-12">
-              <div>
-                <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 px-4">Frequently Asked <span className="text-blue-400">Questions</span></h3>
-                <p className="text-white/70 max-w-2xl mx-auto px-4 text-sm sm:text-base">Find answers to common questions about our platform, how we curate tools, and what's coming next.</p>
-              </div>
+              <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 px-4">Frequently Asked <span className="text-blue-400">Questions</span></h3>
+              <p className="text-white/70 max-w-2xl mx-auto px-4 text-sm sm:text-base">Find answers to common questions about our platform, how we curate tools, and what's coming next.</p>
             </div>
             <div className="relative px-4">
               <Carousel className="" opts={{ align: "start", loop: true, dragFree: true }} setApi={setFaqApi}>
@@ -195,8 +281,6 @@ export default function LandingPage() {
           <section>
             <Featured_05 />
           </section>
-
-
         </div>
       </div>
     </div>

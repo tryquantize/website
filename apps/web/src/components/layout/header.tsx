@@ -46,10 +46,6 @@ export function Header() {
           href: "/home",
         },
         {
-          title: "Features",
-          href: "/about",
-        },
-        {
           title: "Pricing",
           href: "/pricing",
         },
@@ -214,7 +210,7 @@ export function Header() {
                                     {item.description}
                                   </p>
                                 </div>
-                                <Button size="sm" className="mt-10 bg-blue-600 hover:bg-blue-700" onClick={() => setLocation('/waitlist')}>
+                                <Button size="sm" className="mt-10 bg-white text-black hover:bg-gray-100" onClick={() => setLocation('/waitlist')}>
                                   Join the Waitlist
                                 </Button>
                               </div>
@@ -282,7 +278,7 @@ export function Header() {
                     Sign in
                   </Button>
                   <Button 
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-white text-black hover:bg-gray-100"
                     onClick={() => navigateWithLoading('/waitlist')}
                   >
                     Join the Waitlist
@@ -363,7 +359,7 @@ export function Header() {
                             Sign in
                           </button>
                           <button 
-                            className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                            className="block w-full text-left px-4 py-3 bg-white text-black hover:bg-gray-100 transition-colors rounded"
                             onClick={() => {
                               navigateWithLoading('/waitlist');
                               setIsMobileMenuOpen(false);

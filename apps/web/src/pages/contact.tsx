@@ -1,14 +1,14 @@
 import { Mail, MessageSquare, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Component as RaycastAnimatedBackground } from "@/components/ui/raycast-animated-black-background";
-import TestimonialsDemo from "@/components/ui/3d-testimonials-demo";
+import { Component as RaycastAnimatedBackground } from "@/components/ui/raycast-animated-purple-background";
+
 import { Contact2 } from "@/components/ui/contact-2";
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen relative bg-black">
-      <div className="absolute inset-0">
+    <div className="min-h-screen relative bg-gradient-to-br from-purple-900 via-black to-indigo-900">
+      <div className="fixed inset-0 z-0">
         <RaycastAnimatedBackground />
       </div>
       
@@ -28,23 +28,7 @@ export default function ContactPage() {
             </div>
           </div>
         </section>
-        
-        {/* Testimonials Section */}
-        <section className="py-12 sm:py-16 md:py-20 px-4">
-          <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
-              What Our <span className="bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">Users Say</span>
-            </h2>
-            
-            <p className="text-lg sm:text-xl text-white/80 mb-8 sm:mb-12 px-4">
-              Join thousands of researchers, students, and professionals who trust Quantize for their search needs.
-            </p>
-            
-            <div className="flex justify-center">
-              <TestimonialsDemo />
-            </div>
-          </div>
-        </section>
+
       </div>
     </div>
   );

@@ -49,7 +49,7 @@ import { useToast } from "@/hooks/use-toast";
 import { WaitlistService } from "@/lib/waitlist-service";
 import { useTheme } from "@/components/theme-provider";
 import { Header } from "@/components/layout/header";
-import WarpDriveShader from "@/components/ui/warp-drive-shader";
+import { Component as PurpleAnimatedBackground } from "@/components/ui/raycast-animated-purple-background";
 
 
 
@@ -292,7 +292,9 @@ export default function WaitlistPage() {
 
   return (
     <div className="min-h-screen relative">
-      <WarpDriveShader />
+      <div className="fixed inset-0 z-0">
+        <PurpleAnimatedBackground />
+      </div>
       <Header />
 
       <div className="relative overflow-hidden">
