@@ -233,7 +233,7 @@ export default function AboutUsSection() {
                   transition={{ duration: 0.8, delay: 0.9 }}
                 >
                   <motion.button
-                    className="bg-gradient-to-r from-purple-500 to-blue-600 text-white px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium"
+                    className="bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => window.location.href = '/home'}

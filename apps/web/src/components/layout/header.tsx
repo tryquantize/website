@@ -34,7 +34,7 @@ export function Header() {
   const navigationItems = [
     {
       title: "Home",
-      href: "/home",
+      href: "/",
       description: "",
     },
     {
@@ -213,7 +213,7 @@ export function Header() {
                                     {item.description}
                                   </p>
                                 </div>
-                                <Button size="sm" className="mt-10 bg-blue-600 hover:bg-blue-700">
+                                <Button size="sm" className="mt-10 bg-blue-600 hover:bg-blue-700" onClick={() => setLocation('/waitlist')}>
                                   Join the Waitlist
                                 </Button>
                               </div>
@@ -290,39 +290,85 @@ export function Header() {
                 {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
               {isMobileMenuOpen && (
-                <div className="absolute top-20 border-t flex flex-col w-full right-0 bg-black/90 backdrop-blur-md shadow-lg py-4 container gap-8 border-white/10">
+                <div className="absolute top-20 border-t flex flex-col w-full right-0 bg-black/95 backdrop-blur-md shadow-lg py-6 container gap-6 border-white/10 rounded-b-lg">
                   {navigationItems.map((item) => (
-                    <div key={item.title}>
-                      <div className="flex flex-col gap-2">
-                        {item.href ? (
-                          <Link
-                            href={item.href}
-                            className="flex justify-between items-center text-white"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <span className="text-lg">{item.title}</span>
-                            <MoveRight className="w-4 h-4 stroke-1 text-white/60" />
-                          </Link>
-                        ) : (
-                          <p className="text-lg text-white">{item.title}</p>
-                        )}
-                        {item.items &&
-                          item.items.map((subItem) => (
-                            <Link
-                              key={subItem.title}
-                              href={subItem.href}
-                              className="flex justify-between items-center text-white/70"
-                              onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                              <span>
-                                {subItem.title}
-                              </span>
-                              <MoveRight className="w-4 h-4 stroke-1" />
-                            </Link>
-                          ))}
-                      </div>
+                    <div key={item.title} className="space-y-3">
+                      {item.href ? (
+                        <Link
+                          href={item.href}
+                          className="flex justify-between items-center text-white py-2 px-3 rounded-lg hover:bg-white/10 transition-colors"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <span className="text-lg font-medium">{item.title}</span>
+                          <MoveRight className="w-5 h-5 text-white/60" />
+                        </Link>
+                      ) : (
+                        <>
+                          <p className="text-lg font-medium text-white px-3">{item.title}</p>
+                          <div className="ml-4 space-y-2">
+                            {item.items?.map((subItem) => (
+                              <Link
+                                key={subItem.title}
+                                href={subItem.href}
+                                className="flex justify-between items-center text-white/80 py-2 px-3 rounded-lg hover:bg-white/10 transition-colors"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <span className="text-base">{subItem.title}</span>
+                                <MoveRight className="w-4 h-4 text-white/50" />
+                              </Link>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
+                  <div className="border-t border-white/10 pt-4 space-y-3">
+                    {currentUser || (isAuthenticated && user) ? (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          className="w-full border-white/20 text-white/70 hover:text-white hover:bg-white/10"
+                          onClick={() => {
+                            setLocation('/favorites');
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          Favorites
+                        </Button>
+                        <Button 
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            handleFirebaseLogout();
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          Logout
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          className="w-full border-white/20 text-white/70 hover:text-white hover:bg-white/10"
+                          onClick={() => {
+                            navigateWithLoading('/auth');
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          Sign in
+                        </Button>
+                        <Button 
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            navigateWithLoading('/waitlist');
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          Join the Waitlist
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

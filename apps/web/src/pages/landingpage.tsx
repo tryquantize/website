@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
+import { Hero } from "@/components/ui/animated-hero";
 
 // Components
 import TestimonialsColumns from "@/components/ui/testimonials-demo";
@@ -110,42 +111,8 @@ export default function LandingPage() {
         <RaycastBackground />
       </div>
       {/* Hero Section */}
-      <section className="relative w-full h-screen flex items-center justify-center z-10">
-        <div 
-          className={`
-            transition-all duration-1500 ease-out text-center
-            ${startVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
-          `}
-        >
-          <h1 className="text-white text-4xl sm:text-6xl md:text-8xl lg:text-12xl font-bold mb-8 tracking-wide" style={{ fontFamily: 'Instrument Serif, serif' }}>
-            Welcome to Quantize
-          </h1>
-          <div className="flex gap-4 justify-center">
-            <Button 
-              onClick={navigateToHomePage}
-              className="
-                text-black text-sm tracking-[0.2em] uppercase font-extralight
-                px-6 py-2 bg-white border border-white rounded-lg
-                transition-all duration-700
-                hover:tracking-[0.3em] hover:bg-white/90
-              "
-            >
-              Try for free
-            </Button>
-            <Button 
-              onClick={navigateToLogin}
-              variant="outline"
-              className="
-                text-white text-sm tracking-[0.2em] uppercase font-extralight
-                px-6 py-2 bg-transparent border border-white rounded-lg
-                transition-all duration-700
-                hover:tracking-[0.3em] hover:bg-white/10
-              "
-            >
-              Login
-            </Button>
-          </div>
-        </div>
+      <section className="relative w-full h-[85vh] flex items-center justify-center z-10 -mt-16">
+        <Hero />
       </section>
 
       {/* Content Sections */}
@@ -229,54 +196,7 @@ export default function LandingPage() {
             <Featured_05 />
           </section>
 
-          {/* Footer Section */}
-          <footer className="relative mt-24 pt-16 pb-0 overflow-hidden">
-            {/* Raycast Animation Background */}
-            <div className="absolute inset-0 w-full h-full z-0">
-              <RaycastBackground />
-            </div>
-            <div className="relative z-10 bg-black/60 backdrop-blur-sm rounded-3xl p-8">
-              <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                  {/* Company Info */}
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-4">Quantize</h3>
-                    <p className="text-white/80 text-sm leading-relaxed">
-                      The intelligent AI search engine that understands your questions and delivers precise answers.
-                    </p>
-                  </div>
-                  
-                  {/* Navigation */}
-                  <div>
-                    <h4 className="text-lg font-semibold text-white mb-4">Navigation</h4>
-                    <ul className="space-y-2 text-white/70 text-sm">
-                      <li><a href="/home" className="hover:text-white transition-colors">Home</a></li>
-                      <li><a href="/company" className="hover:text-white transition-colors">Company</a></li>
-                      <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
-                      <li><button onClick={navigateToOnboarding} className="hover:text-white transition-colors text-left">Enterprise Login</button></li>
-                    </ul>
-                  </div>
-                  
-                  {/* Contact & Legal */}
-                  <div>
-                    <h4 className="text-lg font-semibold text-white mb-4">Contact</h4>
-                    <ul className="space-y-2 text-white/70 text-sm">
-                      <li><a href="mailto:info@quantize.site" className="hover:text-white transition-colors">info@quantize.site</a></li>
-                      <li><a href="#" className="hover:text-white transition-colors">LinkedIn</a></li>
-                      <li><a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                      <li><a href="/terms" className="hover:text-white transition-colors">Terms of Service</a></li>
-                    </ul>
-                  </div>
-                </div>
-                
-                {/* Bottom Bar */}
-                <div className="border-t border-white/20 pt-6 flex flex-col sm:flex-row justify-between items-center text-white/60 text-sm">
-                  <p>© 2025 Quantize. All rights reserved.</p>
-                  <p className="mt-2 sm:mt-0">Made by <span className="text-blue-400">Aditya Surana</span></p>
-                </div>
-              </div>
-            </div>
-          </footer>
+
         </div>
       </div>
     </div>

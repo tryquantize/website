@@ -20,7 +20,7 @@ function ModernHeader() {
     const navigationItems = [
         {
             title: "Home",
-            href: "/home",
+            href: "/",
             description: "",
         },
         {
@@ -112,8 +112,8 @@ function ModernHeader() {
                                                                 {item.description}
                                                             </p>
                                                         </div>
-                                                        <Button size="sm" className="mt-10 bg-blue-600 hover:bg-blue-700">
-                                                            Get Started
+                                                        <Button size="sm" className="mt-10 bg-blue-600 hover:bg-blue-700" onClick={() => setLocation('/waitlist')}>
+                                                            Join the Waitlist
                                                         </Button>
                                                     </div>
                                                     <div className="flex flex-col text-sm h-full justify-end">
@@ -142,7 +142,7 @@ function ModernHeader() {
                     </NavigationMenu>
                 </div>
                 <div className="flex lg:justify-center">
-                    <Link href="/home" className="flex items-center space-x-2">
+                    <Link href="/" className="flex items-center space-x-2">
                         <QuantizeLogo size={24} />
                         <p className="font-semibold text-lg bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
                             Quantize

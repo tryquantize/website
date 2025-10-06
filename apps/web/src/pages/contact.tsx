@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Component as RaycastAnimatedBackground } from "@/components/ui/raycast-animated-black-background";
 import TestimonialsDemo from "@/components/ui/3d-testimonials-demo";
+import { Contact2 } from "@/components/ui/contact-2";
 
 export default function ContactPage() {
   return (
@@ -12,48 +13,19 @@ export default function ContactPage() {
       </div>
       
       <div className="relative z-10 pt-20">
+        {/* Contact Form Section */}
         <section className="py-20 px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-              Get in <span className="bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">Touch</span>
-            </h1>
-            
-            <p className="text-xl text-white/80 mb-12">
-              Have questions? We'd love to hear from you.
-            </p>
-            
-            <div className="grid md:grid-cols-3 gap-8 mb-12">
-              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                <CardContent className="p-8 text-center">
-                  <Mail className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2">Email</h3>
-                  <p className="text-white/70">info@quantize.site</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                <CardContent className="p-8 text-center">
-                  <MessageSquare className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2">Support</h3>
-                  <p className="text-white/70">support@quantize.site</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-                <CardContent className="p-8 text-center">
-                  <Phone className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2">Business</h3>
-                  <p className="text-white/70">business@quantize.site</p>
-                </CardContent>
-              </Card>
+          <div className="max-w-6xl mx-auto">
+            <div className="text-white">
+              <Contact2 
+                title="Contact Us"
+                description="We are available for questions, feedback, or collaboration opportunities. Let us know how we can help!"
+                phone="+91 7776004343"
+                email="info@quantize.site"
+                web={{ label: "quantize.site", url: "https://quantize.site" }}
+                linkedin={{ label: "tryquantize", url: "https://www.linkedin.com/company/tryquantize/" }}
+              />
             </div>
-            
-            <Button 
-              className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white px-8 py-3 rounded-xl"
-              onClick={() => window.location.href = 'mailto:info@quantize.site'}
-            >
-              Send us an Email
-            </Button>
           </div>
         </section>
         

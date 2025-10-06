@@ -439,7 +439,7 @@ const Hero: React.FC<HeroProps> = ({
               {buttons.primary && (
                 <button 
                   onClick={buttons.primary.onClick}
-                  className="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-purple-500/25"
+                  className="px-8 py-4 bg-white hover:bg-gray-100 text-black rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
                 >
                   {buttons.primary.text}
                 </button>

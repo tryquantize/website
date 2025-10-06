@@ -1,6 +1,4 @@
 import { Pricing } from "@/components/ui/pricing";
-import ShaderComponent from "@/components/ui/interactive-shader";
-import { ShuffleCards } from "@/components/ui/testimonial-cards";
 
 const quantizePlans = [
   {
@@ -63,19 +61,12 @@ const quantizePlans = [
 
 export function PricingPage() {
   return (
-    <div className="relative min-h-screen">
-      <div className="absolute inset-0 z-0">
-        <ShaderComponent />
-      </div>
-      <div className="relative z-10">
-        <Pricing 
-          plans={quantizePlans}
-          title="Unlock the Power of AI Search"
-          description="Choose the plan that fits your search needs
-All plans include access to our advanced AI search engine and comprehensive web integration."
-        />
-        <ShuffleCards />
-      </div>
+    <div className="min-h-screen bg-black">
+      <Pricing 
+        plans={quantizePlans}
+        title="Unlock the Power of AI Search"
+        description="Choose the plan that fits your search needs\nAll plans include access to our advanced AI search engine and comprehensive web integration."
+      />
     </div>
   );
 }
