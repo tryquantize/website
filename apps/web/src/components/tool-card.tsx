@@ -259,6 +259,6 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
       } : {}}
       transition={{ duration: 2, repeat: Infinity }}
     />
-  </motion.div>
+    </motion.div>
   );
 }

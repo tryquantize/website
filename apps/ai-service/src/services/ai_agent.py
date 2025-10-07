@@ -17,7 +17,7 @@ class AISearchAgent:
         self.exa_search = ExaSearchService()
         self.enrichment_agent = CompanyEnrichmentAgent()
     
-    def search_ai_tools(self, query: str, context: Dict[str, Any] = None, selected_model: str = None, selected_types: List[str] = None) -> Dict[str, Any]:
+    def search_ai_tools(self, query: str, context: Dict[str, Any] = None, selected_model: str = None, selected_types: List[str] = None, selected_locations: List[str] = None) -> Dict[str, Any]:
         """
         Main search function that processes user queries and returns AI-generated recommendations
         """
@@ -29,7 +29,7 @@ class AISearchAgent:
             system_prompt = self._get_system_prompt(selected_types)
             
             # Prepare the user message with context and web results
-            user_message = self._prepare_user_message(query, context, selected_types, web_search_results)
+            user_message = self._prepare_user_message(query, context, selected_types, web_search_results, selected_locations)
             
             # Determine which model to use
             model_to_use = MODEL_MAPPING.get(selected_model, self.model) if selected_model else self.model
@@ -48,21 +48,38 @@ class AISearchAgent:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ],
-                "temperature": 0.7,
-                "max_tokens": 2000
+                "temperature": 0.9,  # Higher temperature for faster responses
+                "max_tokens": 1500,  # Reduced tokens for faster processing
+                "stream": True       # Enable streaming for faster perceived response
             }
             
             response = requests.post(
                 f"{self.base_url}/chat/completions",
                 headers=headers,
-                json=payload
+                json=payload,
+                stream=True
             )
             
             if response.status_code != 200:
                 raise Exception(f"API request failed with status {response.status_code}: {response.text}")
             
-            response_data = response.json()
-            ai_response = response_data['choices'][0]['message']['content']
+            # Handle streaming response
+            ai_response = ""
+            for line in response.iter_lines():
+                if line:
+                    line = line.decode('utf-8')
+                    if line.startswith('data: '):
+                        data = line[6:]
+                        if data == '[DONE]':
+                            break
+                        try:
+                            chunk = json.loads(data)
+                            if 'choices' in chunk and len(chunk['choices']) > 0:
+                                delta = chunk['choices'][0].get('delta', {})
+                                if 'content' in delta:
+                                    ai_response += delta['content']
+                        except json.JSONDecodeError:
+                            continue
             
             # Store citations for frontend access
             citations_data = web_search_results.get("citations", []) if web_search_results.get("success") else []
@@ -74,8 +91,14 @@ class AISearchAgent:
             # Extract companies from the web search results
             companies = self.extract_companies(web_search_results, model_to_use, selected_types)
             
-            # Enrich company data with additional details
-            companies = self.enrichment_agent.enrich_company_data(companies, query)
+            # Enrich company data with additional details (skip fallback companies)
+            real_companies = [c for c in companies if c.get('website') != '#']
+            fallback_companies = [c for c in companies if c.get('website') == '#']
+            
+            if real_companies:
+                enriched_real = self.enrichment_agent.enrich_company_data(real_companies, query, selected_locations)
+                companies = enriched_real + fallback_companies
+            # If no real companies, skip enrichment entirely
             
             return {
                 "query": query,
@@ -129,7 +152,7 @@ class AISearchAgent:
             logger.error(f"Web search failed: {str(e)}")
             return {"success": False, "error": str(e), "results": [], "citations": []}
     
-    def _prepare_user_message(self, query: str, context: Dict[str, Any] = None, selected_types: List[str] = None, web_search_results: Dict[str, Any] = None) -> str:
+    def _prepare_user_message(self, query: str, context: Dict[str, Any] = None, selected_types: List[str] = None, web_search_results: Dict[str, Any] = None, selected_locations: List[str] = None) -> str:
         """
         Prepare the user message with additional context and web search results
         """
@@ -151,6 +174,10 @@ class AISearchAgent:
                     message += "\nFilter: Show ONLY AI products and tools"
             else:
                 message += f"\nFilter: Show {', '.join(selected_types)}"
+        
+        # Add location filter information
+        if selected_locations and len(selected_locations) > 0:
+            message += f"\nLocation Filter: Focus on companies/solutions in {', '.join(selected_locations)}"
         
         if context:
             if context.get("budget"):
@@ -211,8 +238,8 @@ Return only the 5 suggestions, one per line, without numbering or bullets."""
                     {"role": "system", "content": "You are a helpful assistant that generates related search suggestions."},
                     {"role": "user", "content": suggestion_prompt}
                 ],
-                "temperature": 0.8,
-                "max_tokens": 300
+                "temperature": 0.9,  # Higher temperature for faster responses
+                "max_tokens": 200   # Reduced tokens for faster processing
             }
             
             response = requests.post(
@@ -400,8 +427,8 @@ Example format:
                     {"role": "system", "content": "You are a data extraction specialist. Return only valid JSON arrays without any additional text or formatting."},
                     {"role": "user", "content": extraction_prompt}
                 ],
-                "temperature": 0.3,
-                "max_tokens": 1500
+                "temperature": 0.9,  # Higher temperature for faster responses
+                "max_tokens": 1000  # Reduced tokens for faster processing
             }
             
             response = requests.post(
@@ -646,6 +673,72 @@ Example format:
                 }
             ]
 
+    def compare_companies(self, companies: List[Dict[str, Any]]) -> str:
+        """
+        Compare multiple companies and provide a concise decision-making analysis
+        """
+        try:
+            # Format company data for comparison
+            company_data = ""
+            for i, company in enumerate(companies, 1):
+                company_data += f"Company {i}: {company.get('name', 'Unknown')}\n"
+                company_data += f"Description: {company.get('description', 'No description')}\n"
+                company_data += f"Pricing: {company.get('pricing', 'Contact for pricing')}\n"
+                company_data += f"Category: {company.get('category', 'General')}\n"
+                if company.get('features'):
+                    company_data += f"Features: {', '.join(company['features'])}\n"
+                company_data += "\n"
+            
+            comparison_prompt = f"""Compare these companies and provide a concise 100-word analysis to help users make the best decision based on budget, features, and fit:
+
+{company_data}
+
+Provide a brief comparison highlighting:
+1. Best value for money
+2. Most comprehensive features
+3. Best fit for different use cases
+4. Clear recommendation
+
+Keep it exactly 100 words and actionable."""
+
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://localhost:3001",
+                "X-Title": "Company Comparison"
+            }
+            
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": "You are a business analyst expert at comparing companies and providing concise decision-making guidance. Always provide exactly 100 words."},
+                    {"role": "user", "content": comparison_prompt}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 150
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/chat/completions",
+                headers=headers,
+                json=payload
+            )
+            
+            if response.status_code == 200:
+                response_data = response.json()
+                comparison = response_data['choices'][0]['message']['content'].strip()
+                return comparison
+            else:
+                # Fallback comparison
+                company_names = [c.get('name', 'Company') for c in companies]
+                return f"Comparing {', '.join(company_names)}: Each offers unique advantages. Consider your budget, required features, and implementation timeline. {company_names[0]} may offer better value, while {company_names[-1]} might have more comprehensive features. Evaluate based on your specific needs and budget constraints for the best fit."
+                
+        except Exception as e:
+            logger.error(f"Company comparison failed: {str(e)}")
+            # Simple fallback
+            company_names = [c.get('name', 'Company') for c in companies]
+            return f"All {len(companies)} companies offer valuable solutions. Compare their pricing models, feature sets, and support options. Consider your budget and specific requirements to make the best choice for your business needs."
+
     def health_check(self) -> Dict[str, Any]:
         """
         Health check endpoint to verify the AI service is working
@@ -665,7 +758,7 @@ Example format:
                     {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": "Say 'AI service is working' if you can respond."}
                 ],
-                "max_tokens": 50
+                "max_tokens": 20  # Reduced tokens for faster health check
             }
             
             response = requests.post(

@@ -32,7 +32,7 @@ import { FavoritesNotification } from "@/components/favorites-notification";
 import { NotificationProvider } from "@/contexts/notification-context";
 import { enhancePrompt } from "@/lib/promptEnhancer";
 import { useToast } from "@/hooks/use-toast";
-import WarpDriveShader from "@/components/ui/warp-drive-shader";
+import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
 
 // Mock search results - in real app this would come from API
 const mockSearchResults = [
@@ -162,6 +162,13 @@ export default function ResultsPage() {
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [queryHistory, setQueryHistory] = useState<string[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
+  
+  // SUPPLIERS SECTION STATE
+  const [showSuppliersSection, setShowSuppliersSection] = useState(true);
+  const [showSuppliersPopup, setShowSuppliersPopup] = useState(false);
+  const [supplierEmail, setSupplierEmail] = useState('');
+  const [supplierPhone, setSupplierPhone] = useState('');
+  const [isSubmittingSuppliers, setIsSubmittingSuppliers] = useState(false);
   
 
   
@@ -331,6 +338,7 @@ export default function ResultsPage() {
     const params = new URLSearchParams(window.location.search);
     const query = params.get('q') || '';
     const types = params.get('types');
+    const locations = params.get('locations');
     
     setSearchQuery(query);
     
@@ -343,6 +351,10 @@ export default function ResultsPage() {
     } else {
       setSelectedTypes(new Set());
     }
+    
+    // Store locations for search (we'll add location state management later if needed)
+    const selectedLocations = locations ? locations.split(',').filter(l => l.trim()) : [];
+    console.log('Restored locations from URL:', selectedLocations);
     
     if (query) {
       // Create new conversation for initial search
@@ -389,19 +401,22 @@ export default function ResultsPage() {
         data: { query }
       }]);
 
-      // Get current selectedTypes from URL if not set in state yet
+      // Get current selectedTypes and locations from URL if not set in state yet
       const params = new URLSearchParams(window.location.search);
       const types = params.get('types');
+      const locations = params.get('locations');
       const currentSelectedTypes = types ? types.split(',').filter(t => t.trim()) : Array.from(selectedTypes);
+      const currentSelectedLocations = locations ? locations.split(',').filter(l => l.trim()) : [];
       
-      console.log('Performing search with types:', currentSelectedTypes);
+      console.log('Performing search with types:', currentSelectedTypes, 'and locations:', currentSelectedLocations);
 
       try {
         const response = await apiRequest("POST", "/api/search", {
           query,
           context: {},
           selectedModel,
-          selectedTypes: currentSelectedTypes
+          selectedTypes: currentSelectedTypes,
+          selectedLocations: currentSelectedLocations
         });
         
         data = await response.json();
@@ -496,7 +511,8 @@ export default function ResultsPage() {
         query: question,
         context: {},
         selectedModel,
-        selectedTypes: Array.from(selectedTypes)
+        selectedTypes: Array.from(selectedTypes),
+        selectedLocations: [] // Use empty array for follow-up questions
       });
       
       const data = await response.json();
@@ -593,7 +609,8 @@ export default function ResultsPage() {
         query,
         context: {},
         selectedModel,
-        selectedTypes: Array.from(selectedTypes)
+        selectedTypes: Array.from(selectedTypes),
+        selectedLocations: [] // Use empty array for new searches
       });
       
       const data = await response.json();
@@ -762,7 +779,8 @@ export default function ResultsPage() {
         query,
         context,
         selectedModel,
-        selectedTypes: Array.from(selectedTypes)
+        selectedTypes: Array.from(selectedTypes),
+        selectedLocations: [] // Use empty array for budget-filtered searches
       });
       
       const data = await response.json();
@@ -809,6 +827,50 @@ export default function ResultsPage() {
     setFavoritesNotification({ show: false, itemName: '' });
   };
 
+  const handleSuppliersYes = () => {
+    setShowSuppliersPopup(true);
+  };
+
+  const handleSuppliersNo = () => {
+    setShowSuppliersSection(false);
+  };
+
+  const handleSuppliersSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supplierEmail.trim() || !supplierPhone.trim()) return;
+    
+    setIsSubmittingSuppliers(true);
+    
+    try {
+      // Here you would typically send the data to your API
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
+      toast({
+        title: "Success!",
+        description: "We'll connect you with relevant Companies soon.",
+      });
+      
+      setShowSuppliersPopup(false);
+      setShowSuppliersSection(false);
+      setSupplierEmail('');
+      setSupplierPhone('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmittingSuppliers(false);
+    }
+  };
+
+  const handleSuppliersCancel = () => {
+    setShowSuppliersPopup(false);
+    setSupplierEmail('');
+    setSupplierPhone('');
+  };
+
 
 
   const handleSelectConversation = (conversationId: string) => {
@@ -843,7 +905,10 @@ export default function ResultsPage() {
 
   return (
     <div className="min-h-screen pb-32 relative">
-      <WarpDriveShader />
+      {/* Raycast Animation Background */}
+      <div className="fixed inset-0 w-full h-full z-0">
+        <RaycastBackground />
+      </div>
       {/* Fixed Sidebar */}
       {showSidebar && (
         <ConversationSidebar 
@@ -948,26 +1013,33 @@ export default function ResultsPage() {
 
         </div>
         
-        {/* Use Case Selection - Show only for generalized queries */}
-        {showUseCaseSelection && (
+        {/* Suppliers Section - Show above use case section */}
+        {showSuppliersSection && allCompanies.length > 0 && (
           <div className="bg-black/20 backdrop-blur-xl p-4 border border-white/10">
-            <div className="flex items-center space-x-2 mb-3">
-              <Target className="w-4 h-4 text-white/60" />
-              <h3 className="text-white/80 text-sm font-medium">Specify domain/niche/use case (optional):</h3>
+            <h3 className="text-lg font-semibold text-white mb-2">Would you like Companies to reach out to you?</h3>
+            <p className="text-white/70 text-sm mb-4">Get personalized quotes and offers directly from verified Companies</p>
+            <div className="flex space-x-4">
+              <button 
+                onClick={handleSuppliersYes}
+                className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all"
+              >
+                Yes, I'm interested
+              </button>
+              <button 
+                onClick={handleSuppliersNo}
+                className="px-6 py-2 bg-white/10 border border-white/20 text-white font-medium rounded-lg hover:bg-white/20 transition-all"
+              >
+                No, thanks
+              </button>
             </div>
-            <input
-              type="text"
-              placeholder="e.g., healthcare, e-commerce, customer service, marketing..."
-              value={useCaseInput}
-              onChange={(e) => handleUseCaseChange(e.target.value)}
-              className="w-full px-3 py-2 bg-white/5 border border-white/20 text-white placeholder:text-white/50 text-sm rounded-lg focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all"
-            />
           </div>
         )}
         
+
+        
         {/* Budget Selection - Show only if no budget in query */}
         {showBudgetSelection && (
-          <div className={`bg-black/20 backdrop-blur-xl p-4 border border-white/10 ${showUseCaseSelection ? 'border-t-0' : ''}`}>
+          <div className={`bg-black/20 backdrop-blur-xl p-4 border border-white/10 ${(showUseCaseSelection || (showSuppliersSection && allCompanies.length > 0)) ? 'border-t-0' : ''}`}>
             <div className="flex items-center space-x-2 mb-3">
               <DollarSign className="w-4 h-4 text-white/60" />
               <h3 className="text-white/80 text-sm font-medium">Select your budget range:</h3>
@@ -1016,9 +1088,9 @@ export default function ResultsPage() {
           } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
             return <FreelancerCards freelancers={allCompanies} />;
           } else {
-            // Show company cards + product tool cards when no specific type is selected
+            // Show exactly 5 company cards + remaining as product cards when no specific type is selected
             const companies = allCompanies.slice(0, 5);
-            const products = allCompanies.slice(5, 15).map(companyItem => ({
+            const products = allCompanies.slice(5, 10).map(companyItem => ({
               name: companyItem.name,
               description: companyItem.description,
               pricing: companyItem.pricing,
@@ -1027,19 +1099,8 @@ export default function ResultsPage() {
             return (
               <div className="mt-6">
                 <CompanyCards companies={companies} />
-                <ProductToolCards products={products} />
-                <div className="mt-8 bg-black/20 backdrop-blur-xl p-6 border border-white/10 rounded-lg">
-                  <h3 className="text-lg font-semibold text-white mb-2">Would you like suppliers to reach out to you?</h3>
-                  <p className="text-white/70 text-sm mb-4">Get personalized quotes and offers directly from verified suppliers</p>
-                  <div className="flex space-x-4">
-                    <button className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all">
-                      Yes, I'm interested
-                    </button>
-                    <button className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all">
-                      No, thanks
-                    </button>
-                  </div>
-                </div>
+                {products.length > 0 && <ProductToolCards products={products} />}
+
               </div>
             );
           }
@@ -1054,7 +1115,65 @@ export default function ResultsPage() {
         onClose={hideFavoritesNotification}
       />
 
-
+      {/* Suppliers Popup */}
+      {showSuppliersPopup && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-white mb-2">
+              {contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : 'Connect with Suppliers'}
+            </h3>
+            <p className="text-white/70 text-sm mb-4">Enter your contact details to receive personalized quotes</p>
+            
+            <form onSubmit={handleSuppliersSubmit} className="space-y-4">
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Email Address</label>
+                <input
+                  type="email"
+                  value={supplierEmail}
+                  onChange={(e) => setSupplierEmail(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 bg-white/5 border border-white/20 text-white placeholder:text-white/50 text-sm rounded-lg focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all"
+                  placeholder="your@email.com"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Phone Number</label>
+                <input
+                  type="tel"
+                  value={supplierPhone}
+                  onChange={(e) => setSupplierPhone(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 bg-white/5 border border-white/20 text-white placeholder:text-white/50 text-sm rounded-lg focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all"
+                  placeholder="+1 (555) 123-4567"
+                />
+              </div>
+              
+              <div className="flex space-x-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmittingSuppliers || !supplierEmail.trim() || !supplierPhone.trim()}
+                  className="flex-1 px-4 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {isSubmittingSuppliers ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Submit'
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSuppliersCancel}
+                  disabled={isSubmittingSuppliers}
+                  className="flex-1 px-4 py-2 bg-white/10 border border-white/20 text-white font-medium rounded-lg hover:bg-white/20 transition-all disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

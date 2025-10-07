@@ -10,13 +10,17 @@ class ExaSearchService:
         self.api_key = EXA_API_KEY
         self.base_url = EXA_BASE_URL
     
-    def search_web(self, query: str, num_results: int = 5, include_domains: List[str] = None) -> Dict[str, Any]:
+    def search_web(self, query: str, num_results: int = 5, include_domains: List[str] = None, locations: List[str] = None) -> Dict[str, Any]:
         """
         Search the web using Exa API for current information
         """
         try:
-            # Enhance query for Indian startup ecosystem focus
-            enhanced_query = f"{query} Indian startups companies India technology business"
+            # Enhance query based on location filters
+            if locations and len(locations) > 0:
+                location_terms = ' OR '.join([f'"{loc}"' for loc in locations])
+                enhanced_query = f"{query} companies startups technology business ({location_terms})"
+            else:
+                enhanced_query = f"{query} companies startups technology business global"
             
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
@@ -79,22 +83,28 @@ class ExaSearchService:
             logger.error(f"Exa search failed: {str(e)}")
             return self._get_fallback_search_results(query)
     
-    def search_for_companies(self, query: str) -> Dict[str, Any]:
+    def search_for_companies(self, query: str, locations: List[str] = None) -> Dict[str, Any]:
         """
-        Search specifically for Indian companies and startups
+        Search specifically for companies and startups with location filtering
         """
-        company_query = f"{query} Indian companies startups India technology business funding"
+        if locations and len(locations) > 0:
+            location_terms = ' OR '.join([f'"{loc}"' for loc in locations])
+            company_query = f"{query} companies startups technology business funding ({location_terms})"
+        else:
+            company_query = f"{query} companies startups technology business funding global"
+        
         return self.search_web(
             company_query, 
             num_results=12,
-            include_domains=["techcrunch.com", "yourstory.com", "inc42.com", "entrackr.com", "crunchbase.com"]
+            include_domains=["techcrunch.com", "yourstory.com", "inc42.com", "entrackr.com", "crunchbase.com"],
+            locations=locations
         )
     
     def search_for_products(self, query: str) -> Dict[str, Any]:
         """
-        Search specifically for AI products and tools from India
+        Search specifically for AI products and tools globally
         """
-        product_query = f"{query} AI tools products Indian made in India software applications"
+        product_query = f"{query} AI tools products software applications global"
         return self.search_web(
             product_query,
             num_results=10,
@@ -103,9 +113,9 @@ class ExaSearchService:
     
     def search_for_freelancers(self, query: str) -> Dict[str, Any]:
         """
-        Search for freelancer information and market trends in India
+        Search for freelancer information and market trends globally
         """
-        freelancer_query = f"{query} freelancers India remote work skills market trends"
+        freelancer_query = f"{query} freelancers remote work skills market trends global"
         return self.search_web(
             freelancer_query,
             num_results=5,
@@ -139,7 +149,7 @@ class ExaSearchService:
                 {
                     "title": f"AI Solutions for {query}",
                     "url": "https://example.com",
-                    "text": f"Various AI solutions and tools are available for {query} in the Indian market.",
+                    "text": f"Various AI solutions and tools are available for {query} in the global market.",
                     "citation_id": 1
                 }
             ],

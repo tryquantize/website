@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, ArrowRight, Brain, Building2, User, Package, Sparkles, Loader2, Undo, Plus, MessageSquare, ArrowLeft } from 'lucide-react';
+import { LocationSelector } from '@/components/location-selector';
 import { Input } from '@/components/ui/input';
 import { QuantizeLogo } from '@/components/quantize-logo';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -26,6 +27,7 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [showConversationHistory, setShowConversationHistory] = useState(false);
   const [, setLocation] = useLocation();
@@ -344,12 +346,12 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                   <button
                     aria-label="Enhance search prompt"
                     disabled={!followUpQuery.trim() || isEnhancing}
-                    className="absolute right-[28px] top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute right-[28px] top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center text-blue-400 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isEnhancing ? (
-                      <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Sparkles className="h-2.5 w-2.5" />
+                      <Sparkles className="h-4 w-4" />
                     )}
                   </button>
                 </TooltipTrigger>
@@ -364,12 +366,12 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
               aria-label="Search"
               onClick={handleFollowUpSearch}
               disabled={!followUpQuery.trim() || isLoadingFollowUp}
-              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition disabled:opacity-50"
+              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center text-white/90 hover:text-white transition disabled:opacity-50"
             >
               {isLoadingFollowUp ? (
-                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Search className="h-3 w-3" />
+                <Search className="h-4 w-4" />
               )}
             </button>
 
@@ -391,9 +393,9 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
           </div>
 
           {/* Bottom row - Icons - mobile optimized */}
-          <div className="relative border-t border-white/10 px-3 py-0.5 h-[25px]">
+          <div className="relative border-t border-white/10 px-3 py-0 h-[25px] -mt-1">
             <div className="flex items-center justify-between">
-              {/* Left - Brain icon with dropdown and selected model */}
+              {/* Left - Brain icon, model name, and Location selector */}
               <div className="relative flex items-center space-x-1">
                 <div className="relative">
                   <button
@@ -401,11 +403,11 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                       e.stopPropagation();
                       setShowModelDropdown(!showModelDropdown);
                     }}
-                    className={`flex h-4 w-4 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 aspect-square ${
+                    className={`flex h-6 w-6 items-center justify-center hover:text-white/80 transition-colors ${
                       selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
                     }`}
                   >
-                    <Brain className="h-2 w-2" />
+                    <Brain className="h-4 w-4" />
                   </button>
                   
                   {showModelDropdown && (
@@ -433,6 +435,31 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                 </div>
                 
                 <span className="text-xs text-white/70 truncate max-w-[80px]">{selectedModel}</span>
+                
+                <LocationSelector 
+                  selectedLocations={selectedLocations}
+                  onLocationChange={setSelectedLocations}
+                />
+                
+                {selectedLocations.length > 0 && (
+                  <div className="flex flex-wrap gap-1 ml-1">
+                    {selectedLocations.map((location) => (
+                      <div key={location} className="flex items-center bg-white/10 backdrop-blur-sm text-white font-bold px-1 py-0 rounded text-xs border border-white/20">
+                        <span className="truncate max-w-[40px]">{location.split(',')[0]}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newLocations = selectedLocations.filter(l => l !== location);
+                            setSelectedLocations(newLocations);
+                          }}
+                          className="ml-1 hover:text-red-300 transition-colors text-xs"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Right - Filter buttons */}
@@ -443,15 +470,15 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-4 w-4 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square ` +
+                          `h-6 w-6 flex items-center justify-center transition hover:text-white/80 ` +
                           (selectedTypes.has('company')
-                            ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                            : 'bg-white/5 border-white/20 text-white/90')
+                            ? 'text-yellow-300'
+                            : 'text-white/90')
                         }
                         aria-label="Company"
                         onClick={() => toggleType('company')}
                       >
-                        <Building2 className="h-2 w-2" />
+                        <Building2 className="h-4 w-4" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Company</TooltipContent>
@@ -461,15 +488,15 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-4 w-4 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square ` +
+                          `h-6 w-6 flex items-center justify-center transition hover:text-white/80 ` +
                           (selectedTypes.has('freelancer')
-                            ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                            : 'bg-white/5 border-white/20 text-white/90')
+                            ? 'text-yellow-300'
+                            : 'text-white/90')
                         }
                         aria-label="Freelancer"
                         onClick={() => toggleType('freelancer')}
                       >
-                        <User className="h-2 w-2" />
+                        <User className="h-4 w-4" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Freelancer</TooltipContent>
@@ -479,15 +506,15 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-4 w-4 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square ` +
+                          `h-6 w-6 flex items-center justify-center transition hover:text-white/80 ` +
                           (selectedTypes.has('product')
-                            ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                            : 'bg-white/5 border-white/20 text-white/90')
+                            ? 'text-yellow-300'
+                            : 'text-white/90')
                         }
                         aria-label="Product"
                         onClick={() => toggleType('product')}
                       >
-                        <Package className="h-2 w-2" />
+                        <Package className="h-4 w-4" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Product</TooltipContent>

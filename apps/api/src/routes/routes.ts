@@ -243,6 +243,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // AI Service proxy routes
+  app.post("/api/ai-service/compare", async (req, res) => {
+    try {
+      const { companies } = req.body;
+      
+      if (!companies || !Array.isArray(companies) || companies.length < 2) {
+        return res.status(400).json({ 
+          message: "At least 2 companies required for comparison",
+          success: false 
+        });
+      }
+
+      // Call Python AI service for comparison
+      const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5002';
+      
+      try {
+        const aiResponse = await fetch(`${aiServiceUrl}/compare`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ companies })
+        });
+
+        if (!aiResponse.ok) {
+          throw new Error(`AI service responded with status: ${aiResponse.status}`);
+        }
+
+        const aiResult = await aiResponse.json();
+        res.json(aiResult);
+      } catch (aiError) {
+        console.error('AI service error:', aiError);
+        
+        // Fallback comparison
+        const companyNames = companies.map(c => c.name).join(', ');
+        res.json({
+          comparison: `Comparison between ${companyNames}: All companies offer unique solutions with different pricing models and features. Consider your specific budget and requirements when making a decision.`,
+          success: true,
+          fallback: true
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Comparison failed", success: false });
+    }
+  });
+
   // Search routes
   app.post("/api/search", async (req, res) => {
     try {
@@ -258,9 +304,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.recordSearch(searchData);
 
       // Call Python AI service for AI-powered search
-      const aiServiceUrl = process.env.AI_SERVICE_URL || 'https://quantize-production.up.railway.app';
+      const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5002';
       console.log(`Attempting to call AI service at: ${aiServiceUrl}`);
-      // AI service integration with Railway - updated with env var
+      // AI service integration - local only
       
       try {
         const aiResponse = await fetch(`${aiServiceUrl}/search`, {
@@ -272,7 +318,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             query,
             context: context || {},
             selectedModel,
-            selectedTypes: selectedTypes || []
+            selectedTypes: selectedTypes || [],
+            selectedLocations: req.body.selectedLocations || []
           })
         });
 

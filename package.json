@@ -11,7 +11,8 @@
     "check": "tsc",
     "clean": "node tools/scripts/cleanup.js",
     "launch": "./tools/scripts/dev.sh",
-    "setup": "yarn install && cd apps/ai-service && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+    "setup": "./setup-local.sh",
+    "setup-manual": "yarn install && cd apps/ai-service && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
   },
   "dependencies": {
     "@headlessui/react": "2.2.7",

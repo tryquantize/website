@@ -181,8 +181,8 @@ yarn build
 yarn start
 ```
 
-### Railway Deployment
-See `docs/deployment/` for detailed deployment guides.
+### Local Development Only
+This application is configured to run entirely on your local machine. See `docs/deployment/` for setup guides.
 
 ## 🧪 Testing
 

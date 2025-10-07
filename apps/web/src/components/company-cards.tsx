@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, ExternalLink, ArrowLeft, Send, Heart, Building2 } from "lucide-react";
+import { MessageCircle, ExternalLink, ArrowLeft, Send, Heart, Building2, GitCompare, X, Loader2 } from "lucide-react";
 import { useFavorites } from "@/contexts/favorites-context";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
 import { GradientCardBase } from "@/components/ui/gradient-card-base";
 import { motion } from "framer-motion";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Company {
   name: string;
@@ -15,6 +16,13 @@ interface Company {
   pricing: string;
   website: string;
   category: string;
+  specifications?: string[];
+  location?: string;
+  about?: string[];
+  rating?: {
+    rating: number;
+    reviews: number;
+  };
 }
 
 interface CompanyCardsProps {
@@ -25,6 +33,10 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
   const [chatStates, setChatStates] = useState<{[key: number]: boolean}>({});
   const [messages, setMessages] = useState<{[key: number]: Array<{text: string, isUser: boolean}>}>({});
   const [inputValues, setInputValues] = useState<{[key: number]: string}>({});
+  const [selectedForComparison, setSelectedForComparison] = useState<Set<number>>(new Set());
+  const [showComparisonPopup, setShowComparisonPopup] = useState(false);
+  const [comparisonResult, setComparisonResult] = useState<string>("");
+  const [isLoadingComparison, setIsLoadingComparison] = useState(false);
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { currentUser } = useFirebaseAuth();
   const { showFavoritesNotification } = useNotification();
@@ -58,6 +70,45 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
     if (website && website !== "#") {
       window.open(website, "_blank", "noopener,noreferrer");
     }
+  };
+
+  const handleCompareToggle = (index: number) => {
+    const newSelected = new Set(selectedForComparison);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedForComparison(newSelected);
+  };
+
+  const handleCompare = async () => {
+    if (selectedForComparison.size < 2) return;
+    
+    setIsLoadingComparison(true);
+    setShowComparisonPopup(true);
+    
+    try {
+      const selectedCompanies = Array.from(selectedForComparison).map(index => companies[index]);
+      
+      const response = await apiRequest("POST", "/api/ai-service/compare", {
+        companies: selectedCompanies
+      });
+      
+      const data = await response.json();
+      setComparisonResult(data.comparison || "Comparison unavailable.");
+    } catch (error) {
+      console.error('Comparison failed:', error);
+      setComparisonResult("Failed to generate comparison. Please try again.");
+    } finally {
+      setIsLoadingComparison(false);
+    }
+  };
+
+  const closeComparisonPopup = () => {
+    setShowComparisonPopup(false);
+    setComparisonResult("");
+    setSelectedForComparison(new Set());
   };
 
   return (
@@ -127,37 +178,47 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
                     </div>
                   </div>
                   {currentUser && (
-                    <Button
-                      onClick={() => {
-                        const companyId = `company_${index}_${company.name}`;
-                        if (isFavorite(companyId)) {
-                          removeFromFavorites(companyId);
-                        } else {
-                          addToFavorites({
-                            id: companyId,
-                            type: 'company',
-                            name: company.name,
-                            description: company.description,
-                            features: company.features,
-                            pricing: company.pricing,
-                            website: company.website,
-                            category: company.category
-                          }, showFavoritesNotification);
-                        }
-                      }}
-                      size="sm"
-                      variant="ghost"
-                      className="p-1 h-auto"
-                    >
-                      <Heart className={`w-4 h-4 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
-                    </Button>
+                    <div className="flex space-x-1">
+                      <Button
+                        onClick={() => handleCompareToggle(index)}
+                        size="sm"
+                        variant="ghost"
+                        className="p-1 h-auto"
+                      >
+                        <GitCompare className={`w-4 h-4 ${selectedForComparison.has(index) ? 'text-blue-500' : 'text-white/40 hover:text-blue-400'}`} />
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          const companyId = `company_${index}_${company.name}`;
+                          if (isFavorite(companyId)) {
+                            removeFromFavorites(companyId);
+                          } else {
+                            addToFavorites({
+                              id: companyId,
+                              type: 'company',
+                              name: company.name,
+                              description: company.description,
+                              features: company.features,
+                              pricing: company.pricing,
+                              website: company.website,
+                              category: company.category
+                            }, showFavoritesNotification);
+                          }
+                        }}
+                        size="sm"
+                        variant="ghost"
+                        className="p-1 h-auto"
+                      >
+                        <Heart className={`w-4 h-4 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+                      </Button>
+                    </div>
                   )}
                 </div>
                 
                 <p className="text-white/70 text-sm mb-3">{company.description}</p>
                 
                 <div className="mb-3">
-                  <p className="text-xs text-white/60 mb-1">About Company</p>
+                  <h6 className="text-sm font-semibold text-blue-300 mb-2 tracking-wide">About Us</h6>
                   <div className="text-xs text-white/70 leading-relaxed">
                     {company.about ? company.about.map((line, i) => (
                       <div key={i}>{line}</div>
@@ -171,12 +232,12 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
                 </div>
                 
                 <div className="mb-3">
-                  <p className="text-xs text-white/60 mb-1">Location</p>
+                  <h6 className="text-sm font-semibold text-green-300 mb-2 tracking-wide">Location</h6>
                   <div className="text-xs text-white/70">{company.location || "Mumbai, India"}</div>
                 </div>
                 
                 <div className="mb-3">
-                  <p className="text-sm text-white/80 font-medium mb-2">Key Specifications</p>
+                  <h6 className="text-sm font-semibold text-purple-300 mb-2 tracking-wide">Key Specifications</h6>
                   <div className="space-y-1">
                     {company.specifications ? company.specifications.map((spec, i) => (
                       <div key={i} className="text-xs text-white/70">• {spec}</div>
@@ -194,16 +255,7 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
                 
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-white/80 font-medium">Rating</span>
-                    <div className="flex items-center space-x-1">
-                      <span className="text-yellow-400 text-sm">★</span>
-                      <span className="text-sm text-white/80">
-                        {company.rating ? `${company.rating.rating} (${company.rating.reviews})` : "4.5 (700)"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-white/60">Category</span>
+                    <h6 className="text-sm font-semibold text-orange-300 tracking-wide">Category</h6>
                     <span className="text-xs text-white/80">{company.category}</span>
                   </div>
                   <div className="text-sm text-white/80 font-medium">{company.pricing}</div>
@@ -241,6 +293,70 @@ export function CompanyCards({ companies }: CompanyCardsProps) {
           </GradientCardBase>
         ))}
       </div>
+      
+      {/* Compare Section */}
+      {selectedForComparison.size >= 2 && (
+        <div className="mt-6 bg-black/20 backdrop-blur-xl p-4 border border-white/10 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <GitCompare className="w-5 h-5 text-blue-400" />
+              <span className="text-white font-medium">
+                {selectedForComparison.size} companies selected for comparison
+              </span>
+            </div>
+            <Button
+              onClick={handleCompare}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Compare
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Comparison Popup */}
+      {showComparisonPopup && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Company Comparison</h3>
+              <Button
+                onClick={closeComparisonPopup}
+                size="sm"
+                variant="ghost"
+                className="p-1 h-auto text-white/60 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex flex-wrap gap-2">
+                {Array.from(selectedForComparison).map(index => (
+                  <span key={index} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm">
+                    {companies[index].name}
+                  </span>
+                ))}
+              </div>
+            </div>
+            
+            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+              {isLoadingComparison ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center space-x-3">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+                    <span className="text-white/70">Generating comparison...</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">
+                  {comparisonResult}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

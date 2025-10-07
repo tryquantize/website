@@ -14,12 +14,10 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-# Enable CORS for all routes with specific origins
+# Enable CORS for local development only
 CORS(app, origins=[
     "http://localhost:3001",
-    "https://quantize-ai.vercel.app",
-    "https://*.vercel.app",
-    "https://quantize-one.vercel.app"
+    "http://127.0.0.1:3001"
 ])
 
 # Initialize AI agent
@@ -64,13 +62,15 @@ def ai_search():
         context = data.get('context', {})
         selected_model = data.get('selectedModel')
         selected_types = data.get('selectedTypes', [])
+        selected_locations = data.get('selectedLocations', [])
         
-        logger.info(f"Processing search query: {query} with model: {selected_model} and types: {selected_types}")
+        logger.info(f"Processing search query: {query} with model: {selected_model}, types: {selected_types}, locations: {selected_locations}")
         logger.info(f"Selected types type: {type(selected_types)}, length: {len(selected_types) if selected_types else 0}")
+        logger.info(f"Selected locations type: {type(selected_locations)}, length: {len(selected_locations) if selected_locations else 0}")
         logger.info(f"Full request data: {data}")
         
         # Process the search using AI agent
-        result = ai_agent.search_ai_tools(query, context, selected_model, selected_types)
+        result = ai_agent.search_ai_tools(query, context, selected_model, selected_types, selected_locations)
         
         # Return the result
         status_code = 200 if result['success'] else 500
@@ -139,6 +139,43 @@ def extract_companies():
         
     except Exception as e:
         logger.error(f"Error extracting companies: {str(e)}")
+        return jsonify({
+            "error": str(e),
+            "success": False
+        }), 500
+
+@app.route('/compare', methods=['POST'])
+def compare_companies():
+    """Compare multiple companies and provide decision guidance"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'companies' not in data:
+            return jsonify({
+                "error": "Companies data is required",
+                "success": False
+            }), 400
+        
+        companies = data['companies']
+        
+        if not isinstance(companies, list) or len(companies) < 2:
+            return jsonify({
+                "error": "At least 2 companies required for comparison",
+                "success": False
+            }), 400
+        
+        logger.info(f"Comparing {len(companies)} companies")
+        
+        # Generate comparison using the AI agent
+        comparison = ai_agent.compare_companies(companies)
+        
+        return jsonify({
+            "comparison": comparison,
+            "success": True
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error comparing companies: {str(e)}")
         return jsonify({
             "error": str(e),
             "success": False

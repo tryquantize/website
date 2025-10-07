@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
-import AnimatedShaderBackground from "@/components/ui/animated-shader-background";
+import { Component as AnimatedBackground } from "@/components/ui/raycast-animated-black-background";
 import ResearchLogs from "@/components/ResearchLogs";
 import { useResearchLogs } from "@/hooks/useResearchLogs";
 
@@ -9,6 +9,7 @@ export default function SearchTransition() {
   const [, setLocation] = useLocation();
   const [query, setQuery] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [apiComplete, setApiComplete] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
   
@@ -18,10 +19,13 @@ export default function SearchTransition() {
     const params = new URLSearchParams(window.location.search);
     const searchQuery = params.get('q') || '';
     const types = params.get('types');
+    const locations = params.get('locations');
     const currentSelectedTypes = types ? types.split(',').filter(t => t.trim()) : [];
+    const currentSelectedLocations = locations ? locations.split(',').filter(l => l.trim()) : [];
     
     setQuery(searchQuery);
     setSelectedTypes(currentSelectedTypes);
+    setSelectedLocations(currentSelectedLocations);
 
     if (searchQuery) {
       // Start the search API call
@@ -29,7 +33,8 @@ export default function SearchTransition() {
         query: searchQuery,
         context: {},
         selectedModel: "GPT-4o Mini",
-        selectedTypes: currentSelectedTypes
+        selectedTypes: currentSelectedTypes,
+        selectedLocations: currentSelectedLocations
       }).then(async (response) => {
         const data = await response.json();
         setSearchResults(data);
@@ -52,7 +57,10 @@ export default function SearchTransition() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-8">
-      <AnimatedShaderBackground />
+      {/* Animated Background */}
+      <div className="fixed inset-0 z-0">
+        <AnimatedBackground />
+      </div>
       <div className="max-w-4xl w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-4">Deep Research in Progress</h1>

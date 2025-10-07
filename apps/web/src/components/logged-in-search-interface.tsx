@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Brain, Sparkles, Building2, User, Package, Mic, MicOff, Loader2, Undo } from "lucide-react";
+import { LocationSelector } from "@/components/location-selector";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
@@ -33,6 +34,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const { currentUser } = useFirebaseAuth();
   const [, setLocation] = useLocation();
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
   const [isSearching, setIsSearching] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -222,7 +224,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
         query: searchQuery,
         userId: user?.id,
         selectedModel,
-        selectedTypes: Array.from(selectedTypes)
+        selectedTypes: Array.from(selectedTypes),
+        selectedLocations
       });
       return response.json();
     },
@@ -238,7 +241,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     if (!query.trim()) return;
     
     const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
-    setLocation(`/search-transition?q=${encodeURIComponent(query)}${typesParam}`);
+    const locationsParam = selectedLocations.length > 0 ? `&locations=${selectedLocations.join(',')}` : '';
+    setLocation(`/search-transition?q=${encodeURIComponent(query)}${typesParam}${locationsParam}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -281,26 +285,57 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   ];
 
   const extraSuggestions = [
-    "AI copywriting tool for ad agencies under $2000",
-    "Customer support chatbot for e-commerce stores under $1500",
-    "AI-driven sales forecasting for retail above $5000",
-    "Automated podcast editing software under $3000",
-    "AI resume screening tool for HR teams under $4000",
-    "Machine learning fraud detection for fintech above $7000",
-    "Voice cloning software for content creators under $2500",
-    "AI-powered SEO optimization tool under $1000",
-    "Automated data entry assistant for accountants under $2000",
-    "Predictive inventory management system above $6000",
-    "AI transcription and meeting notes generator under $1500",
-    "Automated social media scheduling tool under $800",
-    "AI-based health diagnostics platform above $9000",
-    "Natural language query analytics tool under $5000",
-    "AI video upscaling tool for filmmakers under $2500",
-    "Automated influencer discovery platform above $4500",
-    "AI brand logo generator for startups under $500",
-    "Speech-to-text API for call centers under $2000",
-    "AI music composition tool for YouTubers under $1500",
-    "Automated real estate listing optimizer under $1000",
+    "AI agent builder",
+    "Autonomous workflow automation",
+    "Generative video studio",
+    "Voice AI assistant",
+    "AI-powered search engine",
+    "Code generation copilot",
+    "AI data analysis",
+    "Personalized learning tutor",
+    "AI document summarizer",
+    "AI-driven CRM assistant",
+    "Real-time speech translator",
+    "Agentic research assistant",
+    "Smart knowledge retrieval",
+    "Multimodal creative generator",
+    "AI email responder",
+    "Voice-to-action agent",
+    "Context-aware chat system",
+    "AI sales outreach",
+    "AI-powered design tool",
+    "Autonomous scheduling agent",
+    "AI business intelligence",
+    "Code review assistant",
+    "Reasoning engine platform",
+    "AI data labeling",
+    "Conversational analytics agent",
+    "AI-driven marketing suite",
+    "Autonomous lead qualifier",
+    "AI website generator",
+    "AI workflow orchestrator",
+    "Agent-powered HR assistant",
+    "AI productivity dashboard",
+    "Real-time transcription agent",
+    "AI-powered customer support",
+    "Synthetic data generator",
+    "AI-driven legal assistant",
+    "Contextual recommendation engine",
+    "Autonomous sales agent",
+    "AI creative ideation tool",
+    "Generative content engine",
+    "Intelligent document parser",
+    "LLM fine-tuning studio",
+    "Voice-based CRM agent",
+    "AI-powered operations hub",
+    "Adaptive tutoring system",
+    "Agentic data researcher",
+    "Smart content optimizer",
+    "AI recruitment assistant",
+    "Knowledge graph generator",
+    "AI business strategist",
+    "Intelligent note summarizer",
+    "Generative audio studio",
   ];
   
   const allSuggestions = [...quickSuggestions, ...extraSuggestions];
@@ -401,7 +436,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                     aria-label="Enhance search prompt"
                     onClick={handlePromptEnhancement}
                     disabled={!query.trim() || isEnhancing || searchMutation.isPending}
-                    className="absolute right-[44px] xs:right-[48px] sm:right-16 top-1/2 -translate-y-1/2 flex h-7 w-7 xs:h-8 xs:w-8 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+                    className="absolute right-[44px] xs:right-[48px] sm:right-16 top-1/2 -translate-y-1/2 flex h-7 w-7 xs:h-8 xs:w-8 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/5 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                   >
                     {isEnhancing ? (
                       <Loader2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5 animate-spin" />
@@ -450,7 +485,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
           {/* Bottom row - Icons - mobile optimized */}
           <div className="relative border-t border-white/10 px-3 xs:px-4 sm:px-6 py-1 h-[30px] xs:h-[32px] sm:h-[34px] md:h-[36px]">
             <div className="flex items-center justify-between">
-              {/* Left - Brain icon with dropdown and selected model - Mobile optimized */}
+              {/* Left - Brain icon, model name, and Location selector - Mobile optimized */}
               <div className="relative flex items-center space-x-1.5 sm:space-x-2">
                 <div className="relative">
                   <button
@@ -458,17 +493,17 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                       e.stopPropagation();
                       setShowModelDropdown(!showModelDropdown);
                     }}
-                    className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors rounded-full border border-white/20 bg-white/5 aspect-square touch-manipulation ${
+                    className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors aspect-square touch-manipulation ${
                       selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
                     }`}
                   >
-                    <Brain className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
+                    <Brain className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-5.5 sm:w-5.5" />
                   </button>
                   
                   {showModelDropdown && (
                     <>
                       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10000]" onClick={() => setShowModelDropdown(false)} />
-                      <div className="absolute top-8 left-0 z-[10001] bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl min-w-[180px] xs:min-w-[200px] max-h-32 xs:max-h-36 overflow-y-auto">
+                      <div className="absolute bottom-8 left-0 z-[10001] bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl min-w-[180px] xs:min-w-[200px] max-h-32 xs:max-h-36 overflow-y-auto">
                         {llmModels.map((model) => (
                           <button
                             key={model}
@@ -490,6 +525,31 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                 </div>
                 
                 <span className="text-xs text-white/70 hidden xs:inline sm:inline truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px]">{selectedModel || "GPT-4o Mini"}</span>
+                
+                <LocationSelector 
+                  selectedLocations={selectedLocations}
+                  onLocationChange={setSelectedLocations}
+                />
+                
+                {selectedLocations.length > 0 && (
+                  <div className="flex flex-wrap gap-1 ml-2">
+                    {selectedLocations.map((location) => (
+                      <div key={location} className="flex items-center bg-white/10 backdrop-blur-sm text-white font-bold px-1 py-0 rounded text-xs border border-white/20 h-[18px]">
+                        <span className="truncate max-w-[60px]">{location.split(',')[0]}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newLocations = selectedLocations.filter(l => l !== location);
+                            setSelectedLocations(newLocations);
+                          }}
+                          className="ml-1 hover:text-red-300 transition-colors text-xs"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Right - Filter buttons - Mobile optimized */}
@@ -500,15 +560,15 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square touch-manipulation ` +
+                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition hover:text-white/80 aspect-square touch-manipulation ` +
                           (selectedTypes.has('company')
-                            ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                            : 'bg-white/5 border-white/20 text-white/90')
+                            ? 'text-yellow-300'
+                            : 'text-white/90')
                         }
                         aria-label="Company"
                         onClick={() => toggleType('company')}
                       >
-                        <Building2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
+                        <Building2 className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-4.5 sm:w-4.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Company</TooltipContent>
@@ -518,15 +578,15 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square touch-manipulation ` +
+                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition hover:text-white/80 aspect-square touch-manipulation ` +
                           (selectedTypes.has('freelancer')
-                            ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                            : 'bg-white/5 border-white/20 text-white/90')
+                            ? 'text-yellow-300'
+                            : 'text-white/90')
                         }
                         aria-label="Freelancer"
                         onClick={() => toggleType('freelancer')}
                       >
-                        <User className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
+                        <User className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-5.5 sm:w-5.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Freelancer</TooltipContent>
@@ -536,15 +596,15 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                     <TooltipTrigger asChild>
                       <button
                         className={
-                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 rounded-full border backdrop-blur-md flex items-center justify-center transition hover:bg-white/10 aspect-square touch-manipulation ` +
+                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition hover:text-white/80 aspect-square touch-manipulation ` +
                           (selectedTypes.has('product')
-                            ? 'bg-yellow-500/10 border-yellow-400/40 text-yellow-300'
-                            : 'bg-white/5 border-white/20 text-white/90')
+                            ? 'text-yellow-300'
+                            : 'text-white/90')
                         }
                         aria-label="Product"
                         onClick={() => toggleType('product')}
                       >
-                        <Package className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-3.5 sm:w-3.5" />
+                        <Package className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-5.5 sm:w-5.5" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>Product</TooltipContent>

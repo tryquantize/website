@@ -1,83 +1,70 @@
-# AI Service Deployment Checklist
+# Local AI Service Setup Checklist
 
 ## ✅ What's Already Done
 
-- [x] AI service code is ready (`ai_service/` directory)
-- [x] Railway deployment files created
-- [x] Backend updated to use Railway AI service URL
-- [x] Frontend configuration prepared
-- [x] Deployment guide created
-- [x] Test script created
+- [x] AI service code is ready (`apps/ai-service/` directory)
+- [x] Backend configured to use local AI service
+- [x] Frontend configuration prepared for local development
+- [x] Development scripts created
 
-## 🔧 What You Need to Do
+## 🔧 Local Setup Steps
 
 ### Step 1: Get API Keys
 - [ ] Get OpenRouter API key from https://openrouter.ai/
 - [ ] Get Exa API key from https://exa.ai/
 
-### Step 2: Install Railway CLI
+### Step 2: Set Up Python Environment
 ```bash
-npm install -g @railway/cli
+cd apps/ai-service
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-### Step 3: Test Locally (Optional)
+### Step 3: Configure Environment Variables
+Create `.env.local` in the root directory:
 ```bash
-cd ai_service
-# Set your API keys in .env file first
-python test_local.py
+OPENROUTER_API_KEY=your_openrouter_key_here
+EXA_API_KEY=your_exa_key_here
+AI_SERVICE_URL=http://localhost:5002
 ```
 
-### Step 4: Deploy to Railway
+### Step 4: Test AI Service
 ```bash
-cd ai_service
-railway login
-railway init
-# Set environment variables:
-railway variables set OPENROUTER_API_KEY=your_key_here
-railway variables set EXA_API_KEY=your_key_here
-railway variables set FLASK_DEBUG=False
-railway up
+cd apps/ai-service
+source venv/bin/activate
+python test_enrichment.py
 ```
 
-### Step 5: Get Railway URL
+### Step 5: Launch Application
 ```bash
-railway status
-# Copy the domain URL (e.g., https://quantize-ai-service-production.up.railway.app)
+# From root directory
+yarn launch
 ```
 
-### Step 6: Update Backend Environment
-Set this environment variable in your main app deployment:
-```
-AI_SERVICE_URL=https://your-railway-url.railway.app
-```
-
-### Step 7: Test Integration
-- [ ] Test search functionality on your website
+### Step 6: Verify Integration
+- [ ] Test search functionality on http://localhost:3001
 - [ ] Verify AI responses are working
-- [ ] Check fallback to traditional search if AI fails
+- [ ] Check AI service health at http://localhost:5002/health
 
-## 🚀 Files Created for Deployment
+## 🚀 Available Services
 
-- `ai_service/railway.json` - Railway configuration
-- `ai_service/Procfile` - Process definition
-- `ai_service/runtime.txt` - Python version
-- `ai_service/deploy.sh` - Deployment script
-- `ai_service/test_local.py` - Local testing script
-- `RAILWAY_DEPLOYMENT_GUIDE.md` - Detailed guide
-- `client/src/config/ai-service.ts` - Frontend config
+- **Main Website**: http://localhost:3001
+- **AI Service**: http://localhost:5002
+- **AI Health Check**: http://localhost:5002/health
 
 ## 🔍 Troubleshooting
 
-1. **Deployment fails**: Check `railway logs`
-2. **Service not responding**: Verify environment variables
-3. **API errors**: Check API keys and credits
-4. **Search not working**: Check AI_SERVICE_URL in main app
+1. **AI service not starting**: Check Python environment and dependencies
+2. **Service not responding**: Verify ports 3001 and 5002 are available
+3. **API errors**: Check API keys in environment variables
+4. **Search not working**: Check AI service is running on port 5002
 
 ## 📊 Expected Results
 
-After successful deployment:
+After successful setup:
 - AI-powered search responses
 - Company/product recommendations
 - Smart suggestions
 - Fallback to traditional search if AI fails
-- No impact on existing functionality
+- All services running locally
