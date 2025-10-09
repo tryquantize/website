@@ -16,7 +16,7 @@ echo "🤖 Starting AI service on port 5002..."
 cd apps/ai-service
 source venv/bin/activate
 export OPENROUTER_API_KEY="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"
-export EXA_API_KEY="15fc1e5f-7f8c-4b06-a8ee-0a0868cb7fb6"
+export EXA_API_KEY="6f5297ca-2851-4af0-b458-4bd461b4dbd1"
 python app.py &
 AI_PID=$!
 cd ../..

@@ -9,12 +9,14 @@ import { apiRequest } from '@/lib/queryClient';
 import { ArrowLeft, Building2, Plus, X } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Component as AnimatedBackground } from "@/components/ui/raycast-animated-black-background";
+import AI_SERVICE_CONFIG from '@/config/ai-service';
 
 
 export default function AddCompanyPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
   
   const [formData, setFormData] = useState({
     companyName: '',
@@ -30,8 +32,8 @@ export default function AddCompanyPage() {
     industriesServed: [] as string[],
     pricingRanges: [] as string[],
     pricingModel: [] as string[],
-    features: [] as string[],
-    useCases: [] as string[],
+    features: '',
+    useCases: '',
     testimonialPage: '',
     logo: null as File | null,
     companyStage: '',
@@ -195,22 +197,30 @@ export default function AddCompanyPage() {
     setIsEnhancing(prev => ({ ...prev, [type]: true }));
     
     try {
-      const response = await apiRequest('POST', '/api/enhance-text', {
-        text: text.trim(),
-        type,
-        context: {
-          companyName: formData.companyName,
-          category: formData.category,
-          description: formData.description
-        }
+      const response = await fetch(AI_SERVICE_CONFIG.getEnhanceTextUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: text.trim(),
+          type,
+          context: {
+            companyName: formData.companyName,
+            category: formData.category,
+            description: formData.description
+          }
+        })
       });
       
       if (response.ok) {
         const result = await response.json();
-        if (result.success) {
+        if (result.success && result.enhancedText) {
           if (type === 'product') setNewProduct(result.enhancedText);
-          if (type === 'feature') setNewFeature(result.enhancedText);
-          if (type === 'useCase') setNewUseCase(result.enhancedText);
+          if (type === 'feature') {
+            setFormData(prev => ({ ...prev, features: result.enhancedText }));
+          }
+          if (type === 'useCase') {
+            setFormData(prev => ({ ...prev, useCases: result.enhancedText }));
+          }
           if (type === 'client') setNewClient(result.enhancedText);
           
           toast({
@@ -218,10 +228,11 @@ export default function AddCompanyPage() {
             description: 'Your text has been improved with AI assistance.',
           });
         } else {
-          throw new Error(result.error || 'Enhancement failed');
+          throw new Error(result.error || result.message || 'Enhancement failed');
         }
       } else {
-        throw new Error('Enhancement request failed');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || errorData.message || `HTTP ${response.status}`);
       }
     } catch (error) {
       toast({
@@ -234,12 +245,98 @@ export default function AddCompanyPage() {
     }
   };
 
+  const handleAutoFill = async () => {
+    if (!formData.companyName || !formData.website) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please enter company name and website before auto-filling.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsAutoFilling(true);
+    
+    try {
+      const response = await fetch(AI_SERVICE_CONFIG.getAutoFillUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyName: formData.companyName,
+          website: formData.website,
+          linkedinPage: formData.linkedinPage || ''
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setFormData(prev => ({
+          ...prev,
+          description: result.data.description || prev.description,
+          category: result.data.category || prev.category,
+          founded: result.data.founded || prev.founded,
+          headquarters: result.data.headquarters || prev.headquarters,
+          employees: result.data.employees || prev.employees,
+          features: result.data.features || prev.features,
+          useCases: result.data.useCases || prev.useCases
+        }));
+        
+        toast({
+          title: 'Success!',
+          description: 'Company details auto-filled successfully.',
+        });
+      } else {
+        toast({
+          title: 'Auto-fill Failed',
+          description: 'Please fill the form manually.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Auto-fill Failed',
+        description: 'Please fill the form manually.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsAutoFilling(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.companyName || !formData.website || !formData.description || !formData.category) {
+      toast({
+        title: 'Missing Required Fields',
+        description: 'Please fill in company name, website, description, and category.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (formData.products.length === 0) {
+      toast({
+        title: 'Products Required',
+        description: 'Please add at least one product or service.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
-      const response = await apiRequest('POST', '/api/add-company', formData);
+      // Remove logo from submission data (can't serialize File objects)
+      const { logo, ...submissionData } = formData;
+      
+      const response = await fetch(AI_SERVICE_CONFIG.getAddCompanyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData)
+      });
       
       if (response.ok) {
         toast({
@@ -248,12 +345,13 @@ export default function AddCompanyPage() {
         });
         setLocation('/');
       } else {
-        throw new Error('Submission failed');
+        const errorData = await response.json().catch(() => ({ error: 'Submission failed' }));
+        throw new Error(errorData.error || 'Submission failed');
       }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to submit company. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to submit company. Please try again.',
         variant: 'destructive'
       });
     } finally {
@@ -306,6 +404,32 @@ export default function AddCompanyPage() {
                   <span className="w-2 h-8 bg-gradient-to-b from-pink-500 to-cyan-500 rounded-full"></span>
                   Company Information
                 </h2>
+                
+                {/* Auto-fill Button */}
+                {formData.companyName && formData.website && (
+                  <div className="mb-6">
+                    <Button
+                      type="button"
+                      onClick={handleAutoFill}
+                      disabled={isAutoFilling}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isAutoFilling ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Auto-filling Details...
+                        </>
+                      ) : (
+                        <>
+                          ✨ Auto-fill Company Details
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-white/60 text-sm mt-2">
+                      Automatically populate remaining fields using your website and LinkedIn page
+                    </p>
+                  </div>
+                )}
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -610,108 +734,58 @@ export default function AddCompanyPage() {
               {/* Features */}
               <div>
                 <label className="block text-white font-medium text-sm mb-3">
-                  Key Features
+                  Key Features *
                   <span className="block text-xs text-white/60 mt-1">
-                    List all key features of your products/services in detail. Include technical capabilities, integrations, performance metrics, and unique selling points. Examples: "Real-time processing with 99.9% uptime", "Multi-language support for 50+ languages", "Enterprise-grade security with SOC 2 compliance"
+                    Describe all key features of your products/services in detail. Include technical capabilities, integrations, performance metrics, and unique selling points in a comprehensive paragraph.
                   </span>
                 </label>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Input
-                        value={newFeature}
-                        onChange={(e) => setNewFeature(e.target.value)}
-                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 pr-20"
-                        placeholder="Enter detailed feature information..."
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('features', newFeature))}
-                      />
-                      {newFeature.trim() && (
-                        <button
-                          type="button"
-                          onClick={() => enhanceText(newFeature, 'feature')}
-                          disabled={isEnhancing.feature}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-lg hover:scale-110 transition-transform disabled:opacity-50"
-                        >
-                          {isEnhancing.feature ? '⏳' : '✨'}
-                        </button>
-                      )}
-                    </div>
-                    <Button
+                <div className="relative">
+                  <Textarea
+                    value={formData.features}
+                    onChange={(e) => handleInputChange('features', e.target.value)}
+                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 pr-12"
+                    placeholder="Describe your key features and capabilities in detail..."
+                    rows={6}
+                  />
+                  {formData.features.trim() && (
+                    <button
                       type="button"
-                      onClick={() => addItem('features', newFeature)}
-                      className="bg-white/10 hover:bg-white/20 text-white"
+                      onClick={() => enhanceText(formData.features, 'feature')}
+                      disabled={isEnhancing.feature}
+                      className="absolute right-3 top-3 text-lg hover:scale-110 transition-transform disabled:opacity-50"
                     >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.features.map((feature, index) => (
-                      <div key={index} className="bg-white/10 rounded-md px-3 py-1 flex items-center gap-2">
-                        <span className="text-white text-sm">{feature}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeItem('features', index)}
-                          className="text-white/60 hover:text-white"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                      {isEnhancing.feature ? '⏳' : '✨'}
+                    </button>
+                  )}
                 </div>
               </div>
 
               {/* Use Cases */}
               <div>
                 <label className="block text-white font-medium text-sm mb-3">
-                  Use Cases
+                  Use Cases *
                   <span className="block text-xs text-white/60 mt-1">
-                    Describe specific use cases and applications for your products/services. Include industry applications, business scenarios, and real-world implementations. Examples: "E-commerce product description generation for 10,000+ SKUs", "Customer service automation reducing response time by 80%", "Medical image analysis for radiology departments"
+                    Describe specific use cases and applications for your products/services. Include industry applications, business scenarios, and real-world implementations in a comprehensive paragraph.
                   </span>
                 </label>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Input
-                        value={newUseCase}
-                        onChange={(e) => setNewUseCase(e.target.value)}
-                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 pr-20"
-                        placeholder="Enter detailed use case information..."
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('useCases', newUseCase))}
-                      />
-                      {newUseCase.trim() && (
-                        <button
-                          type="button"
-                          onClick={() => enhanceText(newUseCase, 'useCase')}
-                          disabled={isEnhancing.useCase}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-lg hover:scale-110 transition-transform disabled:opacity-50"
-                        >
-                          {isEnhancing.useCase ? '⏳' : '✨'}
-                        </button>
-                      )}
-                    </div>
-                    <Button
+                <div className="relative">
+                  <Textarea
+                    value={formData.useCases}
+                    onChange={(e) => handleInputChange('useCases', e.target.value)}
+                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 pr-12"
+                    placeholder="Describe your use cases and applications in detail..."
+                    rows={6}
+                  />
+                  {formData.useCases.trim() && (
+                    <button
                       type="button"
-                      onClick={() => addItem('useCases', newUseCase)}
-                      className="bg-white/10 hover:bg-white/20 text-white"
+                      onClick={() => enhanceText(formData.useCases, 'useCase')}
+                      disabled={isEnhancing.useCase}
+                      className="absolute right-3 top-3 text-lg hover:scale-110 transition-transform disabled:opacity-50"
                     >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.useCases.map((useCase, index) => (
-                      <div key={index} className="bg-white/10 rounded-md px-3 py-1 flex items-center gap-2">
-                        <span className="text-white text-sm">{useCase}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeItem('useCases', index)}
-                          className="text-white/60 hover:text-white"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                      {isEnhancing.useCase ? '⏳' : '✨'}
+                    </button>
+                  )}
                 </div>
               </div>
 

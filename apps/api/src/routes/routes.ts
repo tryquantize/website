@@ -515,6 +515,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Company auto-fill route
+  app.post("/api/auto-fill-company", async (req, res) => {
+    try {
+      const { companyName, website, linkedinPage } = req.body;
+      
+      if (!companyName || !website) {
+        return res.status(400).json({
+          success: false,
+          error: "Company name and website are required"
+        });
+      }
+      
+      // Call Python AI service for auto-fill
+      const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5002';
+      
+      try {
+        const aiResponse = await fetch(`${aiServiceUrl}/auto-fill-company`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ companyName, website, linkedinPage })
+        });
+
+        if (!aiResponse.ok) {
+          throw new Error(`AI service responded with status: ${aiResponse.status}`);
+        }
+
+        const result = await aiResponse.json();
+        res.json(result);
+      } catch (aiError) {
+        console.error('Company auto-fill error:', aiError);
+        res.status(500).json({ 
+          success: false,
+          error: "Failed to auto-fill company details. Please try again."
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        error: "Company auto-fill failed" 
+      });
+    }
+  });
+
   // Analytics routes
   app.get("/api/tools/:id/analytics", async (req, res) => {
     try {

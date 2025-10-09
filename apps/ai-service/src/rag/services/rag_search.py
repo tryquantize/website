@@ -163,7 +163,6 @@ class RAGSearchService:
                 "topClients": top_clients,
                 "logoUrl": logo_url,
                 "enhancedAbout": enhanced_about,
-
                 "phoneNumber": phone_number,
                 "linkedin_url": linkedin_url
             })
@@ -191,12 +190,21 @@ class RAGSearchService:
         features_text = company_data.get('features', '')
         features = []
         
+        # Split by lines and look for bullet points or numbered items
         for line in features_text.split('\n'):
             line = line.strip()
-            if line.startswith('-') or line.startswith('•'):
-                feature = line.lstrip('-•').strip()
-                if feature:
+            if line.startswith('-') or line.startswith('•') or line.startswith('*'):
+                feature = line.lstrip('-•*').strip()
+                if feature and len(feature) > 5:  # Ensure it's a meaningful feature
                     features.append(feature)
+            elif line and not line.startswith('Features:') and len(line) > 10:
+                # If it's a standalone line that looks like a feature
+                features.append(line)
+        
+        # If no bullet points found, try to split by sentences or periods
+        if not features and features_text:
+            sentences = [s.strip() for s in features_text.replace('Features:', '').split('.') if s.strip() and len(s.strip()) > 10]
+            features = sentences[:3]
         
         return features[:3] if features else ["AI-powered solutions", "Easy integration", "Professional support"]
     
@@ -314,11 +322,12 @@ class RAGSearchService:
     
     def _extract_pricing_ranges(self, company_data: Dict[str, str]) -> List[str]:
         """Extract pricing ranges from RAG data"""
-        pricing_text = company_data.get('pricing', '')
-        for line in pricing_text.split('\n'):
+        info_text = company_data.get('company_info', '')
+        for line in info_text.split('\n'):
             if line.startswith('Pricing Ranges:'):
                 ranges_str = line.replace('Pricing Ranges:', '').strip()
-                return [range_item.strip() for range_item in ranges_str.split(',') if range_item.strip()]
+                if ranges_str:
+                    return [ranges_str]  # Return as single item to avoid splitting on commas within price ranges
         return []
     
     def _extract_pricing_model(self, company_data: Dict[str, str]) -> List[str]:

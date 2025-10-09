@@ -251,6 +251,40 @@ def enhance_text():
             "success": False
         }), 500
 
+@app.route('/auto-fill-company', methods=['POST'])
+def auto_fill_company():
+    """Auto-fill company details from website and LinkedIn"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'companyName' not in data or 'website' not in data:
+            return jsonify({
+                "error": "Company name and website are required",
+                "success": False
+            }), 400
+        
+        company_name = data['companyName']
+        website_url = data['website']
+        linkedin_url = data.get('linkedinPage', '')
+        
+        logger.info(f"Auto-filling company: {company_name}")
+        
+        # Import and use real auto-fill service
+        from services.company_autofill import CompanyAutoFillService
+        autofill_service = CompanyAutoFillService()
+        
+        result = autofill_service.auto_fill_company(company_name, website_url, linkedin_url)
+        
+        status_code = 200 if result['success'] else 400
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        logger.error(f"Error auto-filling company: {str(e)}")
+        return jsonify({
+            "error": str(e),
+            "success": False
+        }), 500
+
 
 
 @app.errorhandler(404)

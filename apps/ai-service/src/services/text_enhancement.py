@@ -37,7 +37,7 @@ class TextEnhancementService:
                         "content": prompt
                     }
                 ],
-                max_tokens=500,
+                max_tokens=self._get_max_tokens(text_type),
                 temperature=0.7
             )
             
@@ -59,6 +59,15 @@ class TextEnhancementService:
                 'success': False,
                 'error': f'Enhancement failed: {str(e)}'
             }
+    
+    def _get_max_tokens(self, text_type: str) -> int:
+        """Get appropriate max tokens based on text type"""
+        if text_type == 'product':
+            return 50  # One line for products
+        elif text_type in ['feature', 'useCase']:
+            return 400  # 200-300 words for features and use cases
+        else:
+            return 100  # Default
     
     def _create_enhancement_prompt(self, text: str, text_type: str, context: Dict[str, Any]) -> str:
         """Create a context-aware prompt for text enhancement"""
@@ -87,7 +96,7 @@ Please improve this by:
 2. Adding technical capabilities where appropriate
 3. Highlighting unique value propositions
 4. Using professional business language
-5. Keeping it concise but informative (max 2-3 sentences)
+5. Keeping it concise but informative (ONE LINE ONLY, maximum 15 words)
 
 Enhanced version:"""
         
@@ -104,7 +113,7 @@ Please improve this by:
 2. Explaining the business value or benefit
 3. Using professional terminology
 4. Making it more concrete and measurable
-5. Keeping it concise (max 2 sentences)
+5. Creating a comprehensive 200-300 word paragraph with detailed explanations
 
 Enhanced version:"""
         
@@ -121,7 +130,7 @@ Please improve this by:
 2. Including quantifiable benefits or outcomes
 3. Making it more concrete with real-world applications
 4. Using professional business language
-5. Highlighting the problem it solves (max 2-3 sentences)
+5. Creating a comprehensive 200-300 word paragraph with detailed use case scenarios
 
 Enhanced version:"""
         

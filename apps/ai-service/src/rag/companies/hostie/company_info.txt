@@ -1,0 +1,18 @@
+Company: Hostie
+Founded: 
+Headquarters: 
+Description: Hostie is an innovative hospitality technology company that provides virtual concierge services for restaurants and hospitality groups nationwide. The company specializes in automated communication solutions that ensure no customer interaction goes unanswered. Their AI-powered platform handles calls, texts, and inquiries in each restaurant's unique voice, enabling staff to focus on in-person service while maximizing every potential revenue opportunity. Hostie's solution addresses the critical challenge of missed calls and lost reservations in the restaurant industry, helping establishments increase their guest capture rate and boost revenue. The platform serves as a complement to existing staff, enhancing operational efficiency while maintaining personalized guest interactions. Their technology has demonstrated significant impact, as evidenced by their work with Burma Food Group where they achieved a 141% increase in over-the-phone covers.
+Website: https://hostie.ai/
+LinkedIn: https://www.linkedin.com/company/hostie-ai/
+Phone: +14154814782
+Category: Hospitality Technology
+Employees: 
+Company Stage: Seed
+Industries Served: Restaurants, Hospitality Groups
+Pricing Ranges: $500-$1,000
+Pricing Models: 
+Top Clients: Burma Food Group
+
+Products/Services:
+- Virtual Concierge - AI-powered system that answers calls, texts, and questions in restaurant's voice
+- Automated Restaurant Communication Platform - Handles reservations and guest inquiries

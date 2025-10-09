@@ -17,7 +17,16 @@ const AI_SERVICE_CONFIG = {
   getSearchUrl: () => `${AI_SERVICE_CONFIG.getServiceUrl()}/search`,
   
   // Suggestions endpoint
-  getSuggestionsUrl: () => `${AI_SERVICE_CONFIG.getServiceUrl()}/suggestions`
+  getSuggestionsUrl: () => `${AI_SERVICE_CONFIG.getServiceUrl()}/suggestions`,
+  
+  // Auto-fill endpoint
+  getAutoFillUrl: () => `${AI_SERVICE_CONFIG.getServiceUrl()}/auto-fill-company`,
+  
+  // Add company endpoint
+  getAddCompanyUrl: () => `${AI_SERVICE_CONFIG.getServiceUrl()}/add-company`,
+  
+  // Enhance text endpoint
+  getEnhanceTextUrl: () => `${AI_SERVICE_CONFIG.getServiceUrl()}/enhance-text`
 };
 
 export default AI_SERVICE_CONFIG;

@@ -72,14 +72,16 @@ STRICT FORMATTING RULES:
 2. Use ONLY information from the data below - NO external knowledge
 3. Write conversationally as if speaking to a business colleague
 4. NO raw data dumps or technical formatting
-5. Keep response under 120 words
+5. Keep response between 80-150 words
 6. Focus on the most relevant companies for the query
+7. Always start with a direct answer to the user's query
+8. Mention specific company names and their key capabilities
 
 USER QUERY: {query}
 
 {rag_context}
 
-Write a helpful, conversational paragraph that directly answers the user's query using the company information above. Make it sound natural and professional.
+Write a helpful, conversational response that directly answers the user's query using the company information above. Start with "Based on our database, here are some great options for {query.lower()}..." and make it sound natural and professional.
 
 Response:"""
     
@@ -123,27 +125,16 @@ Response:"""
     def _fallback_formatting(self, query: str, matching_companies: List[Dict[str, Any]]) -> str:
         """Simple fallback formatting when LLM fails"""
         if not matching_companies:
-            return "No companies found in our database matching your query."
+            return f"I couldn't find any companies in our database that specifically match '{query}'. This might be because your search is very specific or the companies you're looking for aren't in our current database. Try using broader terms or enable web search for more comprehensive results."
         
-        response = f"Found {len(matching_companies)} companies in our database for '{query}':\n\n"
+        company_names = [company.get('company_name', 'Unknown') for company in matching_companies[:3]]
         
-        for company in matching_companies[:5]:  # Top 5 companies
-            company_name = company.get('company_name', 'Unknown')
-            company_data = company.get('data', {})
-            
-            response += f"• {company_name}: "
-            
-            # Add brief description
-            company_info = company_data.get('company_info', '')
-            if 'Description:' in company_info:
-                desc_line = [line for line in company_info.split('\n') if line.startswith('Description:')]
-                if desc_line:
-                    description = desc_line[0].replace('Description:', '').strip()
-                    response += description[:100] + "...\n"
-            else:
-                response += "AI company providing innovative solutions.\n"
-        
-        return response
+        if len(company_names) == 1:
+            return f"Based on our database, {company_names[0]} is a great option for {query.lower()}. They specialize in AI-powered solutions and can help with your requirements. Check out their details in the company cards below for more information about their features and pricing."
+        elif len(company_names) == 2:
+            return f"Based on our database, {company_names[0]} and {company_names[1]} are excellent options for {query.lower()}. Both companies offer specialized AI solutions that can meet your needs. Review their company cards below to compare features, pricing, and capabilities."
+        else:
+            return f"Based on our database, we found several great options for {query.lower()} including {company_names[0]}, {company_names[1]}, and {company_names[2]}. These companies offer various AI-powered solutions that can help with your requirements. Check out their detailed information in the company cards below to find the best fit for your needs."
     
     def format_company_comparison(self, companies: List[Dict[str, Any]]) -> str:
         """Format company comparison using only RAG data"""

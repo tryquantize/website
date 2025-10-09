@@ -1,0 +1,17 @@
+Company: Vapi
+Founded: 
+Headquarters: San Francisco, California
+Description: Vapi.ai is an advanced AI-powered communication solution that transforms business communications through virtual phone systems.
+Website: https://vapi.ai/
+LinkedIn: https://www.linkedin.com/company/vapi-ai/
+Phone: 
+Category: Software Development
+Employees: 12,130
+Company Stage: Series A
+Industries Served: Healthcare, Fintech, EdTech, Retail, E-commerce, SaaS, Real Estate
+Pricing Ranges: $100-$500
+Pricing Models: Subscription, Freemium
+Top Clients: 
+
+Products/Services:
+- Vapi.ai revolutionizes communication with intelligent virtual phone systems for seamless, efficient business interactions.

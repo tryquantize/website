@@ -1,0 +1,17 @@
+Company: Easecruit
+Founded: 
+Headquarters: Gurgaon, Haryana
+Description: Easecruit is a recruitment software company that aims to revolutionize the hiring process by providing powerful tools to streamline and collaborate in finding exceptional talent.
+Website: https://www.linkedin.com/company/easecruit/about/
+LinkedIn: https://www.easecruit.com/ 
+Phone: 
+Category: Staffing and Recruiting
+Employees: 2-10
+Company Stage: Seed
+Industries Served: SaaS, Fintech, EdTech, HR, Recruitment
+Pricing Ranges: <$100
+Pricing Models: Subscription
+Top Clients: 
+
+Products/Services:
+- Recruitment software for streamlining hiring processes

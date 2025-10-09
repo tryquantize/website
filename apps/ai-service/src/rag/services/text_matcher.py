@@ -8,12 +8,10 @@ class TextMatcher:
     def __init__(self):
         self.stop_words = {
             'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
-            'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-            'ai', 'tool', 'tools', 'platform', 'solution', 'solutions', 'company',
-            'business', 'software', 'service', 'services', 'technology', 'tech'
+            'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being'
         }
         # Minimum score threshold to filter out irrelevant results
-        self.min_score_threshold = 5.0
+        self.min_score_threshold = 1.0
     
     def find_matching_companies(self, query: str, companies_data: Dict[str, Dict[str, Any]], 
                               selected_types: List[str] = None) -> List[Dict[str, Any]]:
@@ -101,19 +99,30 @@ class TextMatcher:
             if word_found:
                 matched_words += 1
         
-        # 4. Require a minimum percentage of query words to match
+        # 4. Special handling for general AI queries
+        ai_keywords = ['ai', 'artificial', 'intelligence', 'machine', 'learning', 'ml', 'tool', 'tools', 'platform', 'software']
+        if any(word.lower() in ai_keywords for word in query_words):
+            # For AI-related queries, be more lenient
+            if any(keyword in searchable_text for keyword in ['ai', 'artificial intelligence', 'machine learning', 'platform', 'tool']):
+                score += 2.0
+        
+        # 5. Require a minimum percentage of query words to match (but be more lenient for short queries)
         if total_words > 0:
             match_percentage = matched_words / total_words
-            if match_percentage < 0.5:  # Less than 50% of words match
-                score *= 0.3  # Heavily penalize
+            if total_words <= 2:  # Short queries (1-2 words)
+                if match_percentage < 0.3:  # 30% threshold for short queries
+                    score *= 0.5
+            else:  # Longer queries
+                if match_percentage < 0.5:  # 50% threshold for longer queries
+                    score *= 0.3
         
-        # 5. Boost for company name matches
+        # 6. Boost for company name matches
         company_name = company_data.get('folder_name', '').lower()
         for word in query_words:
             if word.lower() in company_name:
                 score += 10.0
         
-        # 6. Boost for category relevance
+        # 7. Boost for category relevance
         category_info = self._extract_category_from_info(company_info)
         for word in query_words:
             if word.lower() in category_info.lower():

@@ -1,12 +1,3 @@
-/* File Overview
-  Path: client/src/components/ui/toast.tsx
-  Purpose: Reusable UI primitives (largely Shadcn + Radix wrappers) with Tailwind styling.
-
-  Reading tip for newcomers:
-  - Scan the exports at the bottom to see what the rest of the app imports from here
-  - Follow the data flow via function parameters and return values
-*/
-
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -38,7 +29,7 @@ const toastVariants = cva(
       variant: {
         default: "border bg-background text-foreground",
         destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
+          "destructive border-destructive bg-destructive text-destructive-foreground",
       },
     },
     defaultVariants: {
