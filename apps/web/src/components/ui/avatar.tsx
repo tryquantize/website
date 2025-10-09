@@ -1,12 +1,3 @@
-/* File Overview
-  Path: client/src/components/ui/avatar.tsx
-  Purpose: Reusable UI primitives (largely Shadcn + Radix wrappers) with Tailwind styling.
-
-  Reading tip for newcomers:
-  - Scan the exports at the bottom to see what the rest of the app imports from here
-  - Follow the data flow via function parameters and return values
-*/
-
 "use client"
 
 import * as React from "react"
@@ -22,7 +13,7 @@ const Avatar = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
-      className
+      className,
     )}
     {...props}
   />
@@ -49,7 +40,7 @@ const AvatarFallback = React.forwardRef<
     ref={ref}
     className={cn(
       "flex h-full w-full items-center justify-center rounded-full bg-muted",
-      className
+      className,
     )}
     {...props}
   />

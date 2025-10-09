@@ -114,9 +114,6 @@ The application will be available at:
 Create `.env.local` with:
 
 ```bash
-# Database (optional - uses memory storage if not set)
-DATABASE_URL=your_postgres_url
-
 # AI Service
 OPENROUTER_API_KEY=your_openrouter_key
 EXA_API_KEY=your_exa_key
@@ -143,7 +140,7 @@ PORT=3001
 
 ### Backend (Express + TypeScript)
 - **Framework**: Express.js with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM (fallback to memory)
+- **Storage**: In-memory storage for development
 - **Authentication**: JWT + bcrypt
 - **API**: RESTful endpoints
 

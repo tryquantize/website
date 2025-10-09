@@ -4,6 +4,7 @@ from typing import Dict, List, Any
 from config.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, AI_MODEL, SYSTEM_PROMPT, MODEL_MAPPING, COMPANY_SYSTEM_PROMPT, FREELANCER_SYSTEM_PROMPT, PRODUCT_SYSTEM_PROMPT
 from services.exa_search import ExaSearchService
 from services.company_enrichment import CompanyEnrichmentAgent
+from rag.services.rag_search import RAGSearchService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,20 +17,31 @@ class AISearchAgent:
         self.system_prompt = SYSTEM_PROMPT
         self.exa_search = ExaSearchService()
         self.enrichment_agent = CompanyEnrichmentAgent()
+        self.rag_service = RAGSearchService()
     
-    def search_ai_tools(self, query: str, context: Dict[str, Any] = None, selected_model: str = None, selected_types: List[str] = None, selected_locations: List[str] = None) -> Dict[str, Any]:
+    def search_ai_tools(self, query: str, context: Dict[str, Any] = None, selected_model: str = None, selected_types: List[str] = None, selected_locations: List[str] = None, web_search_enabled: bool = False) -> Dict[str, Any]:
         """
         Main search function that processes user queries and returns AI-generated recommendations
         """
         try:
-            # Perform web search using Exa
-            web_search_results = self._perform_web_search(query, selected_types)
+            logger.info(f"Search request - Query: '{query}', Web search enabled: {web_search_enabled}")
+            
+            # Use RAG search when web search is disabled
+            if not web_search_enabled:
+                logger.info(f"Web search is OFF - Using RAG search for query: {query}")
+                return self.rag_service.search(query, selected_types, selected_locations)
+            
+            # Use web search when enabled
+            logger.info(f"Web search is ON - Using Exa web search for query: {query}")
+            
+            # Perform web search using Exa with location filtering
+            web_search_results = self._perform_web_search_with_locations(query, selected_types, selected_locations)
             
             # Determine which system prompt to use based on selected types
             system_prompt = self._get_system_prompt(selected_types)
             
             # Prepare the user message with context and web results
-            user_message = self._prepare_user_message(query, context, selected_types, web_search_results, selected_locations)
+            user_message = self._prepare_user_message(query, context, selected_types, web_search_results, selected_locations, web_search_enabled)
             
             # Determine which model to use
             model_to_use = MODEL_MAPPING.get(selected_model, self.model) if selected_model else self.model
@@ -48,9 +60,9 @@ class AISearchAgent:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_message}
                 ],
-                "temperature": 0.9,  # Higher temperature for faster responses
-                "max_tokens": 1500,  # Reduced tokens for faster processing
-                "stream": True       # Enable streaming for faster perceived response
+                "temperature": 0.9,
+                "max_tokens": 1500,
+                "stream": True
             }
             
             response = requests.post(
@@ -83,7 +95,6 @@ class AISearchAgent:
             
             # Store citations for frontend access
             citations_data = web_search_results.get("citations", []) if web_search_results.get("success") else []
-            ai_response_with_citations = ai_response
             
             # Generate related search suggestions
             suggestions = self._generate_search_suggestions(query, ai_response, model_to_use)
@@ -96,18 +107,17 @@ class AISearchAgent:
             fallback_companies = [c for c in companies if c.get('website') == '#']
             
             if real_companies:
-                enriched_real = self.enrichment_agent.enrich_company_data(real_companies, query, selected_locations)
+                enriched_real = self.enrichment_agent.enrich_company_data(real_companies, query, selected_locations, web_search_enabled)
                 companies = enriched_real + fallback_companies
-            # If no real companies, skip enrichment entirely
             
             return {
                 "query": query,
-                "aiResponse": ai_response_with_citations,
+                "aiResponse": ai_response,
                 "suggestions": suggestions,
                 "companies": companies,
                 "citations": citations_data,
                 "model_used": model_to_use,
-                "web_search_used": web_search_results.get("success", False),
+                "web_search_used": True,
                 "success": True
             }
             
@@ -128,41 +138,43 @@ class AISearchAgent:
                 "companies": fallback_companies,
                 "citations": [],
                 "model_used": self.model,
-                "web_search_used": False,
+                "web_search_used": web_search_enabled,
                 "success": True
             }
     
-    def _perform_web_search(self, query: str, selected_types: List[str] = None) -> Dict[str, Any]:
+    def _perform_web_search_with_locations(self, query: str, selected_types: List[str] = None, selected_locations: List[str] = None) -> Dict[str, Any]:
         """
-        Perform web search based on query and selected types
+        Perform web search based on query, selected types, and locations
         """
         try:
             if selected_types and len(selected_types) == 1:
                 if 'company' in selected_types:
-                    return self.exa_search.search_for_companies(query)
+                    return self.exa_search.search_for_companies(query, selected_locations)
                 elif 'freelancer' in selected_types:
                     return self.exa_search.search_for_freelancers(query)
                 elif 'product' in selected_types:
                     return self.exa_search.search_for_products(query)
             
-            # Default general search
-            return self.exa_search.search_web(query)
+            # Default general search with location filtering
+            return self.exa_search.search_web(query, locations=selected_locations)
             
         except Exception as e:
             logger.error(f"Web search failed: {str(e)}")
             return {"success": False, "error": str(e), "results": [], "citations": []}
     
-    def _prepare_user_message(self, query: str, context: Dict[str, Any] = None, selected_types: List[str] = None, web_search_results: Dict[str, Any] = None, selected_locations: List[str] = None) -> str:
+    def _prepare_user_message(self, query: str, context: Dict[str, Any] = None, selected_types: List[str] = None, web_search_results: Dict[str, Any] = None, selected_locations: List[str] = None, web_search_enabled: bool = False) -> str:
         """
         Prepare the user message with additional context and web search results
         """
         message = f"User Query: {query}"
         
-        # Add web search context if available
-        if web_search_results and web_search_results.get("success"):
+        # Add web search context if available and enabled
+        if web_search_enabled and web_search_results and web_search_results.get("success"):
             web_context = self.exa_search.format_search_context(web_search_results)
             message += f"\n\n{web_context}"
             message += "\n\nIMPORTANT: When writing your response, include citation numbers [1], [2], [3], etc. when referencing information from the above sources."
+        elif not web_search_enabled:
+            message += "\n\nNote: Web search is disabled. Provide responses based on your training data only."
         # Add filter information
         if selected_types and len(selected_types) > 0:
             if len(selected_types) == 1:

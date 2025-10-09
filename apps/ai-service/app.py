@@ -63,14 +63,16 @@ def ai_search():
         selected_model = data.get('selectedModel')
         selected_types = data.get('selectedTypes', [])
         selected_locations = data.get('selectedLocations', [])
+        web_search_enabled = data.get('webSearchEnabled', False)
         
         logger.info(f"Processing search query: {query} with model: {selected_model}, types: {selected_types}, locations: {selected_locations}")
+        logger.info(f"Web search enabled: {web_search_enabled} (type: {type(web_search_enabled)})")
         logger.info(f"Selected types type: {type(selected_types)}, length: {len(selected_types) if selected_types else 0}")
         logger.info(f"Selected locations type: {type(selected_locations)}, length: {len(selected_locations) if selected_locations else 0}")
         logger.info(f"Full request data: {data}")
         
         # Process the search using AI agent
-        result = ai_agent.search_ai_tools(query, context, selected_model, selected_types, selected_locations)
+        result = ai_agent.search_ai_tools(query, context, selected_model, selected_types, selected_locations, web_search_enabled)
         
         # Return the result
         status_code = 200 if result['success'] else 500
@@ -176,6 +178,40 @@ def compare_companies():
         
     except Exception as e:
         logger.error(f"Error comparing companies: {str(e)}")
+        return jsonify({
+            "error": str(e),
+            "success": False
+        }), 500
+
+@app.route('/add-company', methods=['POST'])
+def add_company():
+    """Add a new company to RAG database"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                "error": "Company data is required",
+                "success": False
+            }), 400
+        
+        logger.info(f"Adding company: {data.get('companyName', 'Unknown')}")
+        
+        # Import and use company submission service
+        from services.company_submission import CompanySubmissionService
+        submission_service = CompanySubmissionService()
+        
+        result = submission_service.submit_company(data)
+        
+        if result['success']:
+            # Reload RAG data to include new company
+            ai_agent.rag_service.reload_data()
+        
+        status_code = 200 if result['success'] else 400
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        logger.error(f"Error adding company: {str(e)}")
         return jsonify({
             "error": str(e),
             "success": False

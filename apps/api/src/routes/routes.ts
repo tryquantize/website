@@ -292,7 +292,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Search routes
   app.post("/api/search", async (req, res) => {
     try {
-      const { query, userId, context, selectedModel, selectedTypes } = req.body;
+      const { query, userId, context, selectedModel, selectedTypes, webSearchEnabled } = req.body;
+      
+      console.log('Backend received search request:');
+      console.log('- Query:', query);
+      console.log('- Web Search Enabled:', webSearchEnabled, '(type:', typeof webSearchEnabled, ')');
+      console.log('- Selected Types:', selectedTypes);
       
       // Record the search
       const searchData = {
@@ -319,8 +324,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             context: context || {},
             selectedModel,
             selectedTypes: selectedTypes || [],
-            selectedLocations: req.body.selectedLocations || []
+            selectedLocations: req.body.selectedLocations || [],
+            webSearchEnabled: webSearchEnabled || false
           })
+        });
+        
+        console.log('Sent to AI service:', {
+          query,
+          webSearchEnabled: webSearchEnabled || false,
+          selectedTypes: selectedTypes || []
         });
 
         if (!aiResponse.ok) {
@@ -417,6 +429,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Tool rejected successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to reject tool" });
+    }
+  });
+
+  // Company submission route
+  app.post("/api/add-company", async (req, res) => {
+    try {
+      const formData = req.body;
+      
+      // Call Python AI service to create company folder
+      const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5002';
+      
+      try {
+        const aiResponse = await fetch(`${aiServiceUrl}/add-company`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+
+        if (!aiResponse.ok) {
+          throw new Error(`AI service responded with status: ${aiResponse.status}`);
+        }
+
+        const result = await aiResponse.json();
+        res.json(result);
+      } catch (aiError) {
+        console.error('Company submission error:', aiError);
+        res.status(500).json({ 
+          success: false,
+          message: "Failed to submit company. Please try again."
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        message: "Company submission failed" 
+      });
     }
   });
 

@@ -1,5 +1,11 @@
-import { Component } from "@/components/ui/raycast-animated-black-background";
+import {Sidebar} from "@/components/ui/modern-side-bar";
 
-export default function DemoOne() {
-  return <Component />;
-}
+const DemoOne = () => {
+  return(
+    <div className="flex h-screen w-screen">
+    <Sidebar />
+    </div>
+  );
+};
+
+export { DemoOne };

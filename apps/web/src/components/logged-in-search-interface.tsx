@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Brain, Sparkles, Building2, User, Package, Mic, MicOff, Loader2, Undo } from "lucide-react";
+import { Search, Brain, Sparkles, Building2, User, Package, Mic, MicOff, Loader2, Undo, Globe } from "lucide-react";
 import { LocationSelector } from "@/components/location-selector";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -43,6 +43,9 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showScrollSuggestions, setShowScrollSuggestions] = useState(false);
+  
+  // WEB SEARCH TOGGLE STATE
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   
   // PROMPT ENHANCEMENT STATE
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -225,7 +228,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
         userId: user?.id,
         selectedModel,
         selectedTypes: Array.from(selectedTypes),
-        selectedLocations
+        selectedLocations,
+        webSearchEnabled
       });
       return response.json();
     },
@@ -242,7 +246,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     
     const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
     const locationsParam = selectedLocations.length > 0 ? `&locations=${selectedLocations.join(',')}` : '';
-    setLocation(`/search-transition?q=${encodeURIComponent(query)}${typesParam}${locationsParam}`);
+    const webSearchParam = webSearchEnabled ? '&websearch=true' : '&websearch=false';
+    setLocation(`/search-transition?q=${encodeURIComponent(query)}${typesParam}${locationsParam}${webSearchParam}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -387,7 +392,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6">
+    <div className="fixed inset-0 flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6">
       {/* Welcome Message - Mobile optimized */}
       <div className={`text-center transition-all duration-1000 ease-out mb-4 xs:mb-6 ${
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
@@ -525,6 +530,23 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                 </div>
                 
                 <span className="text-xs text-white/70 hidden xs:inline sm:inline truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px]">{selectedModel || "GPT-4o Mini"}</span>
+                
+                {/* Web Search Toggle - Before Location */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                        className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors aspect-square touch-manipulation ${
+                          webSearchEnabled ? 'text-green-400' : 'text-white/90'
+                        }`}
+                      >
+                        <Globe className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-4.5 sm:w-4.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Web Search {webSearchEnabled ? 'ON' : 'OFF'}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 
                 <LocationSelector 
                   selectedLocations={selectedLocations}

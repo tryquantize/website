@@ -72,8 +72,13 @@ export function Header() {
   const { navigateWithLoading } = useNavigation();
   
   const handleFirebaseLogout = async () => {
-    await firebaseSignOut();
-    setLocation('/');
+    try {
+      await firebaseSignOut();
+      logout(); // Clear Zustand auth state
+      setLocation('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
   const [location, setLocation] = useLocation();
   const isResultsPage = location === '/results';

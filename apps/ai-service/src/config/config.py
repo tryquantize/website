@@ -7,11 +7,11 @@ load_dotenv('../../.env.local')  # Load from root directory
 load_dotenv('.env')  # Load from ai-service directory
 
 # OpenRouter API Configuration - use working keys from dev.sh
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 # Exa Search API Configuration - use working keys from dev.sh
-EXA_API_KEY = os.getenv("EXA_API_KEY") or "bb63ee49-9dc5-441c-b890-f21dcbff4092"
+EXA_API_KEY = os.getenv("EXA_API_KEY") or "15fc1e5f-7f8c-4b06-a8ee-0a0868cb7fb6"
 EXA_BASE_URL = "https://api.exa.ai"
 
 # AI Model Configuration

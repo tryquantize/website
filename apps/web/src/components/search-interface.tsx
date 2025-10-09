@@ -22,7 +22,7 @@ import { AnimatedSearchBar } from "@/components/ui/animated-search-bar"; // Enha
 import { LoadingSpinner } from "@/components/ui/loading-spinner";    // Premium loading animations
 
 // Icons from Lucide React
-import { Search, Lightbulb, Sparkles, Wrench, Building2, Package, User, TrendingUp, Brain, ChevronDown, Loader2, Undo } from "lucide-react";
+import { Search, Lightbulb, Sparkles, Wrench, Building2, Package, User, TrendingUp, Brain, ChevronDown, Loader2, Undo, Globe } from "lucide-react";
 import { LocationSelector } from "@/components/location-selector";
 
 // Data fetching and API
@@ -104,6 +104,9 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
   // MODEL SELECTION STATE
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
+  
+  // WEB SEARCH TOGGLE STATE
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   
   // PROMPT ENHANCEMENT STATE
   const [isEnhancing, setIsEnhancing] = useState(false);           // Enhancement loading state
@@ -310,7 +313,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         userId: user?.id,                                         // User ID for personalization
         selectedModel,                                            // Selected LLM model
         selectedTypes: Array.from(selectedTypes),                // Selected filter types
-        selectedLocations                                         // Selected locations
+        selectedLocations,                                        // Selected locations
+        webSearchEnabled                                          // Web search toggle state
       });
       return response.json();                                   // Parse JSON response
     },
@@ -347,7 +351,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     // Navigate directly to results page
     const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
     const locationsParam = selectedLocations.length > 0 ? `&locations=${selectedLocations.join(',')}` : '';
-    setLocation(`/results?q=${encodeURIComponent(query)}${typesParam}${locationsParam}`);
+    const webSearchParam = webSearchEnabled ? '&websearch=true' : '&websearch=false';
+    setLocation(`/results?q=${encodeURIComponent(query)}${typesParam}${locationsParam}${webSearchParam}`);
   };
 
   /**
@@ -537,11 +542,10 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
   }
 
   return (
-    <div className={`transition-all duration-1500 ease-out ${
-      isSearching 
-        ? 'max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[70vh]'
-        : 'max-w-5xl mx-auto flex flex-col items-center justify-center min-h-[70vh]'
-    }`}>
+    <div className="fixed inset-0 flex flex-col items-center justify-center px-4">
+      <div className={`transition-all duration-1500 ease-out max-w-5xl w-full flex flex-col items-center justify-center ${
+        isSearching ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}>
       {/* Centered hero - Mobile optimized */}
       <div className={`text-center transition-all duration-1000 ease-out px-4 sm:px-6 ${
         isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'mb-0 opacity-100 scale-100 translate-y-0'
@@ -690,6 +694,23 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                 </div>
                 
                 <span className="text-xs text-white/70 hidden xs:inline sm:inline truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px]">{selectedModel || "GPT-4o Mini"}</span>
+                
+                {/* Web Search Toggle - Before Location */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                        className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors aspect-square touch-manipulation ${
+                          webSearchEnabled ? 'text-green-400' : 'text-white/90'
+                        }`}
+                      >
+                        <Globe className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-4.5 sm:w-4.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Web Search {webSearchEnabled ? 'ON' : 'OFF'}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 
                 <LocationSelector 
                   selectedLocations={selectedLocations}
@@ -847,6 +868,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

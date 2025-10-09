@@ -1,0 +1,8 @@
+Company: OpenAI
+Founded: 2015
+Headquarters: San Francisco, CA
+Products: ChatGPT, GPT-4, DALL-E, Whisper
+Description: AI research company focused on safe AGI
+Website: https://openai.com
+Category: AI Platform
+Employees: 500+

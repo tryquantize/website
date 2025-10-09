@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ArrowRight, Brain, Building2, User, Package, Sparkles, Loader2, Undo, Plus, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Search, ArrowRight, Brain, Building2, User, Package, Sparkles, Loader2, Undo, Plus, MessageSquare, ArrowLeft, Globe } from 'lucide-react';
 import { LocationSelector } from '@/components/location-selector';
 import { Input } from '@/components/ui/input';
 import { QuantizeLogo } from '@/components/quantize-logo';
@@ -14,7 +14,7 @@ interface ConversationSidebarProps {
   onSelectConversation: (conversationId: string) => void;
   isMinimized: boolean;
   relatedQuestions?: string[];
-  onQuestionClick?: (question: string) => void;
+  onQuestionClick?: (question: string, webSearchEnabled?: boolean) => void;
   aiResponse?: string;
   citations?: Array<{id: number, title: string, url: string}>;
   currentQuery?: string;
@@ -30,6 +30,7 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [showConversationHistory, setShowConversationHistory] = useState(false);
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [, setLocation] = useLocation();
   const { conversations } = useConversations();
   const { user } = useAuth();
@@ -62,7 +63,8 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
   const handleQuestionClick = async (question: string) => {
     setIsLoadingFollowUp(true);
     try {
-      await onQuestionClick?.(question);
+      // Pass webSearchEnabled state to parent component
+      await onQuestionClick?.(question, webSearchEnabled);
     } finally {
       setIsLoadingFollowUp(false);
     }
@@ -74,7 +76,8 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
     
     setIsLoadingFollowUp(true);
     try {
-      await onQuestionClick?.(followUpQuery);
+      // Pass webSearchEnabled state to parent component
+      await onQuestionClick?.(followUpQuery, webSearchEnabled);
       setFollowUpQuery('');
     } finally {
       setIsLoadingFollowUp(false);
@@ -435,6 +438,23 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
                 </div>
                 
                 <span className="text-xs text-white/70 truncate max-w-[80px]">{selectedModel}</span>
+                
+                {/* Web Search Toggle - Before Location */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                        className={`flex h-6 w-6 items-center justify-center hover:text-white/80 transition-colors ${
+                          webSearchEnabled ? 'text-green-400' : 'text-white/90'
+                        }`}
+                      >
+                        <Globe className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Web Search {webSearchEnabled ? 'ON' : 'OFF'}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 
                 <LocationSelector 
                   selectedLocations={selectedLocations}

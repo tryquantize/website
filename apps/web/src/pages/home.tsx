@@ -10,7 +10,7 @@ export default function Home() {
       <div className="fixed inset-0">
         <RaycastAnimatedBackground />
       </div>
-      <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 relative z-10 pt-4">
+      <div className="relative z-10">
         <SearchInterface onSearchResults={() => {}} />
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Globe, Check } from 'lucide-react';
+import { MapPin, Check } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface LocationSelectorProps {
@@ -65,7 +65,7 @@ export function LocationSelector({ selectedLocations, onLocationChange, classNam
                 isGlobalSelected ? 'text-yellow-400' : 'text-green-400'
               }`}
             >
-              <Globe className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-5.5 sm:w-5.5" />
+              <MapPin className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-5.5 sm:w-5.5" />
             </button>
           </TooltipTrigger>
           <TooltipContent>

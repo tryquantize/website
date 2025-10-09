@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigation } from "@/hooks/use-navigation";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { FirebaseUserService } from "@/services/firebase-user-service";
+import { Component as AnimatedBackground } from "@/components/ui/raycast-animated-black-background";
 
 import { FcGoogle } from "react-icons/fc";
 import { Rocket, Building2, User2 } from "lucide-react";
@@ -270,11 +271,18 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <div className="text-center">
-      <h1 className="text-4xl md:text-5xl font-serif font-bold text-firequest mb-2">Welcome to Quantize!</h1>
-        <p className="text-white/80 mb-8">Create an account or log in to list your AI products, services, or solutions.</p>
+    <div className="min-h-screen bg-black relative">
+      {/* Animated Background */}
+      <div className="fixed inset-0 z-0">
+        <AnimatedBackground />
       </div>
+      
+      {/* Content */}
+      <div className="relative z-10 container mx-auto px-4 py-10">
+        <div className="text-center">
+        <h1 className="text-4xl md:text-5xl font-serif font-bold text-firequest mb-2">Welcome to Quantize!</h1>
+          <p className="text-white/80 mb-8">Create an account or log in to list your AI products, services, or solutions.</p>
+        </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <AnimatePresence mode="wait">
@@ -641,7 +649,8 @@ export default function OnboardingPage() {
             </motion.div>
           )}
         </AnimatePresence>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

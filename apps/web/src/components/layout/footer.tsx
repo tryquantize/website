@@ -62,6 +62,11 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
                     Pricing
                   </Link>
                 </li>
+                <li>
+                  <Link href="/onboarding" className="hover:text-white transition-colors">
+                    Get Started
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -87,6 +92,11 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
                 <li>
                   <Link href="/terms" className="hover:text-white transition-colors">
                     Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/add-company" className="hover:text-white transition-colors font-medium">
+                    Add your company
                   </Link>
                 </li>
               </ul>

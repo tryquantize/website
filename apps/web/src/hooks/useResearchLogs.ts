@@ -4,12 +4,13 @@ import { ResearchLog } from '@/types';
 interface UseResearchLogsProps {
   query: string;
   selectedTypes: string[];
+  webSearchEnabled?: boolean;
 }
 
 // Toggle between real streaming and simulation
 const USE_REAL_STREAMING = false; // Set to true to use real SSE endpoint
 
-const connectToResearchStream = (query: string, selectedTypes: string[], onLog: (log: Omit<ResearchLog, 'id' | 'timestamp'>) => void, onComplete: () => void) => {
+const connectToResearchStream = (query: string, selectedTypes: string[], onLog: (log: Omit<ResearchLog, 'id' | 'timestamp'>) => void, onComplete: () => void, webSearchEnabled: boolean = true) => {
   if (USE_REAL_STREAMING) {
     // Real SSE implementation
     const eventSource = new EventSource(`/api/research/stream?q=${encodeURIComponent(query)}&types=${selectedTypes.join(',')}`);
@@ -39,12 +40,12 @@ const connectToResearchStream = (query: string, selectedTypes: string[], onLog: 
     return () => eventSource.close();
   } else {
     // Use simulation
-    simulateResearchStream(query, onLog, onComplete);
+    simulateResearchStream(query, onLog, onComplete, webSearchEnabled);
     return () => {}; // No cleanup needed for simulation
   }
 };
 
-const simulateResearchStream = async (query: string, onLog: (log: Omit<ResearchLog, 'id' | 'timestamp'>) => void, onComplete: () => void) => {
+const simulateResearchStream = async (query: string, onLog: (log: Omit<ResearchLog, 'id' | 'timestamp'>) => void, onComplete: () => void, webSearchEnabled: boolean = true) => {
   const logs = [
     { delay: 500, log: { type: 'reasoning' as const, title: 'Query Preprocessing', content: `**Initializing research pipeline**: Starting comprehensive analysis for "${query}"` }},
     { delay: 500, log: { type: 'tool_call' as const, title: 'Calling tool: query_parser', content: 'Parsing and tokenizing user query', toolName: 'query_parser' }},
@@ -139,7 +140,10 @@ const simulateResearchStream = async (query: string, onLog: (log: Omit<ResearchL
     { delay: 500, log: { type: 'reasoning' as const, title: 'Research Complete', content: '**Comprehensive research completed**: Analyzed 89 solutions across 67 criteria. Generated 15 high-confidence recommendations with 94% accuracy. Ready to present detailed findings with actionable insights and implementation guidance.' }}
   ];
 
-  for (const { delay, log } of logs) {
+  // Limit logs to 7 entries when web search is disabled
+  const logsToShow = webSearchEnabled ? logs : logs.slice(0, 7);
+  
+  for (const { delay, log } of logsToShow) {
     await new Promise(resolve => setTimeout(resolve, delay));
     onLog(log);
   }
@@ -148,7 +152,7 @@ const simulateResearchStream = async (query: string, onLog: (log: Omit<ResearchL
   onComplete();
 };
 
-export function useResearchLogs({ query, selectedTypes }: UseResearchLogsProps) {
+export function useResearchLogs({ query, selectedTypes, webSearchEnabled = true }: UseResearchLogsProps) {
   const [logs, setLogs] = useState<ResearchLog[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -176,11 +180,12 @@ export function useResearchLogs({ query, selectedTypes }: UseResearchLogsProps) 
       () => {
         setIsStreaming(false);
         setIsComplete(true);
-      }
+      },
+      webSearchEnabled
     );
 
     return cleanup;
-  }, [query, selectedTypes, addLog]);
+  }, [query, selectedTypes, webSearchEnabled, addLog]);
 
   return {
     logs,

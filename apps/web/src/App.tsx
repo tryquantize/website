@@ -45,6 +45,7 @@ import GlowingSearchDemoPage from "@/pages/glowing-search-demo";
 import AboutPage from "@/pages/about";
 import ContactPage from "@/pages/contact";
 import { PricingPage } from "@/pages/pricing";
+import AddCompanyPage from "@/pages/add-company";
 
 function Router() {
   const { isLoading, fromPage, toPage } = useLoading();
@@ -55,8 +56,8 @@ function Router() {
       <LoadingTransition />
       <AnimatedLayout>
         <div className="relative z-10 h-screen flex flex-col">
-          <Header />
-          <main className="flex-1 pt-12 md:pt-24 overflow-y-auto">
+          {location !== '/dashboard' && <Header />}
+          <main className={`flex-1 overflow-y-auto ${location !== '/dashboard' ? 'pt-12 md:pt-24' : ''}`}>
             <div className="min-h-full flex flex-col">
               <div className="flex-1">
                 <Switch>
@@ -85,10 +86,11 @@ function Router() {
                   <Route path="/about" component={AboutPage} />
                   <Route path="/contact" component={ContactPage} />
                   <Route path="/pricing" component={PricingPage} />
+                  <Route path="/add-company" component={AddCompanyPage} />
                   <Route component={NotFound} />
                 </Switch>
               </div>
-              {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/glowing-search-demo' && location !== '/home' && <Footer showJoinUs={location === '/'} />}
+              {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/glowing-search-demo' && location !== '/home' && location !== '/dashboard' && <Footer showJoinUs={location === '/'} />}
             </div>
           </main>
         </div>

@@ -1,0 +1,7 @@
+- Natural language processing
+- Code generation and debugging
+- Image generation with DALL-E
+- Speech-to-text with Whisper
+- API access for developers
+- Custom model fine-tuning
+- Enterprise security features

@@ -1,0 +1,8 @@
+Company: Nextquark
+Founded: 2024
+Headquarters: Hyderabad, Telangana
+Products: Friday - Voice AI Receptionist
+Description: AI Voice agent building company
+Website: https://nextquark.in/
+Category: AI voice Agents
+Employees: 3

@@ -10,22 +10,27 @@ export default function SearchTransition() {
   const [query, setQuery] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [apiComplete, setApiComplete] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
   
-  const { logs, isStreaming, isComplete } = useResearchLogs({ query, selectedTypes });
+  const { logs, isStreaming, isComplete } = useResearchLogs({ query, selectedTypes, webSearchEnabled });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const searchQuery = params.get('q') || '';
     const types = params.get('types');
     const locations = params.get('locations');
+    const websearch = params.get('websearch') === 'true';
     const currentSelectedTypes = types ? types.split(',').filter(t => t.trim()) : [];
     const currentSelectedLocations = locations ? locations.split(',').filter(l => l.trim()) : [];
     
     setQuery(searchQuery);
     setSelectedTypes(currentSelectedTypes);
     setSelectedLocations(currentSelectedLocations);
+    setWebSearchEnabled(websearch);
+    
+    console.log('Search transition - websearch param:', websearch, 'type:', typeof websearch);
 
     if (searchQuery) {
       // Start the search API call
@@ -34,7 +39,8 @@ export default function SearchTransition() {
         context: {},
         selectedModel: "GPT-4o Mini",
         selectedTypes: currentSelectedTypes,
-        selectedLocations: currentSelectedLocations
+        selectedLocations: currentSelectedLocations,
+        webSearchEnabled: websearch
       }).then(async (response) => {
         const data = await response.json();
         setSearchResults(data);

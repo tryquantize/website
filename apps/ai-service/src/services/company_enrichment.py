@@ -15,7 +15,11 @@ class CompanyEnrichmentAgent:
         self.api_key = OPENROUTER_API_KEY
         self.base_url = OPENROUTER_BASE_URL
         self.model = "openai/gpt-3.5-turbo"  # Faster model for enrichment
+        # Initialize both Exa search and RAG data
         self.exa_search = ExaSearchService()
+        from rag.services.data_loader import DataLoader
+        self.data_loader = DataLoader()
+        self.companies_data = self.data_loader.load_all_companies()
         
         # Test API connection on initialization
         self._test_connection()
@@ -48,9 +52,9 @@ class CompanyEnrichmentAgent:
         except Exception as e:
             logger.error(f"API connection test failed: {str(e)}")
     
-    def enrich_company_data(self, companies: List[Dict[str, Any]], query: str, locations: List[str] = None) -> List[Dict[str, Any]]:
+    def enrich_company_data(self, companies: List[Dict[str, Any]], query: str, locations: List[str] = None, web_search_enabled: bool = True) -> List[Dict[str, Any]]:
         """Enrich company data using specialized agents in parallel"""
-        logger.info(f"Starting parallel enrichment for {len(companies)} companies with locations: {locations}")
+        logger.info(f"Starting parallel enrichment for {len(companies)} companies with locations: {locations}, web_search: {web_search_enabled}")
         try:
             # Try to get existing event loop
             loop = asyncio.get_event_loop()
@@ -61,12 +65,12 @@ class CompanyEnrichmentAgent:
                     future = executor.submit(asyncio.run, self._enrich_companies_async(companies, query, locations))
                     return future.result()
             else:
-                return asyncio.run(self._enrich_companies_async(companies, query, locations))
+                return asyncio.run(self._enrich_companies_async(companies, query, locations, web_search_enabled))
         except RuntimeError:
             # No event loop, create new one
-            return asyncio.run(self._enrich_companies_async(companies, query, locations))
+            return asyncio.run(self._enrich_companies_async(companies, query, locations, web_search_enabled))
     
-    async def _enrich_companies_async(self, companies: List[Dict[str, Any]], query: str, locations: List[str] = None) -> List[Dict[str, Any]]:
+    async def _enrich_companies_async(self, companies: List[Dict[str, Any]], query: str, locations: List[str] = None, web_search_enabled: bool = True) -> List[Dict[str, Any]]:
         """Async method to enrich companies in parallel"""
         # Skip enrichment for fallback companies (website: '#')
         real_companies = [c for c in companies if c.get('website') != '#']
@@ -77,7 +81,7 @@ class CompanyEnrichmentAgent:
             return companies
         
         async with aiohttp.ClientSession() as session:
-            tasks = [self._enrich_single_company(session, company, query, locations) for company in real_companies]
+            tasks = [self._enrich_single_company(session, company, query, locations, web_search_enabled) for company in real_companies]
             enriched_companies = await asyncio.gather(*tasks, return_exceptions=True)
             
             # Handle exceptions and ensure we return valid data
@@ -94,71 +98,106 @@ class CompanyEnrichmentAgent:
             logger.info(f"Enriched {len(result)} real companies, skipped {len(fallback_companies)} fallback companies")
             return final_result
     
-    async def _enrich_single_company(self, session: aiohttp.ClientSession, company: Dict[str, Any], query: str, locations: List[str] = None) -> Dict[str, Any]:
+    async def _enrich_single_company(self, session: aiohttp.ClientSession, company: Dict[str, Any], query: str, locations: List[str] = None, web_search_enabled: bool = True) -> Dict[str, Any]:
         """Enrich a single company with parallel agent calls"""
-        logger.info(f"Enriching company: {company.get('name', 'Unknown')} with locations: {locations}")
+        logger.info(f"Enriching company: {company.get('name', 'Unknown')} with locations: {locations}, web_search: {web_search_enabled}")
         enriched_company = company.copy()
         
-        # Run 3 enrichment tasks in parallel (removed location agent)
+        # Run 4 enrichment tasks in parallel including LinkedIn
         tasks = [
-            self._get_key_specifications_async(session, company['name'], query, locations),
-            self._get_company_description_async(session, company['name'], locations),
-            self._get_company_website_async(session, company['name']) if not company.get('website') or company['website'] == '#' else asyncio.sleep(0, result=company.get('website', 'https://example.com'))
+            self._get_key_specifications_async(session, company['name'], query, locations, web_search_enabled),
+            self._get_company_description_async(session, company['name'], locations, web_search_enabled),
+            self._get_company_website_async(session, company['name'], web_search_enabled) if not company.get('website') or company['website'] == '#' else asyncio.sleep(0, result=company.get('website', 'https://example.com')),
+            self._get_linkedin_url_async(session, company['name'], web_search_enabled)
         ]
         
-        specs, about, website = await asyncio.gather(*tasks)
+        specs, about, website, linkedin_url = await asyncio.gather(*tasks)
         
         enriched_company['specifications'] = specs
-        # Use the location from search interface instead of researching it
-        enriched_company['location'] = locations[0] if locations and len(locations) > 0 else ""
+        # Use the location from search interface - ensure it's properly set
+        if locations and len(locations) > 0:
+            enriched_company['location'] = locations[0]
+        else:
+            enriched_company['location'] = "Global"
         enriched_company['about'] = about
+        enriched_company['linkedin_url'] = linkedin_url
         if not enriched_company.get('website') or enriched_company['website'] == '#':
             enriched_company['website'] = website
         
-        logger.info(f"Successfully enriched {company['name']}")
+        logger.info(f"Successfully enriched {company['name']} with LinkedIn: {linkedin_url}")
         return enriched_company
     
-    async def _get_key_specifications_async(self, session: aiohttp.ClientSession, company_name: str, query: str, locations: List[str] = None) -> List[str]:
-        """Agent 1: Generate 5 key specifications for the company using web search"""
+    async def _get_key_specifications_async(self, session: aiohttp.ClientSession, company_name: str, query: str, locations: List[str] = None, web_search_enabled: bool = True) -> List[str]:
+        """Agent 1: Generate key specifications from web search or RAG database"""
         try:
-            # Search for company-specific information with better query
-            search_query = f"{company_name} company products services features technology solutions"
-            search_results = self.exa_search.search_web(search_query, num_results=5, locations=locations)
-            
-            web_context = ""
-            if search_results.get("success") and search_results.get("results"):
-                # Filter out fallback results (check for example.com or generic content)
-                real_results = [r for r in search_results["results"] if 'example.com' not in r.get('url', '') and len(r.get('text', '')) > 50]
+            if web_search_enabled:
+                # Use web search for specifications
+                search_query = f"{company_name} company products services features technology solutions"
+                search_results = self.exa_search.search_web(search_query, num_results=5, locations=locations)
                 
-                if not real_results:
-                    logger.warning(f"No real search results found for {company_name} specifications")
-                    return []
+                web_context = ""
+                if search_results.get("success") and search_results.get("results"):
+                    real_results = [r for r in search_results["results"] if 'example.com' not in r.get('url', '') and len(r.get('text', '')) > 50]
+                    
+                    if not real_results:
+                        logger.warning(f"No real search results found for {company_name} specifications")
+                        return []
+                    
+                    for result in real_results[:3]:
+                        web_context += f"Title: {result.get('title', '')}\n"
+                        web_context += f"Content: {result.get('text', '')[:500]}...\n\n"
                 
-                for result in real_results[:3]:  # Use top 3 real results
-                    web_context += f"Title: {result.get('title', '')}\n"
-                    web_context += f"Content: {result.get('text', '')[:500]}...\n\n"
-            
-            if web_context:
-                prompt = f"""Based on the following web search results about {company_name}, extract exactly 5 key specifications, features, or capabilities that are specific to this company.
+                if web_context:
+                    prompt = f"""Based on the following web search results about {company_name}, extract exactly 5 key specifications, features, or capabilities that are specific to this company.
 
 Web Search Results:
 {web_context}
 
 Analyze the content and extract 5 specific technical specifications, product features, or business capabilities that are unique to {company_name}. Each specification should be 3-8 words and based ONLY on the actual information found in the search results. If you cannot find 5 specific features, return fewer rather than making them up. Return only the specifications, one per line, no bullets or numbers."""
+                    
+                    response = await self._make_agent_request_async(session, prompt)
+                    if not response:
+                        response = self._make_sync_request(prompt)
+                    
+                    if response:
+                        specs = [s.strip() for s in response.split('\n') if s.strip() and len(s.strip()) > 2]
+                        if specs and len(specs) >= 2:
+                            return specs[:5]
                 
-                response = await self._make_agent_request_async(session, prompt)
-                if not response:
-                    # Fallback to sync request
-                    response = self._make_sync_request(prompt)
+                logger.warning(f"Could not generate real specifications for {company_name}")
+                return []
+            else:
+                # Use RAG database for specifications
+                company_data = self._find_company_in_rag(company_name)
                 
-                if response:
-                    specs = [s.strip() for s in response.split('\n') if s.strip() and len(s.strip()) > 2]
-                    # Only return if we have real specifications
-                    if specs and len(specs) >= 2:
-                        return specs[:5]
-            
-            logger.warning(f"Could not generate real specifications for {company_name}")
-            return []
+                if not company_data:
+                    logger.warning(f"Company {company_name} not found in RAG database")
+                    return []
+                
+                specs = []
+                
+                # Get features from RAG data
+                features_text = company_data.get('features', '')
+                for line in features_text.split('\n'):
+                    line = line.strip()
+                    if line.startswith('-') or line.startswith('•'):
+                        feature = line.lstrip('-•').strip()
+                        if feature and len(feature) > 5:
+                            specs.append(feature)
+                
+                # Get additional info from company_info
+                info_text = company_data.get('company_info', '')
+                for line in info_text.split('\n'):
+                    if line.startswith('Products:'):
+                        products = line.replace('Products:', '').strip()
+                        if products:
+                            specs.append(f"Products: {products}")
+                    elif line.startswith('Category:'):
+                        category = line.replace('Category:', '').strip()
+                        if category:
+                            specs.append(f"Category: {category}")
+                
+                return specs[:5] if specs else []
             
         except Exception as e:
             logger.error(f"Specifications agent failed: {str(e)}")
@@ -168,63 +207,153 @@ Analyze the content and extract 5 specific technical specifications, product fea
     
 
     
-    async def _get_company_website_async(self, session: aiohttp.ClientSession, company_name: str) -> str:
-        """Agent 3: Get company website"""
+    async def _get_company_website_async(self, session: aiohttp.ClientSession, company_name: str, web_search_enabled: bool = True) -> str:
+        """Agent 3: Get company website from web search or RAG database"""
         try:
-            prompt = f"What is the official website URL for {company_name}? Return ONLY the URL starting with https://. No other text."
-            response = await self._make_agent_request_async(session, prompt)
-            if response:
-                url = response.strip().split('\n')[0].strip()
-                if url.startswith('https://') and len(url) < 100:
-                    return url
+            if web_search_enabled:
+                # Use AI to generate website URL
+                prompt = f"What is the official website URL for {company_name}? Return ONLY the URL starting with https://. No other text."
+                response = await self._make_agent_request_async(session, prompt)
+                if response:
+                    url = response.strip().split('\n')[0].strip()
+                    if url.startswith('https://') and len(url) < 100:
+                        return url
+            else:
+                # Use RAG database for website
+                company_data = self._find_company_in_rag(company_name)
+                
+                if company_data:
+                    info_text = company_data.get('company_info', '')
+                    for line in info_text.split('\n'):
+                        if line.startswith('Website:'):
+                            website = line.replace('Website:', '').strip()
+                            if website and website.startswith('http'):
+                                return website
+            
+            return "https://example.com"
+            
         except Exception as e:
             logger.error(f"Website agent failed: {str(e)}")
-        
-        return "https://example.com"
+            return "https://example.com"
     
-    async def _get_company_description_async(self, session: aiohttp.ClientSession, company_name: str, locations: List[str] = None) -> List[str]:
-        """Agent 4: Get 2 bullet point company description using web search"""
+    async def _get_company_description_async(self, session: aiohttp.ClientSession, company_name: str, locations: List[str] = None, web_search_enabled: bool = True) -> List[str]:
+        """Agent 4: Get company description from web search or RAG database"""
         try:
-            # Search for company information
-            search_query = f"{company_name} company about services products what does do"
-            search_results = self.exa_search.search_web(search_query, num_results=3, locations=locations)
-            
-            web_context = ""
-            if search_results.get("success") and search_results.get("results"):
-                # Filter out fallback results
-                real_results = [r for r in search_results["results"] if 'example.com' not in r.get('url', '') and len(r.get('text', '')) > 50]
+            if web_search_enabled:
+                # Use web search for description
+                search_query = f"{company_name} company about services products what does do"
+                search_results = self.exa_search.search_web(search_query, num_results=3, locations=locations)
                 
-                if not real_results:
-                    logger.warning(f"No real search results found for {company_name} description")
-                    return []
+                web_context = ""
+                if search_results.get("success") and search_results.get("results"):
+                    real_results = [r for r in search_results["results"] if 'example.com' not in r.get('url', '') and len(r.get('text', '')) > 50]
+                    
+                    if not real_results:
+                        logger.warning(f"No real search results found for {company_name} description")
+                        return []
+                    
+                    for result in real_results[:2]:
+                        web_context += f"Content: {result.get('text', '')[:400]}...\n"
                 
-                for result in real_results[:2]:  # Use top 2 real results
-                    web_context += f"Content: {result.get('text', '')[:400]}...\n"
-            
-            if web_context:
-                prompt = f"""Based on the following information about {company_name}, write exactly 2 bullet points describing what they do.
+                if web_context:
+                    prompt = f"""Based on the following information about {company_name}, write exactly 2 bullet points describing what they do.
 
 Web Search Results:
 {web_context}
 
 Each bullet point should be 8-15 words describing their main services/products based ONLY on the actual information found. If you cannot find enough information for 2 bullet points, return fewer rather than making them up. Return only the bullet points, one per line, no bullets or formatting."""
+                    
+                    response = await self._make_agent_request_async(session, prompt)
+                    if not response:
+                        response = self._make_sync_request(prompt)
+                    
+                    if response:
+                        lines = [line.strip() for line in response.split('\n') if line.strip() and len(line.strip()) > 10]
+                        if lines and len(lines) >= 1:
+                            return lines[:2]
                 
-                response = await self._make_agent_request_async(session, prompt)
-                if not response:
-                    # Fallback to sync request
-                    response = self._make_sync_request(prompt)
+                logger.warning(f"Could not generate real description for {company_name}")
+                return []
+            else:
+                # Use RAG database for description
+                company_data = self._find_company_in_rag(company_name)
                 
-                if response:
-                    lines = [line.strip() for line in response.split('\n') if line.strip() and len(line.strip()) > 10]
-                    if lines and len(lines) >= 1:
-                        return lines[:2]
-            
-            logger.warning(f"Could not generate real description for {company_name}")
-            return []
+                if not company_data:
+                    logger.warning(f"Company {company_name} not found in RAG database")
+                    return []
+                
+                descriptions = []
+                
+                # Get description from company_info
+                info_text = company_data.get('company_info', '')
+                for line in info_text.split('\n'):
+                    if line.startswith('Description:'):
+                        desc = line.replace('Description:', '').strip()
+                        if desc:
+                            descriptions.append(desc)
+                
+                # Get additional context from use_cases if available
+                use_cases_text = company_data.get('use_cases', '')
+                if use_cases_text:
+                    first_use_case = use_cases_text.split('\n')[0].strip()
+                    if first_use_case and first_use_case not in descriptions:
+                        descriptions.append(first_use_case)
+                
+                return descriptions[:2] if descriptions else []
             
         except Exception as e:
             logger.error(f"Description agent failed: {str(e)}")
             return []
+    
+    async def _get_linkedin_url_async(self, session: aiohttp.ClientSession, company_name: str, web_search_enabled: bool = True) -> str:
+        """Agent 5: Get LinkedIn URL from web search or generate from company name"""
+        try:
+            if web_search_enabled:
+                # Search for company LinkedIn page
+                search_query = f"{company_name} company linkedin profile page site:linkedin.com"
+                search_results = self.exa_search.search_web(search_query, num_results=3)
+                
+                # First try to find LinkedIn URL directly from search results
+                if search_results.get("success") and search_results.get("results"):
+                    for result in search_results["results"]:
+                        url = result.get('url', '')
+                        if 'linkedin.com/company/' in url and 'example.com' not in url:
+                            logger.info(f"Found LinkedIn URL from search: {url}")
+                            return url
+                
+                # If no direct LinkedIn URL found, use AI to generate likely URL
+                prompt = f"""What is the most likely LinkedIn company page URL for {company_name}? 
+                
+Return ONLY the URL in this exact format: https://linkedin.com/company/[company-slug]
+The company slug should be the company name in lowercase with spaces replaced by hyphens and special characters removed.
+For example: "Tech Solutions Inc" becomes "tech-solutions-inc"
+Return only the URL, no other text."""
+                
+                response = await self._make_agent_request_async(session, prompt)
+                if not response:
+                    response = self._make_sync_request(prompt)
+                
+                if response:
+                    url = response.strip().split('\n')[0].strip()
+                    if url.startswith('https://linkedin.com/company/') and len(url) < 100:
+                        logger.info(f"Generated LinkedIn URL: {url}")
+                        return url
+            
+            # Fallback: generate URL based on company name (used for both web and RAG modes)
+            company_slug = company_name.lower().replace(' ', '-').replace('&', 'and')
+            import re
+            company_slug = re.sub(r'[^a-z0-9-]', '', company_slug)
+            fallback_url = f"https://linkedin.com/company/{company_slug}"
+            logger.info(f"Using fallback LinkedIn URL: {fallback_url}")
+            return fallback_url
+            
+        except Exception as e:
+            logger.error(f"LinkedIn agent failed: {str(e)}")
+            # Generate fallback URL
+            company_slug = company_name.lower().replace(' ', '-').replace('&', 'and')
+            import re
+            company_slug = re.sub(r'[^a-z0-9-]', '', company_slug)
+            return f"https://linkedin.com/company/{company_slug}"
     
 
     
@@ -316,4 +445,27 @@ Each bullet point should be 8-15 words describing their main services/products b
             logger.error(f"Sync request exception: {str(e)}")
         
         return None
+    
+    def _find_company_in_rag(self, company_name: str) -> Dict[str, Any]:
+        """Find company data in RAG database by name"""
+        try:
+            # Search through loaded companies data
+            for company_key, company_data in self.companies_data.items():
+                # Check if company name matches (case insensitive)
+                if company_name.lower() in company_key.lower():
+                    return company_data.get('data', {})
+                
+                # Also check in company_info for exact name match
+                info_text = company_data.get('data', {}).get('company_info', '')
+                for line in info_text.split('\n'):
+                    if line.startswith('Company:'):
+                        rag_company_name = line.replace('Company:', '').strip()
+                        if company_name.lower() == rag_company_name.lower():
+                            return company_data.get('data', {})
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error finding company in RAG: {str(e)}")
+            return None
     

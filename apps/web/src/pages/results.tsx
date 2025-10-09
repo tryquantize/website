@@ -152,11 +152,11 @@ export default function ResultsPage() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [favoritesNotification, setFavoritesNotification] = useState({ show: false, itemName: '' });
-  const [selectedBudgets, setSelectedBudgets] = useState<Set<string>>(new Set());
-  const [showBudgetSelection, setShowBudgetSelection] = useState(false);
   const [showUseCaseSelection, setShowUseCaseSelection] = useState(false);
   const [useCaseInput, setUseCaseInput] = useState('');
-  const [isLoadingBudgetResults, setIsLoadingBudgetResults] = useState(false);
+  
+  // WEB SEARCH STATE
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   
   // PROMPT ENHANCEMENT STATE
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -195,18 +195,7 @@ export default function ResultsPage() {
     "Mistral 7B Instruct"
   ];
 
-  const budgetOptions = [
-    "Free",
-    "<$10",
-    "<$50",
-    "<$100",
-    "<$250",
-    "<$500",
-    "<$1000",
-    "<$2500",
-    "<$5000",
-    "Enterprise"
-  ];
+
 
   /**
    * PROMPT ENHANCEMENT HANDLER
@@ -339,8 +328,12 @@ export default function ResultsPage() {
     const query = params.get('q') || '';
     const types = params.get('types');
     const locations = params.get('locations');
+    const webSearch = params.get('websearch') === 'true';
+    
+    console.log('URL params - websearch:', params.get('websearch'), 'parsed as:', webSearch);
     
     setSearchQuery(query);
+    setWebSearchEnabled(webSearch);
     
     // Restore selected types from URL
     if (types) {
@@ -355,6 +348,7 @@ export default function ResultsPage() {
     // Store locations for search (we'll add location state management later if needed)
     const selectedLocations = locations ? locations.split(',').filter(l => l.trim()) : [];
     console.log('Restored locations from URL:', selectedLocations);
+    console.log('Web search from URL:', webSearch);
     
     if (query) {
       // Create new conversation for initial search
@@ -364,7 +358,7 @@ export default function ResultsPage() {
       
       // Small delay to ensure selectedTypes is set before search
       setTimeout(() => {
-        performInitialSearch(query, conversationId);
+        performInitialSearch(query, conversationId, webSearch);
       }, 100);
     }
   }, [location]);
@@ -381,7 +375,7 @@ export default function ResultsPage() {
     }
   }, [showModelDropdown]);
 
-  const performInitialSearch = async (query: string, conversationId?: string) => {
+  const performInitialSearch = async (query: string, conversationId?: string, webSearchEnabled: boolean = false) => {
     setIsInitialLoading(true);
     setContentItems([]);
 
@@ -416,7 +410,8 @@ export default function ResultsPage() {
           context: {},
           selectedModel,
           selectedTypes: currentSelectedTypes,
-          selectedLocations: currentSelectedLocations
+          selectedLocations: currentSelectedLocations,
+          webSearchEnabled: webSearchEnabled
         });
         
         data = await response.json();
@@ -464,17 +459,9 @@ export default function ResultsPage() {
         timestamp: Date.now()
       };
 
-      // Check if budget and use case selection should be shown
-      const shouldShowBudgetSelection = !hasBudgetInQuery(query);
+      // Check if use case selection should be shown
       const shouldShowUseCaseSelection = !hasBudgetInQuery(query) && isGeneralizedQuery(query);
-      setShowBudgetSelection(shouldShowBudgetSelection);
       setShowUseCaseSelection(shouldShowUseCaseSelection);
-      
-      // Show companies by default with enterprise budget assumption
-      if (shouldShowBudgetSelection) {
-        // Don't clear companies - show them by default
-        // User can filter later if needed
-      }
 
       // Replace loading with result only (suggestions are now inside the result box)
       setContentItems([
@@ -505,14 +492,18 @@ export default function ResultsPage() {
     }
   };
 
-  const handleSuggestionClick = async (question: string) => {
+  const handleSuggestionClick = async (question: string, useWebSearch?: boolean) => {
     try {
+      // Use the passed parameter if provided, otherwise use current state
+      const shouldUseWebSearch = useWebSearch !== undefined ? useWebSearch : webSearchEnabled;
+      
       const response = await apiRequest("POST", "/api/search", {
         query: question,
         context: {},
         selectedModel,
         selectedTypes: Array.from(selectedTypes),
-        selectedLocations: [] // Use empty array for follow-up questions
+        selectedLocations: [], // Use empty array for follow-up questions
+        webSearchEnabled: shouldUseWebSearch
       });
       
       const data = await response.json();
@@ -610,7 +601,8 @@ export default function ResultsPage() {
         context: {},
         selectedModel,
         selectedTypes: Array.from(selectedTypes),
-        selectedLocations: [] // Use empty array for new searches
+        selectedLocations: [], // Use empty array for new searches
+        webSearchEnabled: webSearchEnabled // Use current web search state
       });
       
       const data = await response.json();
@@ -733,90 +725,12 @@ export default function ResultsPage() {
     setContentItems([]);
     setAllCompanies([]);
     setCurrentConversationId(null);
-    setSelectedBudgets(new Set());
-    setShowBudgetSelection(false);
     setShowUseCaseSelection(false);
     setUseCaseInput('');
-    setIsLoadingBudgetResults(false);
-  };
-
-  const updateResultsWithFilters = async () => {
-    if (selectedBudgets.size === 0) {
-      // Get original companies from the last result if no budget selected
-      const lastResult = contentItems.find(item => item.type === 'result');
-      if (lastResult && lastResult.data.companies) {
-        setAllCompanies(lastResult.data.companies);
-      } else {
-        setAllCompanies([]);
-      }
-      setIsLoadingBudgetResults(false);
-      return;
-    }
-    
-    setIsLoadingBudgetResults(true);
-    
-    const lastResult = contentItems.find(item => item.type === 'result');
-    if (!lastResult) {
-      setIsLoadingBudgetResults(false);
-      return;
-    }
-    
-    let query = lastResult.data.query;
-    const context: any = { budgets: Array.from(selectedBudgets) };
-    
-    // Add use case if provided
-    if (useCaseInput.trim()) {
-      query = `${useCaseInput.trim()} ${query}`;
-      context.useCase = useCaseInput.trim();
-    }
-    
-    // Add budget
-    const budgetList = Array.from(selectedBudgets).join(', ');
-    query += ` budget ${budgetList}`;
-    
-    try {
-      const response = await apiRequest("POST", "/api/search", {
-        query,
-        context,
-        selectedModel,
-        selectedTypes: Array.from(selectedTypes),
-        selectedLocations: [] // Use empty array for budget-filtered searches
-      });
-      
-      const data = await response.json();
-      const newCompanies = data.companies || [];
-      const pinnedCompanies = pinnedCards.filter(pin => 
-        !newCompanies.some((newCompany: Company) => newCompany.name === pin.name)
-      );
-      const updatedAllCompanies = [...pinnedCompanies, ...newCompanies];
-      setAllCompanies(updatedAllCompanies);
-      
-    } catch (error) {
-      console.error('Search failed:', error);
-    } finally {
-      setIsLoadingBudgetResults(false);
-    }
-  };
-
-  const handleBudgetSelect = async (budget: string) => {
-    const newSelectedBudgets = new Set(selectedBudgets);
-    if (newSelectedBudgets.has(budget)) {
-      newSelectedBudgets.delete(budget);
-    } else {
-      newSelectedBudgets.add(budget);
-    }
-    setSelectedBudgets(newSelectedBudgets);
-    
-    // Update results after state change
-    setTimeout(() => updateResultsWithFilters(), 0);
   };
 
   const handleUseCaseChange = (value: string) => {
     setUseCaseInput(value);
-    // Update results if budget is already selected
-    if (selectedBudgets.size > 0) {
-      setTimeout(() => updateResultsWithFilters(), 300); // Debounce
-    }
   };
 
   const showFavoritesNotification = (itemName: string) => {
@@ -1013,7 +927,7 @@ export default function ResultsPage() {
 
         </div>
         
-        {/* Suppliers Section - Show above use case section */}
+        {/* Suppliers Section */}
         {showSuppliersSection && allCompanies.length > 0 && (
           <div className="bg-black/20 backdrop-blur-xl p-4 border border-white/10">
             <h3 className="text-lg font-semibold text-white mb-2">Would you like Companies to reach out to you?</h3>
@@ -1037,40 +951,9 @@ export default function ResultsPage() {
         
 
         
-        {/* Budget Selection - Show only if no budget in query */}
-        {showBudgetSelection && (
-          <div className={`bg-black/20 backdrop-blur-xl p-4 border border-white/10 ${(showUseCaseSelection || (showSuppliersSection && allCompanies.length > 0)) ? 'border-t-0' : ''}`}>
-            <div className="flex items-center space-x-2 mb-3">
-              <DollarSign className="w-4 h-4 text-white/60" />
-              <h3 className="text-white/80 text-sm font-medium">Select your budget range:</h3>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {budgetOptions.map((budget) => (
-                <button
-                  key={budget}
-                  onClick={() => handleBudgetSelect(budget)}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-all ${
-                    selectedBudgets.has(budget)
-                      ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 border-yellow-400/60 text-black shadow-lg shadow-yellow-400/30'
-                      : 'bg-white/5 border border-white/20 text-white/80 hover:bg-white/10 hover:border-white/30 hover:text-white'
-                  }`}
-                >
-                  {budget}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+
         
-        {/* Loading Circle for Budget Results */}
-        {isLoadingBudgetResults && (
-          <div className="bg-black/20 backdrop-blur-xl p-6 border border-white/10 border-t-0 flex items-center justify-center">
-            <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-white/20 border-t-white/80"></div>
-              <span className="text-white/70 text-sm">Finding tools within your budget...</span>
-            </div>
-          </div>
-        )}
+
         
 
         
