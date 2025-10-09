@@ -1,3 +1,33 @@
+"""
+@file app.py
+@module AIService
+@description Flask application for AI-powered search and company enrichment services
+
+This service provides:
+- AI-powered search with web context
+- Company information extraction and enrichment
+- Text enhancement and auto-completion
+- Search suggestions generation
+- Company comparison and analysis
+
+@requires flask, flask_cors, logging
+@requires services.ai_agent
+@requires config.config
+@since 1.0.0
+
+@example
+# Start the AI service
+python app.py
+
+# Health check
+curl http://localhost:5002/health
+
+# Search request
+curl -X POST http://localhost:5002/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "AI chatbots for customer service"}'
+"""
+
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
@@ -25,7 +55,27 @@ ai_agent = AISearchAgent()
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """
+    Health check endpoint for service monitoring
+    
+    @route GET /health
+    @description Check if the AI service is running and all dependencies are available
+    @access Public
+    @returns {Object} Health status with success flag and component statuses
+    @returns {200} Service is healthy
+    @returns {500} Service is unhealthy
+    
+    @example
+    GET /health
+    Response: {
+        "status": "healthy",
+        "success": true,
+        "components": {
+            "ai_agent": "ok",
+            "rag_service": "ok"
+        }
+    }
+    """
     try:
         health_status = ai_agent.health_check()
         return jsonify(health_status), 200 if health_status['success'] else 500

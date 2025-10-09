@@ -40,7 +40,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [placeholder, setPlaceholder] = useState("");
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
+  const [selectedModel, setSelectedModel] = useState("Claude 3.5 Haiku");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showScrollSuggestions, setShowScrollSuggestions] = useState(false);
   
@@ -110,6 +110,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const greeting = getGreeting();
 
   const llmModels = [
+    "Claude 3.5 Haiku",
     "GPT-4o Mini",
     "Gemini 2.5 Flash", 
     "Qwen2.5 Coder 32B Instruct",
@@ -499,7 +500,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                       setShowModelDropdown(!showModelDropdown);
                     }}
                     className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors aspect-square touch-manipulation ${
-                      selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
+                      selectedModel && selectedModel !== "Claude 3.5 Haiku" ? 'text-yellow-400' : 'text-white'
                     }`}
                   >
                     <Brain className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-5.5 sm:w-5.5" />
@@ -529,7 +530,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                   )}
                 </div>
                 
-                <span className="text-xs text-white/70 hidden xs:inline sm:inline truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px]">{selectedModel || "GPT-4o Mini"}</span>
+                <span className="text-xs text-white/70 hidden xs:inline sm:inline truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px]">{selectedModel || "Claude 3.5 Haiku"}</span>
                 
                 {/* Web Search Toggle - Before Location */}
                 <TooltipProvider>

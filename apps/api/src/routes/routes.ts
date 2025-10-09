@@ -1,15 +1,28 @@
-/* File Overview
-  Path: server/routes.ts
-  Purpose: Declares all REST API endpoints for the application. This includes:
-  - Authentication (register, login)
-  - Tools (CRUD, listing, analytics, clicks)
-  - Startup-specific data (tools, contact requests, analytics)
-  - Admin actions (approve/reject tools)
-
-  Reading tip for newcomers:
-  - Each route follows a simple pattern: validate/parse input, call storage methods, return JSON
-  - The storage layer is swappable (memory vs database) via the exported `storage` in server/storage.ts
-*/
+/**
+ * @file routes.ts
+ * @module APIRoutes
+ * @description REST API endpoint definitions for the Quantize Website
+ * 
+ * This file contains all API routes organized by functionality:
+ * - Authentication: User registration and login
+ * - Tools: CRUD operations for AI tools
+ * - Search: AI-powered search with fallback to traditional search
+ * - Admin: Tool approval and management
+ * - Analytics: Usage tracking and metrics
+ * - AI Service Integration: Proxy routes to Python AI service
+ * 
+ * @requires express
+ * @requires http
+ * @requires ../services/storage
+ * @requires ../../../../packages/shared/schemas/schema
+ * @requires zod
+ * @requires node-fetch
+ * @since 1.0.0
+ * 
+ * @example
+ * // Register routes with Express app
+ * const server = await registerRoutes(app);
+ */
 
 import type { Express } from "express";
 import { createServer, type Server } from "http";
@@ -18,8 +31,28 @@ import { insertUserSchema, insertAiToolSchema, insertContactRequestSchema, inser
 import { z } from "zod";
 import fetch from 'node-fetch';
 
+/**
+ * Register all API routes with the Express application
+ * 
+ * @function registerRoutes
+ * @param {Express} app - Express application instance
+ * @returns {Promise<Server>} HTTP server instance
+ * @throws {Error} If route registration fails
+ */
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Authentication routes
+  
+  /**
+   * @route POST /api/auth/register
+   * @description Register a new user account
+   * @access Public
+   * @param {Object} req.body - User registration data
+   * @param {string} req.body.email - User email address
+   * @param {string} req.body.password - User password
+   * @param {string} req.body.name - User full name
+   * @returns {Object} User object without password
+   * @returns {400} Invalid user data or user already exists
+   * @returns {500} Registration failed
+   */
   app.post("/api/auth/register", async (req, res) => {
     try {
       // Parse and validate the incoming body with Zod to ensure correct shape
@@ -39,6 +72,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @route POST /api/auth/login
+   * @description Authenticate user and return user data
+   * @access Public
+   * @param {Object} req.body - Login credentials
+   * @param {string} req.body.email - User email address
+   * @param {string} req.body.password - User password
+   * @returns {Object} User object without password
+   * @returns {400} Email and password required
+   * @returns {401} Invalid credentials
+   * @returns {500} Login failed
+   */
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { email, password } = req.body;

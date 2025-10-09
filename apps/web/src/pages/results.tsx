@@ -143,7 +143,7 @@ export default function ResultsPage() {
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [placeholder, setPlaceholder] = useState("");
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
+  const [selectedModel, setSelectedModel] = useState("Claude 3.5 Haiku");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const { pinnedCards } = useFavorites();
@@ -185,6 +185,7 @@ export default function ResultsPage() {
   }, [transcript, resetTranscript]);
 
   const llmModels = [
+    "Claude 3.5 Haiku",
     "GPT-4o Mini",
     "Gemini 2.5 Flash", 
     "Qwen2.5 Coder 32B Instruct",

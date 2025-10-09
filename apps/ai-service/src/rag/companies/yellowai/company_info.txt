@@ -1,0 +1,18 @@
+Company: Yellow.ai 
+Founded: 2016
+Headquarters: 400 Concar Drive, San Mateo, California, 94402, United States
+Description: Yellow.ai is the world's leading enterprise-grade conversational AI platform that unlocks business potential at scale. It provides AI-driven tools for automating and personalizing customer interactions across multiple channels and languages.
+Website: https://yellow.ai/
+LinkedIn: https://www.linkedin.com/company/yellowdotai/
+Phone: 
+Category: AI Software / Customer Service Automation
+Employees: 951
+Company Stage: 
+Industries Served: Fintech, Healthcare, E-commerce, Manufacturing, Automotive, Logistics, Gaming, Agriculture
+Pricing Ranges: $500-$1,000
+Pricing Models: Usage-based
+Top Clients: 
+
+Products/Services:
+- "Advanced enterprise AI platform enabling intelligent, omnichannel customer interactions through sophisticated natural language processing"This enhanced version:✓ Specifies "enterprise" scale✓
+- voice ai

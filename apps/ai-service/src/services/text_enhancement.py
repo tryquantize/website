@@ -2,16 +2,17 @@ import os
 import logging
 from typing import Dict, Any
 from openai import OpenAI
+from config.config import AI_MODEL, OPENROUTER_API_KEY, OPENROUTER_BASE_URL
 
 logger = logging.getLogger(__name__)
 
 class TextEnhancementService:
     def __init__(self):
         self.client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=os.getenv("OPENROUTER_API_KEY")
+            base_url=OPENROUTER_BASE_URL,
+            api_key=OPENROUTER_API_KEY
         )
-        self.model = "openai/gpt-4o-mini"
+        self.model = AI_MODEL
     
     def enhance_text(self, text: str, text_type: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
         """Enhance text using AI based on the type and context"""

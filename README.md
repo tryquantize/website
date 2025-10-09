@@ -209,6 +209,27 @@ curl http://localhost:5002/health
 
 MIT License - see LICENSE file for details.
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - System architecture and component overview
+- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with examples
+- **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Developer onboarding and best practices
+- **[Restructuring Summary](docs/RESTRUCTURING_SUMMARY.md)** - Recent improvements and changes
+
+## 🧪 Testing
+
+```bash
+# Health check
+curl http://localhost:5002/health
+
+# Manual API testing
+curl -X POST http://localhost:3001/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "AI chatbots"}'
+```
+
 ## 🆘 Troubleshooting
 
 ### Common Issues
@@ -220,14 +241,18 @@ MIT License - see LICENSE file for details.
 
 ### Getting Help
 
-- Check the `docs/` directory for detailed guides
-- Review the deployment checklist in `docs/deployment/`
+- Check the **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** for detailed troubleshooting
+- Review the **[Architecture Guide](docs/ARCHITECTURE.md)** for system understanding
+- See **[API Reference](docs/API_REFERENCE.md)** for endpoint documentation
 - Ensure all environment variables are properly set
 
-## 🔄 Migration from Old Structure
+## 🔄 Recent Improvements
 
-This project has been restructured for better maintainability. All functionality remains the same:
-- All API endpoints work as before
-- All environment variables are compatible
-- All deployment processes remain functional
-- Import paths have been updated automatically
+This project has been comprehensively restructured for better maintainability:
+- ✅ **Organized file structure** with logical groupings
+- ✅ **Comprehensive documentation** for all components
+- ✅ **Streamlined codebase** with only essential files
+- ✅ **Enhanced code quality** with consistent patterns
+- ✅ **All functionality preserved** - no breaking changes
+
+See **[Restructuring Summary](docs/RESTRUCTURING_SUMMARY.md)** for complete details.

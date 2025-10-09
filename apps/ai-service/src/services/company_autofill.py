@@ -296,7 +296,7 @@ class CompanyAutoFillService:
             }
             
             payload = {
-                "model": "openai/gpt-4o-mini",
+                "model": self.ai_agent.model,
                 "messages": [
                     {"role": "system", "content": "You are a data extraction specialist. Extract company information from available content and return only valid JSON. Work with whatever content is provided, even if limited. Extract and summarize what you can find."},
                     {"role": "user", "content": prompt}

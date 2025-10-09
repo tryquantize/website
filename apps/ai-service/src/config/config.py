@@ -7,7 +7,7 @@ load_dotenv('../../.env.local')  # Load from root directory
 load_dotenv('.env')  # Load from ai-service directory
 
 # OpenRouter API Configuration - use working keys from dev.sh
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 # Exa Search API Configuration - use working keys from dev.sh
@@ -15,10 +15,11 @@ EXA_API_KEY = os.getenv("EXA_API_KEY") or "6f5297ca-2851-4af0-b458-4bd461b4dbd1"
 EXA_BASE_URL = "https://api.exa.ai"
 
 # AI Model Configuration
-AI_MODEL = "openai/gpt-4o-mini"
+AI_MODEL = "anthropic/claude-3.5-haiku"
 
 # Model mapping for different LLMs
 MODEL_MAPPING = {
+    "Claude 3.5 Haiku": "anthropic/claude-3.5-haiku",
     "GPT-4o Mini": "openai/gpt-4o-mini",
     "Gemini 2.5 Flash": "google/gemini-2.0-flash-exp",
     "Qwen2.5 Coder 32B Instruct": "qwen/qwen-2.5-coder-32b-instruct",

@@ -1,23 +1,48 @@
-/* File Overview
-  Path: server/index.ts
-  Purpose: Express server entry point. Sets up middleware, registers API routes, integrates with Vite for development (so you can load the React app with Hot Module Replacement),
-  and serves the built static files in production. Finally, it starts the HTTP server on PORT (default 3001).
-
-  Reading tip for newcomers:
-  - Scan the route registration in registerRoutes(app) to see all available API endpoints
-  - In development we let Vite serve the React app; in production we serve the prebuilt files from dist/public
-*/
+/**
+ * @file index.ts
+ * @module APIServer
+ * @description Express server entry point for the Quantize Website API
+ * 
+ * This file sets up the main Express server with:
+ * - Middleware configuration (JSON parsing, request logging)
+ * - API route registration
+ * - Vite integration for development HMR
+ * - Static file serving for production
+ * - Error handling middleware
+ * 
+ * @requires express
+ * @requires ./src/routes/routes
+ * @requires ./src/utils/vite
+ * @since 1.0.0
+ * 
+ * @example
+ * // Start the server
+ * yarn dev    // Development mode with HMR
+ * yarn start  // Production mode
+ */
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./src/routes/routes";
 import { setupVite, serveStatic, log } from "./src/utils/vite";
 
 const app = express();
-// Parse JSON and URL-encoded bodies so API endpoints can read req.body
+
+/**
+ * Middleware Configuration
+ * Parse JSON and URL-encoded request bodies for API endpoints
+ */
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Lightweight request logger for API routes: logs method, path, status, and duration
+/**
+ * Request Logger Middleware
+ * Logs API requests with method, path, status code, duration, and response data
+ * Only logs requests to /api/* endpoints to avoid cluttering logs with static assets
+ * 
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object  
+ * @param {NextFunction} next - Express next function
+ */
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
