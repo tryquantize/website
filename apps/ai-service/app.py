@@ -217,6 +217,42 @@ def add_company():
             "success": False
         }), 500
 
+@app.route('/enhance-text', methods=['POST'])
+def enhance_text():
+    """Enhance text using AI"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'text' not in data or 'type' not in data:
+            return jsonify({
+                "error": "Text and type are required",
+                "success": False
+            }), 400
+        
+        text = data['text']
+        text_type = data['type']
+        context = data.get('context', {})
+        
+        logger.info(f"Enhancing {text_type} text: {text[:50]}...")
+        
+        # Import and use text enhancement service
+        from services.text_enhancement import TextEnhancementService
+        enhancement_service = TextEnhancementService()
+        
+        result = enhancement_service.enhance_text(text, text_type, context)
+        
+        status_code = 200 if result['success'] else 400
+        return jsonify(result), status_code
+        
+    except Exception as e:
+        logger.error(f"Error enhancing text: {str(e)}")
+        return jsonify({
+            "error": str(e),
+            "success": False
+        }), 500
+
+
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({

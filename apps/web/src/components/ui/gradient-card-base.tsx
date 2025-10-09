@@ -40,7 +40,7 @@ export const GradientCardBase = ({
       className={`relative rounded-[20px] overflow-hidden ${className}`}
       style={{
         width,
-        height,
+        ...(height === "auto" ? { minHeight: "400px" } : { height }),
         transformStyle: "preserve-3d",
         boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
       }}
@@ -65,11 +65,11 @@ export const GradientCardBase = ({
         className="absolute inset-0 z-10"
         style={{
           backgroundColor: "rgba(255, 255, 255, 0.1)",
-          backdropFilter: "blur(20px)",
+          backdropFilter: "blur(360px)",
           border: "1px solid rgba(255, 255, 255, 0.2)",
         }}
         animate={{
-          backdropFilter: isHovered ? "blur(25px)" : "blur(20px)",
+          backdropFilter: isHovered ? "blur(450px)" : "blur(360px)",
           backgroundColor: isHovered ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.1)",
         }}
         transition={{
@@ -80,7 +80,7 @@ export const GradientCardBase = ({
 
       {/* Content */}
       <motion.div
-        className="relative h-full z-20"
+        className={`relative z-20 ${height === "auto" ? "h-auto min-h-full" : "h-full"}`}
         animate={{
           rotateX: isHovered ? -rotation.x * 0.2 : 0,
           rotateY: isHovered ? -rotation.y * 0.2 : 0

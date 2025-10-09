@@ -111,6 +111,8 @@ interface Company {
   pricing: string;
   website: string;
   category: string;
+  enhancedAbout?: string;
+
 }
 
 interface SearchResult {
@@ -152,8 +154,7 @@ export default function ResultsPage() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [favoritesNotification, setFavoritesNotification] = useState({ show: false, itemName: '' });
-  const [showUseCaseSelection, setShowUseCaseSelection] = useState(false);
-  const [useCaseInput, setUseCaseInput] = useState('');
+
   
   // WEB SEARCH STATE
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
@@ -459,9 +460,7 @@ export default function ResultsPage() {
         timestamp: Date.now()
       };
 
-      // Check if use case selection should be shown
-      const shouldShowUseCaseSelection = !hasBudgetInQuery(query) && isGeneralizedQuery(query);
-      setShowUseCaseSelection(shouldShowUseCaseSelection);
+
 
       // Replace loading with result only (suggestions are now inside the result box)
       setContentItems([
@@ -725,13 +724,10 @@ export default function ResultsPage() {
     setContentItems([]);
     setAllCompanies([]);
     setCurrentConversationId(null);
-    setShowUseCaseSelection(false);
-    setUseCaseInput('');
+
   };
 
-  const handleUseCaseChange = (value: string) => {
-    setUseCaseInput(value);
-  };
+
 
   const showFavoritesNotification = (itemName: string) => {
     setFavoritesNotification({ show: true, itemName });
@@ -967,7 +963,7 @@ export default function ResultsPage() {
           if (currentTypes.has('product') && currentTypes.size === 1) {
             return <ProductCards products={allCompanies} />;
           } else if (currentTypes.has('company') && currentTypes.size === 1) {
-            return <CompanyCards companies={allCompanies} />;
+            return <CompanyCards companies={allCompanies} webSearchEnabled={webSearchEnabled} searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''} />;
           } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
             return <FreelancerCards freelancers={allCompanies} />;
           } else {
@@ -981,9 +977,8 @@ export default function ResultsPage() {
             }));
             return (
               <div className="mt-6">
-                <CompanyCards companies={companies} />
+                <CompanyCards companies={companies} webSearchEnabled={webSearchEnabled} searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''} />
                 {products.length > 0 && <ProductToolCards products={products} />}
-
               </div>
             );
           }

@@ -100,18 +100,19 @@ class CompanyEnrichmentAgent:
     
     async def _enrich_single_company(self, session: aiohttp.ClientSession, company: Dict[str, Any], query: str, locations: List[str] = None, web_search_enabled: bool = True) -> Dict[str, Any]:
         """Enrich a single company with parallel agent calls"""
-        logger.info(f"Enriching company: {company.get('name', 'Unknown')} with locations: {locations}, web_search: {web_search_enabled}")
+        logger.info(f"Enriching company: {company.get('name', 'Unknown')} with query: '{query}', locations: {locations}, web_search: {web_search_enabled}")
         enriched_company = company.copy()
         
-        # Run 4 enrichment tasks in parallel including LinkedIn
+        # Run 5 enrichment tasks in parallel including LinkedIn and use cases
         tasks = [
             self._get_key_specifications_async(session, company['name'], query, locations, web_search_enabled),
-            self._get_company_description_async(session, company['name'], locations, web_search_enabled),
+            self._get_company_description_async(session, company['name'], query, locations, web_search_enabled),
             self._get_company_website_async(session, company['name'], web_search_enabled) if not company.get('website') or company['website'] == '#' else asyncio.sleep(0, result=company.get('website', 'https://example.com')),
-            self._get_linkedin_url_async(session, company['name'], web_search_enabled)
+            self._get_linkedin_url_async(session, company['name'], web_search_enabled),
+            self._get_use_cases_async(session, company['name'], query, locations, web_search_enabled)
         ]
         
-        specs, about, website, linkedin_url = await asyncio.gather(*tasks)
+        specs, about, website, linkedin_url, use_cases = await asyncio.gather(*tasks)
         
         enriched_company['specifications'] = specs
         # Use the location from search interface - ensure it's properly set
@@ -119,20 +120,21 @@ class CompanyEnrichmentAgent:
             enriched_company['location'] = locations[0]
         else:
             enriched_company['location'] = "Global"
-        enriched_company['about'] = about
+        enriched_company['enhancedAbout'] = about
+
         enriched_company['linkedin_url'] = linkedin_url
         if not enriched_company.get('website') or enriched_company['website'] == '#':
             enriched_company['website'] = website
         
-        logger.info(f"Successfully enriched {company['name']} with LinkedIn: {linkedin_url}")
+        logger.info(f"Successfully enriched {company['name']} with query-specific content for '{query}'")
         return enriched_company
     
     async def _get_key_specifications_async(self, session: aiohttp.ClientSession, company_name: str, query: str, locations: List[str] = None, web_search_enabled: bool = True) -> List[str]:
         """Agent 1: Generate key specifications from web search or RAG database"""
         try:
             if web_search_enabled:
-                # Use web search for specifications
-                search_query = f"{company_name} company products services features technology solutions"
+                # Use web search for specifications with query context
+                search_query = f"{company_name} {query} products services features technology solutions"
                 search_results = self.exa_search.search_web(search_query, num_results=5, locations=locations)
                 
                 web_context = ""
@@ -148,12 +150,19 @@ class CompanyEnrichmentAgent:
                         web_context += f"Content: {result.get('text', '')[:500]}...\n\n"
                 
                 if web_context:
-                    prompt = f"""Based on the following web search results about {company_name}, extract exactly 5 key specifications, features, or capabilities that are specific to this company.
+                    prompt = f"""Based on the following web search results about {company_name}, extract exactly 5 key specifications that are SPECIFICALLY RELEVANT to "{query}".
 
 Web Search Results:
 {web_context}
 
-Analyze the content and extract 5 specific technical specifications, product features, or business capabilities that are unique to {company_name}. Each specification should be 3-8 words and based ONLY on the actual information found in the search results. If you cannot find 5 specific features, return fewer rather than making them up. Return only the specifications, one per line, no bullets or numbers."""
+User's Search Query: {query}
+
+Generate 5 specific technical specifications or capabilities that are:
+1. Unique to {company_name}
+2. Directly relevant to the user's search for "{query}"
+3. Based on actual information found in the search results
+
+Each specification must be EXACTLY 10 words long and focus on how {company_name} addresses "{query}". Return only the specifications, one per line, no bullets or numbers."""
                     
                     response = await self._make_agent_request_async(session, prompt)
                     if not response:
@@ -167,35 +176,45 @@ Analyze the content and extract 5 specific technical specifications, product fea
                 logger.warning(f"Could not generate real specifications for {company_name}")
                 return []
             else:
-                # Use RAG database for specifications
+                # Use RAG database for specifications with query context
                 company_data = self._find_company_in_rag(company_name)
                 
                 if not company_data:
                     logger.warning(f"Company {company_name} not found in RAG database")
                     return []
                 
-                specs = []
-                
-                # Get features from RAG data
+                # Use AI to filter and contextualize RAG data based on query
+                rag_context = ""
                 features_text = company_data.get('features', '')
+                info_text = company_data.get('company_info', '')
+                use_cases_text = company_data.get('use_cases', '')
+                
+                rag_context = f"Company Info: {info_text}\nFeatures: {features_text}\nUse Cases: {use_cases_text}"
+                
+                if rag_context.strip():
+                    prompt = f"""Based on the following company information about {company_name}, extract exactly 5 key specifications that are SPECIFICALLY RELEVANT to "{query}".
+
+Company Data:
+{rag_context}
+
+User's Search Query: {query}
+
+Generate 5 specific features, capabilities, or specifications that directly relate to "{query}". Each specification must be EXACTLY 10 words long and focus on how {company_name} addresses "{query}". Return only the specifications, one per line, no bullets or numbers."""
+                    
+                    response = self._make_sync_request(prompt)
+                    if response:
+                        specs = [s.strip() for s in response.split('\n') if s.strip() and len(s.strip()) > 2]
+                        if specs:
+                            return specs[:5]
+                
+                # Fallback to original RAG parsing if AI fails
+                specs = []
                 for line in features_text.split('\n'):
                     line = line.strip()
                     if line.startswith('-') or line.startswith('•'):
                         feature = line.lstrip('-•').strip()
                         if feature and len(feature) > 5:
                             specs.append(feature)
-                
-                # Get additional info from company_info
-                info_text = company_data.get('company_info', '')
-                for line in info_text.split('\n'):
-                    if line.startswith('Products:'):
-                        products = line.replace('Products:', '').strip()
-                        if products:
-                            specs.append(f"Products: {products}")
-                    elif line.startswith('Category:'):
-                        category = line.replace('Category:', '').strip()
-                        if category:
-                            specs.append(f"Category: {category}")
                 
                 return specs[:5] if specs else []
             
@@ -236,12 +255,12 @@ Analyze the content and extract 5 specific technical specifications, product fea
             logger.error(f"Website agent failed: {str(e)}")
             return "https://example.com"
     
-    async def _get_company_description_async(self, session: aiohttp.ClientSession, company_name: str, locations: List[str] = None, web_search_enabled: bool = True) -> List[str]:
+    async def _get_company_description_async(self, session: aiohttp.ClientSession, company_name: str, query: str, locations: List[str] = None, web_search_enabled: bool = True) -> str:
         """Agent 4: Get company description from web search or RAG database"""
         try:
             if web_search_enabled:
-                # Use web search for description
-                search_query = f"{company_name} company about services products what does do"
+                # Use web search for description with query context
+                search_query = f"{company_name} {query} company about services products what does do"
                 search_results = self.exa_search.search_web(search_query, num_results=3, locations=locations)
                 
                 web_context = ""
@@ -250,60 +269,79 @@ Analyze the content and extract 5 specific technical specifications, product fea
                     
                     if not real_results:
                         logger.warning(f"No real search results found for {company_name} description")
-                        return []
+                        return ""
                     
                     for result in real_results[:2]:
                         web_context += f"Content: {result.get('text', '')[:400]}...\n"
                 
                 if web_context:
-                    prompt = f"""Based on the following information about {company_name}, write exactly 2 bullet points describing what they do.
+                    prompt = f"""Based on the following information about {company_name}, write a comprehensive company description that is SPECIFICALLY RELATED to "{query}".
 
 Web Search Results:
 {web_context}
 
-Each bullet point should be 8-15 words describing their main services/products based ONLY on the actual information found. If you cannot find enough information for 2 bullet points, return fewer rather than making them up. Return only the bullet points, one per line, no bullets or formatting."""
+User's Search Query: {query}
+
+Write a detailed description that is EXACTLY 150 words describing what {company_name} does, their services/products, and how they specifically address "{query}". Focus on their unique value proposition and capabilities related to the user's search. Base the description ONLY on actual information found in the search results. Return only the description text, no formatting."""
                     
                     response = await self._make_agent_request_async(session, prompt)
                     if not response:
                         response = self._make_sync_request(prompt)
                     
-                    if response:
-                        lines = [line.strip() for line in response.split('\n') if line.strip() and len(line.strip()) > 10]
-                        if lines and len(lines) >= 1:
-                            return lines[:2]
+                    if response and len(response.strip()) > 50:
+                        return response.strip()
                 
                 logger.warning(f"Could not generate real description for {company_name}")
-                return []
+                return ""
             else:
-                # Use RAG database for description
+                # Use RAG database for description with query context
                 company_data = self._find_company_in_rag(company_name)
                 
                 if not company_data:
                     logger.warning(f"Company {company_name} not found in RAG database")
-                    return []
+                    return ""
                 
-                descriptions = []
-                
-                # Get description from company_info
+                # Use AI to generate query-specific descriptions from RAG data
+                rag_context = ""
                 info_text = company_data.get('company_info', '')
+                use_cases_text = company_data.get('use_cases', '')
+                features_text = company_data.get('features', '')
+                
+                rag_context = f"Company Info: {info_text}\nUse Cases: {use_cases_text}\nFeatures: {features_text}"
+                
+                if rag_context.strip():
+                    prompt = f"""Based on the following company information about {company_name}, write a comprehensive company description that is SPECIFICALLY RELATED to "{query}".
+
+Company Data:
+{rag_context}
+
+User's Search Query: {query}
+
+Write a detailed description that is EXACTLY 150 words describing what {company_name} does, their services/products, and how they specifically address "{query}". Focus on their unique value proposition and capabilities related to the user's search. Return only the description text, no formatting."""
+                    
+                    response = self._make_sync_request(prompt)
+                    if response and len(response.strip()) > 50:
+                        return response.strip()
+                
+                # Fallback to original RAG parsing if AI fails
+                description = ""
                 for line in info_text.split('\n'):
                     if line.startswith('Description:'):
                         desc = line.replace('Description:', '').strip()
                         if desc:
-                            descriptions.append(desc)
+                            description = desc
+                            break
                 
-                # Get additional context from use_cases if available
-                use_cases_text = company_data.get('use_cases', '')
-                if use_cases_text:
+                if not description and use_cases_text:
                     first_use_case = use_cases_text.split('\n')[0].strip()
-                    if first_use_case and first_use_case not in descriptions:
-                        descriptions.append(first_use_case)
+                    if first_use_case:
+                        description = first_use_case
                 
-                return descriptions[:2] if descriptions else []
+                return description if description else ""
             
         except Exception as e:
             logger.error(f"Description agent failed: {str(e)}")
-            return []
+            return ""
     
     async def _get_linkedin_url_async(self, session: aiohttp.ClientSession, company_name: str, web_search_enabled: bool = True) -> str:
         """Agent 5: Get LinkedIn URL from web search or generate from company name"""
@@ -354,6 +392,81 @@ Return only the URL, no other text."""
             import re
             company_slug = re.sub(r'[^a-z0-9-]', '', company_slug)
             return f"https://linkedin.com/company/{company_slug}"
+    
+    async def _get_use_cases_async(self, session: aiohttp.ClientSession, company_name: str, query: str, locations: List[str] = None, web_search_enabled: bool = True) -> List[str]:
+        """Agent 6: Generate use cases using LLM with search query only"""
+        try:
+            if web_search_enabled:
+                # Use LLM only with company name and search query - no web search
+                prompt = f"""Generate exactly 3 use cases that show how {company_name} can be used for "{query}".
+
+Company: {company_name}
+User's Search Query: {query}
+
+Generate 3 specific, practical use cases that demonstrate how {company_name} addresses or relates to "{query}". Each use case must be:
+1. Directly relevant to the search query "{query}"
+2. Realistic and practical for {company_name}
+3. EXACTLY 15 words long
+
+Return only the use cases, one per line, no bullets or numbers."""
+                
+                response = await self._make_agent_request_async(session, prompt)
+                if not response:
+                    response = self._make_sync_request(prompt)
+                
+                if response:
+                    use_cases = [s.strip() for s in response.split('\n') if s.strip() and len(s.strip()) > 10]
+                    if use_cases and len(use_cases) >= 1:
+                        return use_cases[:3]
+                
+                logger.warning(f"Could not generate use cases for {company_name}")
+                return []
+            else:
+                # Use RAG database for use cases with query context
+                company_data = self._find_company_in_rag(company_name)
+                
+                if not company_data:
+                    logger.warning(f"Company {company_name} not found in RAG database")
+                    return []
+                
+                # Use AI to generate query-specific use cases from RAG data
+                rag_context = ""
+                use_cases_text = company_data.get('use_cases', '')
+                features_text = company_data.get('features', '')
+                info_text = company_data.get('company_info', '')
+                
+                rag_context = f"Company Info: {info_text}\nFeatures: {features_text}\nUse Cases: {use_cases_text}"
+                
+                if rag_context.strip():
+                    prompt = f"""Based on the following company information about {company_name}, generate exactly 3 use cases that are SPECIFICALLY RELEVANT to "{query}".
+
+Company Data:
+{rag_context}
+
+User's Search Query: {query}
+
+Generate 3 specific use cases that show how {company_name} addresses "{query}". Each use case must be EXACTLY 15 words long and focus on practical applications. Return only the use cases, one per line, no bullets or numbers."""
+                    
+                    response = self._make_sync_request(prompt)
+                    if response:
+                        use_cases = [s.strip() for s in response.split('\n') if s.strip() and len(s.strip()) > 10]
+                        if use_cases:
+                            return use_cases[:3]
+                
+                # Fallback to original RAG parsing if AI fails
+                use_cases = []
+                for line in use_cases_text.split('\n'):
+                    line = line.strip()
+                    if line.startswith('-') or line.startswith('•'):
+                        use_case = line.lstrip('-•').strip()
+                        if use_case and len(use_case) > 10:
+                            use_cases.append(use_case)
+                
+                return use_cases[:3] if use_cases else []
+            
+        except Exception as e:
+            logger.error(f"Use cases agent failed: {str(e)}")
+            return []
     
 
     

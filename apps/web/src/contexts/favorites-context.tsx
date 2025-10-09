@@ -11,6 +11,25 @@ export interface FavoriteItem {
   pricing: string;
   website: string;
   category: string;
+  // Enhanced company fields
+  specifications?: string[];
+  location?: string;
+  about?: string[];
+  linkedin_url?: string;
+  rating?: {
+    rating: number;
+    reviews: number;
+  };
+  companyStage?: string;
+  industriesServed?: string[];
+  pricingRanges?: string[];
+  pricingModel?: string[];
+  employees?: string;
+  productsServices?: string[];
+  topClients?: string[];
+  logoUrl?: string;
+  founded?: string;
+  enhancedAbout?: string;
 }
 
 interface FavoritesContextType {

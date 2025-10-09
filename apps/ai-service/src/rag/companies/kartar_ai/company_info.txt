@@ -1,0 +1,40 @@
+Company: Kartar AI 
+Founded: 2024
+Headquarters: Indore, India
+Description: Transforming Businesses Through
+AI Innovation
+We're not just another AI company – we're your strategic partner in digital transformation, committed to delivering solutions that drive real business value.
+
+Our Vision
+At Kartar AI, we envision a future where artificial intelligence empowers businesses to reach their full potential. We're not just another AI company – we're your strategic partner in digital transformation, committed to delivering solutions that drive real business value.
+
+
+Our Expertise
+With deep expertise in machine learning, natural language processing, and computer vision, we specialize in developing custom AI solutions that address your unique business challenges. Our team of experts combines technical excellence with industry knowledge to deliver results that matter.
+
+Why Choose Kartar AI?
+We combine technical excellence with business acumen to deliver AI solutions that truly matter.
+
+Tailored Solutions
+We don't believe in one-size-fits-all. Every solution is customized to your specific needs and objectives.
+
+Proven Results
+Our track record speaks for itself, with successful implementations across various industries and use cases.
+
+Expert Team
+Work with seasoned AI professionals who understand both technology and business requirements.
+Website: https://kartar.ai/
+LinkedIn: https://www.linkedin.com/company/kartar-ai/
+Phone: +91 7776004343
+Category: AI Solutions Provider
+Employees: 2
+Company Stage: Pre-seed
+Industries Served: Fintech, Retail, E-commerce, SaaS, Real Estate
+Pricing Ranges: $100-$500
+Pricing Models: Subscription
+Top Clients: Nextquark, OpenCV
+
+Products/Services:
+- AI Automations
+- AI Voice Agents
+- LLM Security and Vulnerability

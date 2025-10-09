@@ -66,7 +66,7 @@ class DataLoader:
             # Load text files
             text_files = [
                 'company_info.txt', 'pricing.txt', 'features.txt', 
-                'use_cases.txt', 'reviews.txt', 'integrations.txt', 'alternatives.txt'
+                'use_cases.txt', 'reviews.txt', 'integrations.txt', 'alternatives.txt', 'clients.txt'
             ]
             
             for file_name in text_files:

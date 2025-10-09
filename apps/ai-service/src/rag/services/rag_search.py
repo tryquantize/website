@@ -38,24 +38,39 @@ class RAGSearchService:
                 query, self.companies_data, selected_types
             )
             
-            logger.info(f"Found {len(matching_companies)} matching companies")
+            logger.info(f"Found {len(matching_companies)} matching companies with relevance threshold")
             
+            # If no highly relevant matches, try with lower threshold for broader results
             if not matching_companies:
-                logger.warning("No matching companies found, returning empty result")
-                return {
-                    "query": query,
-                    "aiResponse": "I couldn't find any companies in our database that match your specific query. Please try a different search term or browse our available companies.",
-                    "suggestions": ["AI tools", "Machine learning platforms", "Automation software", "AI writing tools", "AI image generators"],
-                    "companies": [],
-                    "citations": [],
-                    "model_used": "RAG_ONLY",
-                    "web_search_used": False,
-                    "rag_used": True,
-                    "success": True
-                }
+                logger.info("No highly relevant matches found, trying with relaxed criteria")
+                # Temporarily lower the threshold for broader search
+                original_threshold = self.text_matcher.min_score_threshold
+                self.text_matcher.min_score_threshold = 2.0
+                
+                matching_companies = self.text_matcher.find_matching_companies(
+                    query, self.companies_data, selected_types
+                )
+                
+                # Restore original threshold
+                self.text_matcher.min_score_threshold = original_threshold
+                
+                # If still no matches, return helpful message
+                if not matching_companies:
+                    logger.warning("No matching companies found even with relaxed criteria")
+                    return {
+                        "query": query,
+                        "aiResponse": f"I couldn't find any companies in our database that specifically match '{query}'. This might be because your search is very specific or the companies you're looking for aren't in our current database. Try using broader terms or enable web search for more comprehensive results.",
+                        "suggestions": self._generate_fallback_suggestions(query),
+                        "companies": [],
+                        "citations": [],
+                        "model_used": "RAG_ONLY",
+                        "web_search_used": False,
+                        "rag_used": True,
+                        "success": True
+                    }
             
             # Extract structured company data
-            companies_list = self._format_companies_for_response(matching_companies)
+            companies_list = self._format_companies_for_response(matching_companies, query)
             logger.info(f"Formatted {len(companies_list)} companies for response")
             
             # Use LLM only to enrich/format the existing RAG data
@@ -92,7 +107,7 @@ class RAGSearchService:
                 "error": str(e)
             }
     
-    def _format_companies_for_response(self, matching_companies: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _format_companies_for_response(self, matching_companies: List[Dict[str, Any]], query: str = "") -> List[Dict[str, Any]]:
         """Format company data for API response with proper enrichment"""
         companies_list = []
         
@@ -108,11 +123,25 @@ class RAGSearchService:
             website = self._extract_website(company_data)
             category = self._extract_category(company_data)
             
-            # Add enrichment fields that were missing
+            # Add all enhanced form fields
             location = self._extract_location(company_data)
             founded = self._extract_founded(company_data)
             about = self._extract_about_us(company_data)
-            key_specs = self._extract_key_specifications(company_data)
+            key_specs = self._extract_key_specifications(company_data, query)
+            
+            # New enhanced fields
+            company_stage = self._extract_company_stage(company_data)
+            industries_served = self._extract_industries_served(company_data)
+            pricing_ranges = self._extract_pricing_ranges(company_data)
+            pricing_model = self._extract_pricing_model(company_data)
+            employees = self._extract_employees(company_data)
+            products_services = self._extract_products_services(company_data)
+            top_clients = self._extract_top_clients(company_data)
+            logo_url = self._extract_logo_url(company_data)
+            enhanced_about = self._generate_enhanced_about(company_data, company_name)
+            enhanced_use_cases = self._generate_enhanced_use_cases(company_data, company_name)
+            phone_number = self._extract_phone_number(company_data)
+            linkedin_url = self._extract_linkedin_url(company_data)
             
             companies_list.append({
                 "name": company_name,
@@ -124,7 +153,19 @@ class RAGSearchService:
                 "location": location,
                 "founded": founded,
                 "about": about,
-                "specifications": key_specs
+                "specifications": key_specs,
+                "companyStage": company_stage,
+                "industriesServed": industries_served,
+                "pricingRanges": pricing_ranges,
+                "pricingModel": pricing_model,
+                "employees": employees,
+                "productsServices": products_services,
+                "topClients": top_clients,
+                "logoUrl": logo_url,
+                "enhancedAbout": enhanced_about,
+
+                "phoneNumber": phone_number,
+                "linkedin_url": linkedin_url
             })
         
         return companies_list
@@ -228,25 +269,182 @@ class RAGSearchService:
         
         return about_points[:2] if about_points else ["AI company providing innovative solutions"]
     
-    def _extract_key_specifications(self, company_data: Dict[str, str]) -> List[str]:
-        """Extract key specifications from features and company info"""
-        specs = []
+    def _extract_key_specifications(self, company_data: Dict[str, str], query: str = "") -> List[str]:
+        """Extract and enhance key specifications using LLM from features and use cases, tailored to search query"""
+        try:
+            # Get raw data
+            features_text = company_data.get('features', '')
+            use_cases_text = company_data.get('use_cases', '')
+            company_name = self._extract_company_name(company_data)
+            
+            # If no data available, return fallback
+            if not features_text and not use_cases_text:
+                return ["AI-powered solutions", "Easy integration", "Professional support", "Scalable architecture", "24/7 support"]
+            
+            # Use LLM enricher to generate enhanced specifications with query context
+            enhanced_specs = self.llm_enricher.generate_key_specifications(
+                company_name, features_text, use_cases_text, query
+            )
+            
+            return enhanced_specs[:5] if enhanced_specs else [
+                "AI-powered solutions", "Easy integration", "Professional support", 
+                "Scalable architecture", "24/7 support"
+            ]
+            
+        except Exception as e:
+            logger.error(f"Failed to generate key specifications: {e}")
+            return ["AI-powered solutions", "Easy integration", "Professional support", "Scalable architecture", "24/7 support"]
+    
+    def _extract_company_stage(self, company_data: Dict[str, str]) -> str:
+        """Extract company stage from RAG data"""
+        info_text = company_data.get('company_info', '')
+        for line in info_text.split('\n'):
+            if line.startswith('Company Stage:'):
+                return line.replace('Company Stage:', '').strip()
+        return "N/A"
+    
+    def _extract_industries_served(self, company_data: Dict[str, str]) -> List[str]:
+        """Extract industries served from RAG data"""
+        info_text = company_data.get('company_info', '')
+        for line in info_text.split('\n'):
+            if line.startswith('Industries Served:'):
+                industries_str = line.replace('Industries Served:', '').strip()
+                return [industry.strip() for industry in industries_str.split(',') if industry.strip()]
+        return []
+    
+    def _extract_pricing_ranges(self, company_data: Dict[str, str]) -> List[str]:
+        """Extract pricing ranges from RAG data"""
+        pricing_text = company_data.get('pricing', '')
+        for line in pricing_text.split('\n'):
+            if line.startswith('Pricing Ranges:'):
+                ranges_str = line.replace('Pricing Ranges:', '').strip()
+                return [range_item.strip() for range_item in ranges_str.split(',') if range_item.strip()]
+        return []
+    
+    def _extract_pricing_model(self, company_data: Dict[str, str]) -> List[str]:
+        """Extract pricing model from RAG data"""
+        pricing_text = company_data.get('pricing', '')
+        for line in pricing_text.split('\n'):
+            if line.startswith('Pricing Models:'):
+                models_str = line.replace('Pricing Models:', '').strip()
+                return [model.strip() for model in models_str.split(',') if model.strip()]
+        return []
+    
+    def _extract_employees(self, company_data: Dict[str, str]) -> str:
+        """Extract employee count from RAG data"""
+        info_text = company_data.get('company_info', '')
+        for line in info_text.split('\n'):
+            if line.startswith('Employees:'):
+                return line.replace('Employees:', '').strip()
+        return "N/A"
+    
+    def _extract_products_services(self, company_data: Dict[str, str]) -> List[str]:
+        """Extract products/services from RAG data"""
+        products = []
+        info_text = company_data.get('company_info', '')
         
-        # Get top features as specs
-        features = self._extract_features(company_data)
-        specs.extend(features[:3])
+        # Look for Products/Services section
+        lines = info_text.split('\n')
+        in_products_section = False
         
-        # Add category as spec
-        category = self._extract_category(company_data)
-        if category != "AI Tools":
-            specs.append(f"Category: {category}")
+        for line in lines:
+            if line.startswith('Products/Services:'):
+                in_products_section = True
+                continue
+            elif in_products_section:
+                if line.startswith('-') or line.startswith('•'):
+                    product = line.lstrip('-•').strip()
+                    if product:
+                        products.append(product)
+                elif line.strip() == '' or ':' in line:
+                    break
         
-        # Add location as spec if not Global
-        location = self._extract_location(company_data)
-        if location != "Global":
-            specs.append(f"Based in {location}")
+        return products
+    
+    def _extract_top_clients(self, company_data: Dict[str, str]) -> List[str]:
+        """Extract top clients from RAG data"""
+        clients = []
         
-        return specs[:5] if specs else ["AI-powered solutions", "Easy integration", "Professional support"]
+        # Check if clients.txt file exists in the data
+        clients_text = company_data.get('clients', '')
+        if clients_text:
+            for line in clients_text.split('\n'):
+                line = line.strip()
+                if line.startswith('-') or line.startswith('•'):
+                    client = line.lstrip('-•').strip()
+                    if client and client != 'No clients listed':
+                        clients.append(client)
+        
+        # Also check company_info for Top Clients field
+        info_text = company_data.get('company_info', '')
+        for line in info_text.split('\n'):
+            if line.startswith('Top Clients:'):
+                clients_str = line.replace('Top Clients:', '').strip()
+                if clients_str and clients_str != 'N/A':
+                    clients.extend([client.strip() for client in clients_str.split(',') if client.strip()])
+                break
+        
+        return clients
+    
+    def _extract_logo_url(self, company_data: Dict[str, str]) -> str:
+        """Extract logo URL from RAG data (placeholder for now)"""
+        # For now, return a placeholder. In the future, this could be stored in links.json
+        return ""
+    
+    def _generate_enhanced_about(self, company_data: Dict[str, str], company_name: str) -> str:
+        """Generate enhanced about paragraph using LLM"""
+        try:
+            company_info = company_data.get('company_info', '')
+            features = company_data.get('features', '')
+            use_cases = company_data.get('use_cases', '')
+            
+            # Use LLM enricher to generate enhanced about paragraph
+            enhanced_about = self.llm_enricher.generate_enhanced_about(
+                company_name, company_info, features, use_cases
+            )
+            
+            return enhanced_about
+            
+        except Exception as e:
+            logger.error(f"Failed to generate enhanced about: {e}")
+            return f"{company_name} specializes in innovative AI solutions, focusing on delivering cutting-edge technology that transforms business operations. With a commitment to excellence and customer success, they provide tailored solutions that address specific industry challenges while maintaining the highest standards of quality and reliability."
+    
+    def _extract_phone_number(self, company_data: Dict[str, str]) -> str:
+        """Extract phone number from RAG data"""
+        info_text = company_data.get('company_info', '')
+        for line in info_text.split('\n'):
+            if line.startswith('Phone:'):
+                return line.replace('Phone:', '').strip()
+        return ""
+    
+    def _extract_linkedin_url(self, company_data: Dict[str, str]) -> str:
+        """Extract LinkedIn URL from RAG data"""
+        info_text = company_data.get('company_info', '')
+        for line in info_text.split('\n'):
+            if line.startswith('LinkedIn:'):
+                return line.replace('LinkedIn:', '').strip()
+        return ""
+    
+    def _generate_enhanced_use_cases(self, company_data: Dict[str, str], company_name: str) -> List[str]:
+        """Generate enhanced use cases using LLM from use cases and industries data"""
+        try:
+            use_cases_text = company_data.get('use_cases', '')
+            industries_served = self._extract_industries_served(company_data)
+            
+            # Use LLM enricher to generate enhanced use cases
+            enhanced_use_cases = self.llm_enricher.generate_enhanced_use_cases(
+                company_name, use_cases_text, industries_served
+            )
+            
+            return enhanced_use_cases
+            
+        except Exception as e:
+            logger.error(f"Failed to generate enhanced use cases: {e}")
+            return [
+                "Business process automation and optimization solutions",
+                "Data analytics and insights for decision making",
+                "Customer experience enhancement through AI integration"
+            ]
     
     def _generate_rag_suggestions(self, query: str, matching_companies: List[Dict[str, Any]]) -> List[str]:
         """Generate suggestions based on available RAG data"""
@@ -271,6 +469,56 @@ class RAGSearchService:
         ])
         
         return suggestions[:5]  # Return top 5 suggestions
+    
+    def _generate_fallback_suggestions(self, query: str) -> List[str]:
+        """Generate helpful suggestions when no matches are found"""
+        # Extract key terms from the query to generate relevant suggestions
+        query_lower = query.lower()
+        
+        suggestions = []
+        
+        # Add suggestions based on query content
+        if any(term in query_lower for term in ['image', 'photo', 'picture', 'visual']):
+            suggestions.extend(["AI image generators", "Visual AI tools", "Image editing platforms"])
+        elif any(term in query_lower for term in ['text', 'writing', 'content', 'copy']):
+            suggestions.extend(["AI writing tools", "Content generation", "Text automation"])
+        elif any(term in query_lower for term in ['chat', 'conversation', 'talk']):
+            suggestions.extend(["AI chatbots", "Conversational AI", "Customer service AI"])
+        elif any(term in query_lower for term in ['data', 'analytics', 'analysis']):
+            suggestions.extend(["Data analytics platforms", "AI analytics tools", "Business intelligence"])
+        else:
+            # Generic AI-related suggestions
+            suggestions.extend(["AI platforms", "Machine learning tools", "Automation software"])
+        
+        # Add some general suggestions
+        suggestions.extend(["Browse all companies", "Popular AI tools"])
+        
+        return suggestions[:5]
+    
+    def get_company_details(self, company_name: str) -> Dict[str, Any]:
+        """Get detailed company information for comparison"""
+        try:
+            # Normalize company name
+            normalized_name = company_name.lower().replace(' ', '_').replace('.', '')
+            
+            # Find company in loaded data
+            company_data = self.companies_data.get(normalized_name)
+            if not company_data:
+                return {}
+            
+            # Extract comprehensive details
+            return {
+                'company_info': company_data.get('company_info', ''),
+                'features_detailed': company_data.get('features', ''),
+                'use_cases': company_data.get('use_cases', ''),
+                'pricing_details': company_data.get('pricing', ''),
+                'clients': company_data.get('clients', ''),
+                'links': company_data.get('links', {})
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get company details for {company_name}: {e}")
+            return {}
     
     def reload_data(self):
         """Reload all RAG data (useful for updates)"""

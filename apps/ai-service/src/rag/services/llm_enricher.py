@@ -185,3 +185,167 @@ Comparison:"""
             context += f"- Features: {company_data.get('features', 'N/A')}\n\n"
         
         return context
+    
+    def generate_key_specifications(self, company_name: str, features_text: str, use_cases_text: str, query: str = "") -> List[str]:
+        """Generate 5 short key specifications using LLM from features and use cases, tailored to search query"""
+        try:
+            query_context = f"\n\nUser Search Query: {query}\nIMPORTANT: Focus specifications on features/capabilities most relevant to '{query}' from the company data." if query else ""
+            
+            prompt = f"""Based on the following company information, generate exactly 5 key specifications. Each specification should be exactly 10 words long.
+
+Company: {company_name}
+
+Features:
+{features_text}
+
+Use Cases:
+{use_cases_text}{query_context}
+
+Generate 5 technical specifications (exactly 10 words each) that highlight the most important capabilities{' related to the search query' if query else ''}. Format as a simple list, one per line.
+
+Specifications:"""
+            
+            response = self._call_llm_simple(prompt)
+            
+            # Parse response into list
+            specs = []
+            for line in response.split('\n'):
+                line = line.strip().lstrip('•-*').strip()
+                if line and not line.startswith('Specifications:'):
+                    specs.append(line)
+            
+            # Ensure we have exactly 5 specs
+            if len(specs) >= 5:
+                return specs[:5]
+            else:
+                fallback_specs = ["AI-powered solutions", "Easy integration", "Professional support", "Scalable architecture", "24/7 monitoring"]
+                while len(specs) < 5:
+                    specs.append(fallback_specs[len(specs)])
+                return specs[:5]
+                
+        except Exception as e:
+            logger.error(f"Key specifications generation failed: {e}")
+            return ["AI-powered solutions", "Easy integration", "Professional support", "Scalable architecture", "24/7 monitoring"]
+    
+    def _call_llm_simple(self, prompt: str) -> str:
+        """Simple LLM call for specifications generation"""
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://localhost:3001",
+            "X-Title": "Specifications Generator"
+        }
+        
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": "You are a technical specification writer. Generate technical specifications that are exactly 10 words long each."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.3,
+            "max_tokens": 100
+        }
+        
+        response = requests.post(f"{self.base_url}/chat/completions", headers=headers, json=payload)
+        
+        if response.status_code != 200:
+            raise Exception(f"LLM API error: {response.status_code}")
+        
+        return response.json()['choices'][0]['message']['content'].strip()
+    
+    def generate_enhanced_about(self, company_name: str, company_info: str, features: str, use_cases: str) -> str:
+        """Generate enhanced about paragraph focusing on company mission, vision, and expertise"""
+        try:
+            prompt = f"""Create a compelling 150-word about paragraph for {company_name}. Focus ONLY on what the company does, vision, mission, expertise, and value proposition. DO NOT include team size, location, year, pricing, or client names.
+
+Company Info: {company_info}
+Features: {features}
+Use Cases: {use_cases}
+
+Write exactly 150 words:"""
+            
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": "Write compelling company about sections focusing on value proposition and expertise only."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 200
+            }
+            
+            response = requests.post(f"{self.base_url}/chat/completions", 
+                headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}, 
+                json=payload)
+            
+            if response.status_code == 200:
+                return response.json()['choices'][0]['message']['content'].strip()
+            else:
+                raise Exception(f"API error: {response.status_code}")
+                
+        except Exception as e:
+            logger.error(f"Enhanced about generation failed: {e}")
+            return f"{company_name} specializes in innovative AI solutions, delivering cutting-edge technology that transforms business operations. With expertise spanning multiple domains and a commitment to excellence, they provide tailored solutions addressing specific industry challenges while maintaining the highest standards of quality and reliability."
+    
+    def generate_enhanced_use_cases(self, company_name: str, use_cases_text: str, industries_served: List[str]) -> List[str]:
+        """Generate 2-3 enhanced use case bullet points (15 words each) from use cases and industries"""
+        try:
+            industries_str = ', '.join(industries_served) if industries_served else 'various industries'
+            
+            prompt = f"""Create exactly 3 use case bullet points for {company_name}. Each bullet point should be exactly 15 words long and focus on specific industry applications.
+
+Use Cases Data:
+{use_cases_text}
+
+Industries Served: {industries_str}
+
+Generate 3 specific use case bullet points (exactly 15 words each) that combine the use cases with the industries served. Format as a simple list.
+
+Use Cases:"""
+            
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": "Generate specific use case bullet points that are exactly 15 words each, focusing on industry applications."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.5,
+                "max_tokens": 150
+            }
+            
+            response = requests.post(f"{self.base_url}/chat/completions", 
+                headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}, 
+                json=payload)
+            
+            if response.status_code == 200:
+                response_text = response.json()['choices'][0]['message']['content'].strip()
+                
+                # Parse response into list
+                use_cases = []
+                for line in response_text.split('\n'):
+                    line = line.strip().lstrip('•-*').strip()
+                    if line and not line.startswith('Use Cases:'):
+                        use_cases.append(line)
+                
+                # Ensure we have exactly 3 use cases
+                if len(use_cases) >= 3:
+                    return use_cases[:3]
+                else:
+                    fallback_cases = [
+                        "Business process automation and optimization solutions",
+                        "Data analytics and insights for decision making", 
+                        "Customer experience enhancement through AI integration"
+                    ]
+                    while len(use_cases) < 3:
+                        use_cases.append(fallback_cases[len(use_cases)])
+                    return use_cases[:3]
+            else:
+                raise Exception(f"API error: {response.status_code}")
+                
+        except Exception as e:
+            logger.error(f"Enhanced use cases generation failed: {e}")
+            return [
+                "Business process automation and optimization solutions",
+                "Data analytics and insights for decision making",
+                "Customer experience enhancement through AI integration"
+            ]

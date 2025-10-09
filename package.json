@@ -57,6 +57,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cobe": "0.6.5",
+    "dicons": "1.1.7",
     "embla-carousel-react": "^8.6.0",
     "express": "^4.21.2",
     "firebase": "^12.1.0",

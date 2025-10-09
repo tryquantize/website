@@ -470,6 +470,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Text enhancement route
+  app.post("/api/enhance-text", async (req, res) => {
+    try {
+      const { text, type, context } = req.body;
+      
+      if (!text || !type) {
+        return res.status(400).json({
+          success: false,
+          error: "Text and type are required"
+        });
+      }
+      
+      // Call Python AI service for text enhancement
+      const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:5002';
+      
+      try {
+        const aiResponse = await fetch(`${aiServiceUrl}/enhance-text`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text, type, context })
+        });
+
+        if (!aiResponse.ok) {
+          throw new Error(`AI service responded with status: ${aiResponse.status}`);
+        }
+
+        const result = await aiResponse.json();
+        res.json(result);
+      } catch (aiError) {
+        console.error('Text enhancement error:', aiError);
+        res.status(500).json({ 
+          success: false,
+          error: "Failed to enhance text. Please try again."
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        error: "Text enhancement failed" 
+      });
+    }
+  });
+
   // Analytics routes
   app.get("/api/tools/:id/analytics", async (req, res) => {
     try {

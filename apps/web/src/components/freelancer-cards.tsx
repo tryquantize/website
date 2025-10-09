@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, ExternalLink, ArrowLeft, Send, User, Heart } from "lucide-react";
+import { MessageCircle, ExternalLink, ArrowLeft, Send, User, Heart, MapPin, Users, Calendar, TrendingUp, DollarSign, Target, Briefcase, Award, ChevronDown, ChevronUp, Building2 } from "lucide-react";
 import { useFavorites } from "@/contexts/favorites-context";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
+import { GradientCardBase } from "@/components/ui/gradient-card-base";
+import { motion } from "framer-motion";
 
 interface Freelancer {
   name: string;
@@ -13,6 +15,24 @@ interface Freelancer {
   pricing: string;
   website: string;
   category: string;
+  specifications?: string[];
+  location?: string;
+  about?: string[];
+  linkedin_url?: string;
+  rating?: {
+    rating: number;
+    reviews: number;
+  };
+  companyStage?: string;
+  industriesServed?: string[];
+  pricingRanges?: string[];
+  pricingModel?: string[];
+  employees?: string;
+  productsServices?: string[];
+  topClients?: string[];
+  logoUrl?: string;
+  founded?: string;
+  enhancedAbout?: string;
 }
 
 interface FreelancerCardsProps {
@@ -23,6 +43,10 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
   const [chatStates, setChatStates] = useState<{[key: number]: boolean}>({});
   const [messages, setMessages] = useState<{[key: number]: Array<{text: string, isUser: boolean}>}>({});
   const [inputValues, setInputValues] = useState<{[key: number]: string}>({});
+  const [expandedCards, setExpandedCards] = useState<{[key: number]: boolean}>({});
+  const [expandedIndustries, setExpandedIndustries] = useState<{[key: number]: boolean}>({});
+  const [expandedProducts, setExpandedProducts] = useState<{[key: number]: boolean}>({});
+  const [aboutDropdownStates, setAboutDropdownStates] = useState<{[key: number]: boolean}>({});
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { currentUser } = useFirebaseAuth();
   const { showFavoritesNotification } = useNotification();
@@ -58,13 +82,76 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
     }
   };
 
+  const toggleCardExpansion = (index: number) => {
+    setExpandedCards(prev => ({...prev, [index]: !prev[index]}));
+  };
+
+  const toggleIndustriesExpansion = (index: number) => {
+    setExpandedIndustries(prev => ({...prev, [index]: !prev[index]}));
+  };
+
+  const toggleProductsExpansion = (index: number) => {
+    setExpandedProducts(prev => ({...prev, [index]: !prev[index]}));
+  };
+
+  const toggleAboutDropdown = (index: number) => {
+    setAboutDropdownStates(prev => ({...prev, [index]: !prev[index]}));
+  };
+
+  // Helper function to check if a field has meaningful data
+  const hasData = (value: any): boolean => {
+    if (!value) return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'string') {
+      const cleaned = value.toLowerCase().trim();
+      return cleaned !== '' && cleaned !== 'n/a' && cleaned !== 'not applicable' && cleaned !== 'null' && cleaned !== 'undefined';
+    }
+    return true;
+  };
+
+  // Get available sections for a freelancer
+  const getAvailableSections = (freelancer: Freelancer) => {
+    const sections = [];
+    if (hasData(freelancer.specifications) || hasData(freelancer.features)) sections.push('specifications');
+    if (hasData(freelancer.pricingRanges) || hasData(freelancer.pricingModel) || hasData(freelancer.pricing)) sections.push('pricing');
+    if (hasData(freelancer.location)) sections.push('location');
+    if (hasData(freelancer.employees)) sections.push('employees');
+    if (hasData(freelancer.founded)) sections.push('founded');
+    if (hasData(freelancer.companyStage)) sections.push('stage');
+    if (hasData(freelancer.industriesServed)) sections.push('industries');
+    if (hasData(freelancer.productsServices)) sections.push('products');
+    if (hasData(freelancer.topClients)) sections.push('clients');
+    return sections;
+  };
+
+  // Get icon for section
+  const getSectionIcon = (section: string) => {
+    switch (section) {
+      case 'specifications': return <Briefcase className="w-4 h-4 text-white" />;
+      case 'pricing': return <DollarSign className="w-4 h-4 text-white" />;
+      case 'location': return <MapPin className="w-4 h-4 text-white" />;
+      case 'employees': return <Users className="w-4 h-4 text-white" />;
+      case 'founded': return <Calendar className="w-4 h-4 text-white" />;
+      case 'stage': return <TrendingUp className="w-4 h-4 text-white" />;
+      case 'industries': return <Target className="w-4 h-4 text-white" />;
+      case 'products': return <Award className="w-4 h-4 text-white" />;
+      case 'clients': return <Building2 className="w-4 h-4 text-white" />;
+      default: return <Briefcase className="w-4 h-4 text-white" />;
+    }
+  };
+
   return (
     <div className="mt-6">
       <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2" style={{scrollbarWidth: 'thin'}}>
-        {freelancers.map((freelancer, index) => (
-          <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all rounded-lg p-4 min-w-[280px] h-[400px] flex-shrink-0">
+        {freelancers.map((freelancer, index) => {
+          const availableSections = getAvailableSections(freelancer);
+          const isExpanded = expandedCards[index];
+          const cardHeight = isExpanded ? "auto" : "400px";
+          
+          return (
+          <GradientCardBase key={index} className="min-w-[600px] max-w-[600px] flex-shrink-0" width="600px" height={cardHeight}>
             {chatStates[index] ? (
-              <div className="space-y-3 h-full flex flex-col">
+              <div className="space-y-3 h-full flex flex-col p-4">
                 <div className="flex items-center justify-between">
                   <h5 className="text-white text-base font-medium">{freelancer.name}</h5>
                   <Button
@@ -105,14 +192,60 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
                 </div>
               </div>
             ) : (
-              <div className="space-y-3 h-full flex flex-col">
+              <div className={`space-y-3 h-full flex flex-col p-4 ${isExpanded ? 'overflow-y-auto' : ''}`}>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <h5 className="text-white text-base font-medium">{freelancer.name}</h5>
+                  <div className="flex items-center space-x-3">
+                    <motion.div
+                      className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden"
+                      style={{
+                        background: freelancer.logoUrl ? "transparent" : "linear-gradient(225deg, #171c2c 0%, #121624 100%)",
+                        boxShadow: "0 4px 8px -1px rgba(0, 0, 0, 0.2), inset 1px 1px 3px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.4)"
+                      }}
+                      whileHover={{ y: -1, boxShadow: "0 6px 12px -1px rgba(0, 0, 0, 0.3), inset 1px 1px 3px rgba(255, 255, 255, 0.15), inset -1px -1px 2px rgba(0, 0, 0, 0.5)" }}
+                    >
+                      {freelancer.logoUrl ? (
+                        <img src={freelancer.logoUrl} alt={`${freelancer.name} logo`} className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-5 h-5 text-white" />
+                      )}
+                    </motion.div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h5 className="text-white text-lg font-semibold">{freelancer.name}</h5>
+                        <div className="flex items-center gap-1">
+                          {freelancer.linkedin_url && (
+                            <button
+                              onClick={() => window.open(freelancer.linkedin_url, "_blank", "noopener,noreferrer")}
+                              className="text-white/80 hover:text-blue-400 transition-colors"
+                              title="View LinkedIn Profile"
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                              </svg>
+                            </button>
+                          )}
+                          {freelancer.website && freelancer.website !== "#" && (
+                            <button
+                              onClick={() => handleVisitProfile(freelancer.website)}
+                              className="text-white/80 hover:text-blue-400 transition-colors"
+                              title="Visit Website"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </button>
+                          )}
+                          {/* Section Icons */}
+                          <div className="flex items-center gap-1 ml-2">
+                            {availableSections.slice(0, 6).map((section) => (
+                              <div key={section} className="text-white/60 hover:text-white transition-colors" title={section}>
+                                {getSectionIcon(section)}
+                              </div>
+                            ))}
+                            {availableSections.length > 6 && (
+                              <span className="text-xs text-white/60">+{availableSections.length - 6}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                       <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full">{freelancer.category}</span>
                     </div>
                   </div>
@@ -131,7 +264,22 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
                             features: freelancer.features,
                             pricing: freelancer.pricing,
                             website: freelancer.website,
-                            category: freelancer.category
+                            category: freelancer.category,
+                            specifications: freelancer.specifications,
+                            location: freelancer.location,
+                            about: freelancer.about,
+                            linkedin_url: freelancer.linkedin_url,
+                            rating: freelancer.rating,
+                            companyStage: freelancer.companyStage,
+                            industriesServed: freelancer.industriesServed,
+                            pricingRanges: freelancer.pricingRanges,
+                            pricingModel: freelancer.pricingModel,
+                            employees: freelancer.employees,
+                            productsServices: freelancer.productsServices,
+                            topClients: freelancer.topClients,
+                            logoUrl: freelancer.logoUrl,
+                            founded: freelancer.founded,
+                            enhancedAbout: freelancer.enhancedAbout
                           }, showFavoritesNotification);
                         }
                       }}
@@ -143,27 +291,182 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
                     </Button>
                   )}
                 </div>
-                
-                <p className="text-white/70 text-sm">{freelancer.description}</p>
-                
-                <div>
-                  <p className="text-xs text-white/60 mb-1">Skills:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {freelancer.features.slice(0, 3).map((skill, skillIndex) => (
-                      <span key={skillIndex} className="text-xs bg-white/5 text-white/80 border border-white/20 px-2 py-1 rounded">
-                        {skill}
-                      </span>
-                    ))}
+
+                {/* Compact View - Basic Info */}
+                {!isExpanded && (
+                  <div className="space-y-3">
+                    <p className="text-white/80 text-sm line-clamp-2">{freelancer.description}</p>
+                    
+                    {/* Quick Info Grid */}
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      {hasData(freelancer.location) && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3 h-3 text-white/60" />
+                          <span className="text-white">{freelancer.location}</span>
+                        </div>
+                      )}
+                      {hasData(freelancer.employees) && (
+                        <div className="flex items-center gap-2">
+                          <Users className="w-3 h-3 text-white/60" />
+                          <span className="text-white">{freelancer.employees}</span>
+                        </div>
+                      )}
+                      {hasData(freelancer.founded) && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-3 h-3 text-white/60" />
+                          <span className="text-white">{freelancer.founded}</span>
+                        </div>
+                      )}
+                      {hasData(freelancer.companyStage) && (
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-3 h-3 text-white/60" />
+                          <span className="text-white">{freelancer.companyStage}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Skills Preview */}
+                    {hasData(freelancer.features) && (
+                      <div>
+                        <p className="text-xs text-white/60 mb-1">Skills:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {freelancer.features.slice(0, 3).map((skill, skillIndex) => (
+                            <span key={skillIndex} className="text-xs bg-white/5 text-white/80 border border-white/20 px-2 py-1 rounded">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Expand Button */}
+                    <button
+                      onClick={() => toggleCardExpansion(index)}
+                      className="w-full flex items-center justify-center gap-2 py-2 text-white/60 hover:text-white transition-colors border-t border-white/10 mt-4"
+                    >
+                      <span className="text-sm">View Details</span>
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
                   </div>
-                </div>
-                
-                <div className="text-sm text-white/80 font-medium">{freelancer.pricing}</div>
+                )}
+
+                {/* Expanded View - Full Details */}
+                {isExpanded && (
+                  <div className="space-y-4">
+                    <p className="text-white/80 text-sm">{freelancer.description}</p>
+                    
+                    {/* Freelancer Info Grid */}
+                    <div className="grid grid-cols-4 gap-3 text-xs">
+                      {hasData(freelancer.location) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <MapPin className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Location</span>
+                          </div>
+                          <div className="text-white/80">{freelancer.location}</div>
+                        </div>
+                      )}
+                      {hasData(freelancer.employees) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Users className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Team Size</span>
+                          </div>
+                          <div className="text-white/80">{freelancer.employees}</div>
+                        </div>
+                      )}
+                      {hasData(freelancer.founded) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Calendar className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Experience Since</span>
+                          </div>
+                          <div className="text-white/80">{freelancer.founded}</div>
+                        </div>
+                      )}
+                      {hasData(freelancer.companyStage) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <TrendingUp className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Level</span>
+                          </div>
+                          <div className="text-white/80">{freelancer.companyStage}</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Skills */}
+                    {hasData(freelancer.features) && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Briefcase className="w-4 h-4 text-white/60" />
+                          <h6 className="text-sm font-semibold text-white">Skills & Expertise</h6>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {freelancer.features.map((skill, skillIndex) => (
+                            <span key={skillIndex} className="text-xs bg-white/5 text-white/80 border border-white/20 px-2 py-1 rounded">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Pricing Information */}
+                    {(hasData(freelancer.pricingRanges) || hasData(freelancer.pricingModel) || hasData(freelancer.pricing)) && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <DollarSign className="w-4 h-4 text-white/60" />
+                          <h6 className="text-sm font-semibold text-white">Pricing Information</h6>
+                        </div>
+                        <div className="space-y-2 text-xs">
+                          {hasData(freelancer.pricingRanges) && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-white/60">Ranges:</span>
+                              <div className="flex flex-wrap gap-1">
+                                {freelancer.pricingRanges!.map((range, i) => (
+                                  <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded">
+                                    {range}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {hasData(freelancer.pricingModel) && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-white/60">Models:</span>
+                              <div className="flex flex-wrap gap-1">
+                                {freelancer.pricingModel!.map((model, i) => (
+                                  <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
+                                    {model}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {hasData(freelancer.pricing) && !hasData(freelancer.pricingRanges) && !hasData(freelancer.pricingModel) && (
+                            <div className="text-white/80">{freelancer.pricing}</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Collapse Button */}
+                    <button
+                      onClick={() => toggleCardExpansion(index)}
+                      className="w-full flex items-center justify-center gap-2 py-2 text-white/60 hover:text-white transition-colors border-t border-white/10 mt-4"
+                    >
+                      <span className="text-sm">Show Less</span>
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
                 
                 <div className="flex space-x-1 mt-auto">
                   <Button
                     onClick={() => handleChatClick(index)}
                     size="sm"
-                    className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-medium shadow-lg shadow-yellow-400/30 text-xs px-2"
+                    className="flex-1 bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
                   >
                     <MessageCircle className="w-3 h-3 mr-1" />
                     Chat
@@ -171,25 +474,16 @@ export function FreelancerCards({ freelancers }: FreelancerCardsProps) {
                   <Button
                     onClick={() => alert(`Hiring ${freelancer.name}...`)}
                     size="sm"
-                    className="flex-1 bg-gradient-to-r from-gray-300 to-gray-500 hover:from-gray-400 hover:to-gray-600 text-black font-medium shadow-lg shadow-gray-400/30 text-xs px-2"
+                    className="flex-1 bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
                   >
                     💼 Hire
                   </Button>
-                  {freelancer.website && freelancer.website !== "#" && (
-                    <Button
-                      onClick={() => handleVisitProfile(freelancer.website)}
-                      size="sm"
-                      variant="outline"
-                      className="border-white/20 text-white/80 hover:bg-white/10 text-xs px-1"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                    </Button>
-                  )}
                 </div>
               </div>
             )}
-          </div>
-        ))}
+          </GradientCardBase>
+          );
+        })}
       </div>
     </div>
   );

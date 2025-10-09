@@ -8,19 +8,25 @@ class TextMatcher:
     def __init__(self):
         self.stop_words = {
             'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
-            'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being'
+            'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+            'ai', 'tool', 'tools', 'platform', 'solution', 'solutions', 'company',
+            'business', 'software', 'service', 'services', 'technology', 'tech'
         }
+        # Minimum score threshold to filter out irrelevant results
+        self.min_score_threshold = 5.0
     
     def find_matching_companies(self, query: str, companies_data: Dict[str, Dict[str, Any]], 
                               selected_types: List[str] = None) -> List[Dict[str, Any]]:
         """Find companies that match the search query"""
         query_words = self._extract_keywords(query)
+        original_query = query.lower()
         matches = []
         
         for company_name, company_data in companies_data.items():
-            score = self._calculate_match_score(query_words, company_data)
+            score = self._calculate_match_score(query_words, original_query, company_data)
             
-            if score > 0:
+            # Only include companies that meet the minimum relevance threshold
+            if score >= self.min_score_threshold:
                 matches.append({
                     'company_name': company_name,
                     'data': company_data,
@@ -43,38 +49,75 @@ class TextMatcher:
         
         # Split into words and remove stop words
         words = [word.strip() for word in clean_query.split() 
-                if word.strip() and word.strip() not in self.stop_words]
+                if word.strip() and word.strip() not in self.stop_words and len(word.strip()) > 2]
         
         return words
     
-    def _calculate_match_score(self, query_words: List[str], company_data: Dict[str, Any]) -> float:
-        """Calculate relevance score for a company based on query words"""
+    def _calculate_match_score(self, query_words: List[str], original_query: str, company_data: Dict[str, Any]) -> float:
+        """Calculate relevance score for a company based on query words and phrases"""
         score = 0.0
         
-        # Combine all text data for searching
+        # Get text sections
+        company_info = company_data.get('company_info', '').lower()
+        features = company_data.get('features', '').lower()
+        pricing = company_data.get('pricing', '').lower()
+        use_cases = company_data.get('use_cases', '').lower()
         searchable_text = self._get_searchable_text(company_data).lower()
+        
+        # 1. Check for exact phrase matches (highest priority)
+        if len(original_query) > 3:  # Only for meaningful queries
+            if original_query in searchable_text:
+                score += 20.0
+        
+        # 2. Check for multi-word phrase matches
+        if len(query_words) >= 2:
+            for i in range(len(query_words) - 1):
+                phrase = f"{query_words[i]} {query_words[i+1]}"
+                if phrase in searchable_text:
+                    score += 15.0
+        
+        # 3. Individual word matching with context requirements
+        matched_words = 0
+        total_words = len(query_words)
         
         for word in query_words:
             word_lower = word.lower()
+            word_found = False
             
-            # Count occurrences of the word
-            word_count = searchable_text.count(word_lower)
-            
-            if word_count > 0:
-                # Weight different sections differently
-                company_info_score = company_data.get('company_info', '').lower().count(word_lower) * 3.0
-                features_score = company_data.get('features', '').lower().count(word_lower) * 2.0
-                pricing_score = company_data.get('pricing', '').lower().count(word_lower) * 1.5
-                use_cases_score = company_data.get('use_cases', '').lower().count(word_lower) * 2.0
+            # Weight different sections differently
+            if word_lower in company_info:
+                score += 3.0
+                word_found = True
+            if word_lower in features:
+                score += 2.5
+                word_found = True
+            if word_lower in use_cases:
+                score += 2.5
+                word_found = True
+            if word_lower in pricing:
+                score += 1.5
+                word_found = True
                 
-                word_score = company_info_score + features_score + pricing_score + use_cases_score
-                score += word_score
+            if word_found:
+                matched_words += 1
         
-        # Boost score for exact company name matches
+        # 4. Require a minimum percentage of query words to match
+        if total_words > 0:
+            match_percentage = matched_words / total_words
+            if match_percentage < 0.5:  # Less than 50% of words match
+                score *= 0.3  # Heavily penalize
+        
+        # 5. Boost for company name matches
         company_name = company_data.get('folder_name', '').lower()
         for word in query_words:
             if word.lower() in company_name:
                 score += 10.0
+        
+        # 6. Boost for category relevance
+        category_info = self._extract_category_from_info(company_info)
+        for word in query_words:
+            if word.lower() in category_info.lower():
+                score += 5.0
         
         return score
     
@@ -91,6 +134,13 @@ class TextMatcher:
         ]
         
         return ' '.join(text_fields)
+    
+    def _extract_category_from_info(self, company_info: str) -> str:
+        """Extract category information from company info"""
+        for line in company_info.split('\n'):
+            if line.startswith('category:') or line.startswith('products:') or line.startswith('description:'):
+                return line.split(':', 1)[1].strip() if ':' in line else ''
+        return ''
     
     def _filter_by_types(self, matches: List[Dict[str, Any]], selected_types: List[str]) -> List[Dict[str, Any]]:
         """Filter matches based on selected types"""

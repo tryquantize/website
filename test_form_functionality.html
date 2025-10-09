@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Form Input Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-form { max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #333; 
+            background: rgba(255,255,255,0.1); 
+            color: white; 
+            border-radius: 4px;
+        }
+        input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.4); }
+        .enhance-btn { 
+            background: #2563eb; 
+            color: white; 
+            border: none; 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin-left: 10px;
+        }
+        .tag { 
+            display: inline-block; 
+            background: rgba(255,255,255,0.1); 
+            padding: 5px 10px; 
+            margin: 5px; 
+            border-radius: 4px; 
+        }
+        .remove-btn { 
+            background: none; 
+            border: none; 
+            color: #ff6b6b; 
+            cursor: pointer; 
+            margin-left: 5px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="test-form">
+        <h1>🧪 Form Input Test</h1>
+        <p>Test if basic form inputs work correctly:</p>
+        
+        <div class="form-group">
+            <label>Company Name:</label>
+            <input type="text" id="companyName" placeholder="Enter company name..." />
+        </div>
+        
+        <div class="form-group">
+            <label>Website:</label>
+            <input type="url" id="website" placeholder="https://yourcompany.com" />
+        </div>
+        
+        <div class="form-group">
+            <label>Description:</label>
+            <textarea id="description" rows="3" placeholder="Describe your company..."></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Product/Service:</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="newProduct" placeholder="Enter product info..." style="flex: 1;" />
+                <button class="enhance-btn" onclick="enhanceText('product')">✨</button>
+                <button onclick="addProduct()" style="background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">+</button>
+            </div>
+            <div id="productTags"></div>
+        </div>
+        
+        <div class="form-group">
+            <label>Pricing Range:</label>
+            <select id="pricingSelect" onchange="addPricing()">
+                <option value="">Select pricing range...</option>
+                <option value="<$100">&lt;$100</option>
+                <option value="$100-$500">$100-$500</option>
+                <option value="$1,000-$2,500">$1,000-$2,500</option>
+                <option value="Contact for pricing">Contact for pricing</option>
+            </select>
+            <div id="pricingTags"></div>
+        </div>
+        
+        <button onclick="testSubmit()" style="background: #2563eb; color: white; border: none; padding: 15px 30px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 20px;">
+            Test Submit
+        </button>
+        
+        <div id="results" style="margin-top: 20px; padding: 15px; background: rgba(0,255,0,0.1); border-radius: 4px; display: none;">
+            <h3>✅ Form Data Collected:</h3>
+            <pre id="formData"></pre>
+        </div>
+    </div>
+
+    <script>
+        let products = [];
+        let pricingRanges = [];
+        
+        function addProduct() {
+            const input = document.getElementById('newProduct');
+            const value = input.value.trim();
+            if (value) {
+                products.push(value);
+                input.value = '';
+                updateProductTags();
+            }
+        }
+        
+        function removeProduct(index) {
+            products.splice(index, 1);
+            updateProductTags();
+        }
+        
+        function updateProductTags() {
+            const container = document.getElementById('productTags');
+            container.innerHTML = products.map((product, index) => 
+                `<span class="tag">${product} <button class="remove-btn" onclick="removeProduct(${index})">×</button></span>`
+            ).join('');
+        }
+        
+        function addPricing() {
+            const select = document.getElementById('pricingSelect');
+            const value = select.value;
+            if (value && !pricingRanges.includes(value)) {
+                pricingRanges.push(value);
+                select.value = '';
+                updatePricingTags();
+            }
+        }
+        
+        function removePricing(index) {
+            pricingRanges.splice(index, 1);
+            updatePricingTags();
+        }
+        
+        function updatePricingTags() {
+            const container = document.getElementById('pricingTags');
+            container.innerHTML = pricingRanges.map((range, index) => 
+                `<span class="tag">${range} <button class="remove-btn" onclick="removePricing(${index})">×</button></span>`
+            ).join('');
+        }
+        
+        function enhanceText(type) {
+            const input = document.getElementById('newProduct');
+            const originalText = input.value;
+            if (originalText.trim()) {
+                // Simulate enhancement
+                input.value = `Enhanced: ${originalText} - with advanced AI capabilities and enterprise-grade features`;
+                alert('✨ Text enhanced! (This is a simulation)');
+            }
+        }
+        
+        function testSubmit() {
+            const formData = {
+                companyName: document.getElementById('companyName').value,
+                website: document.getElementById('website').value,
+                description: document.getElementById('description').value,
+                products: products,
+                pricingRanges: pricingRanges
+            };
+            
+            document.getElementById('formData').textContent = JSON.stringify(formData, null, 2);
+            document.getElementById('results').style.display = 'block';
+            
+            console.log('Form Data:', formData);
+        }
+        
+        // Test input responsiveness
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    console.log(`Input changed: ${this.id} = ${this.value}`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

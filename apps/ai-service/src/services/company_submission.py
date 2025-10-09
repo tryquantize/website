@@ -28,6 +28,27 @@ class CompanySubmissionService:
                         'error': f'Missing required field: {field}'
                     }
             
+            # Validate that products array has at least one item
+            if not form_data.get('products') or len(form_data.get('products', [])) == 0:
+                return {
+                    'success': False,
+                    'error': 'At least one product/service is required'
+                }
+            
+            # Validate that at least one pricing range is selected
+            if not form_data.get('pricingRanges') or len(form_data.get('pricingRanges', [])) == 0:
+                return {
+                    'success': False,
+                    'error': 'At least one pricing range is required'
+                }
+            
+            # Validate that at least one industry is selected
+            if not form_data.get('industriesServed') or len(form_data.get('industriesServed', [])) == 0:
+                return {
+                    'success': False,
+                    'error': 'At least one industry served is required'
+                }
+            
             # Generate company folder name
             company_folder = self._generate_folder_name(form_data['companyName'])
             
@@ -87,31 +108,34 @@ class CompanySubmissionService:
         
         # Create use_cases.txt
         self._create_use_cases_file(company_path, form_data)
+        
+        # Create clients.txt
+        self._create_clients_file(company_path, form_data)
     
     def _create_links_file(self, company_path: str, form_data: Dict[str, Any]):
         """Create links.json file"""
         links_data = {
             "official_pages": [],
-            "reviews": [],
-            "documentation": []
+            "testimonials": [],
+            "linkedin": [],
+            "contact": []
         }
         
         # Add main website
         if form_data.get('website'):
             links_data["official_pages"].append(form_data['website'])
         
-        # Parse additional URLs
-        if form_data.get('officialPages'):
-            official_urls = [url.strip() for url in form_data['officialPages'].split('\n') if url.strip()]
-            links_data["official_pages"].extend(official_urls)
+        # Add LinkedIn page
+        if form_data.get('linkedinPage'):
+            links_data["linkedin"].append(form_data['linkedinPage'])
         
-        if form_data.get('reviewPages'):
-            review_urls = [url.strip() for url in form_data['reviewPages'].split('\n') if url.strip()]
-            links_data["reviews"].extend(review_urls)
+        # Add testimonial page
+        if form_data.get('testimonialPage'):
+            links_data["testimonials"].append(form_data['testimonialPage'])
         
-        if form_data.get('documentationPages'):
-            doc_urls = [url.strip() for url in form_data['documentationPages'].split('\n') if url.strip()]
-            links_data["documentation"].extend(doc_urls)
+        # Add phone number as contact info
+        if form_data.get('phoneNumber'):
+            links_data["contact"].append(f"Phone: {form_data['phoneNumber']}")
         
         # Write links.json
         with open(os.path.join(company_path, 'links.json'), 'w', encoding='utf-8') as f:
@@ -119,15 +143,28 @@ class CompanySubmissionService:
     
     def _create_company_info_file(self, company_path: str, form_data: Dict[str, Any]):
         """Create company_info.txt file"""
+        # Format products array
+        products_list = form_data.get('products', [])
+        products_text = '\n'.join([f"- {product}" for product in products_list]) if products_list else 'N/A'
+        
         info_lines = [
             f"Company: {form_data.get('companyName', '')}",
             f"Founded: {form_data.get('founded', 'N/A')}",
             f"Headquarters: {form_data.get('headquarters', 'N/A')}",
-            f"Products: {form_data.get('products', '')}",
             f"Description: {form_data.get('description', '')}",
             f"Website: {form_data.get('website', '')}",
+            f"LinkedIn: {form_data.get('linkedinPage', 'N/A')}",
+            f"Phone: {form_data.get('phoneNumber', 'N/A')}",
             f"Category: {form_data.get('category', '')}",
-            f"Employees: {form_data.get('employees', 'N/A')}"
+            f"Employees: {form_data.get('employees', 'N/A')}",
+            f"Company Stage: {form_data.get('companyStage', 'N/A')}",
+            f"Industries Served: {', '.join(form_data.get('industriesServed', []))}",
+            f"Pricing Ranges: {', '.join(form_data.get('pricingRanges', ['Contact for pricing']))}",
+            f"Pricing Models: {', '.join(form_data.get('pricingModel', []))}",
+            f"Top Clients: {', '.join(form_data.get('topClients', []))}",
+            "",
+            "Products/Services:",
+            products_text
         ]
         
         content = '\n'.join(info_lines)
@@ -137,24 +174,49 @@ class CompanySubmissionService:
     
     def _create_pricing_file(self, company_path: str, form_data: Dict[str, Any]):
         """Create pricing.txt file"""
-        pricing_content = form_data.get('pricing', 'Contact for pricing')
+        pricing_ranges = form_data.get('pricingRanges', ['Contact for pricing'])
+        pricing_models = form_data.get('pricingModel', [])
+        
+        pricing_content = f"Pricing Ranges: {', '.join(pricing_ranges)}\n"
+        if pricing_models:
+            pricing_content += f"Pricing Models: {', '.join(pricing_models)}\n"
+        pricing_content += "\nFor detailed pricing information, please contact the company directly."
         
         with open(os.path.join(company_path, 'pricing.txt'), 'w', encoding='utf-8') as f:
             f.write(pricing_content)
     
     def _create_features_file(self, company_path: str, form_data: Dict[str, Any]):
         """Create features.txt file"""
-        features_content = form_data.get('features', '- AI-powered solutions\n- Easy integration\n- Professional support')
+        features_list = form_data.get('features', [])
+        if features_list:
+            features_content = '\n'.join([f"- {feature}" for feature in features_list])
+        else:
+            features_content = '- AI-powered solutions\n- Easy integration\n- Professional support'
         
         with open(os.path.join(company_path, 'features.txt'), 'w', encoding='utf-8') as f:
             f.write(features_content)
     
     def _create_use_cases_file(self, company_path: str, form_data: Dict[str, Any]):
         """Create use_cases.txt file"""
-        use_cases_content = form_data.get('useCases', 'Business Applications:\n- Automation\n- Analytics\n- Customer service')
+        use_cases_list = form_data.get('useCases', [])
+        if use_cases_list:
+            use_cases_content = '\n'.join([f"- {use_case}" for use_case in use_cases_list])
+        else:
+            use_cases_content = 'Business Applications:\n- Automation\n- Analytics\n- Customer service'
         
         with open(os.path.join(company_path, 'use_cases.txt'), 'w', encoding='utf-8') as f:
             f.write(use_cases_content)
+    
+    def _create_clients_file(self, company_path: str, form_data: Dict[str, Any]):
+        """Create clients.txt file"""
+        clients_list = form_data.get('topClients', [])
+        if clients_list:
+            clients_content = '\n'.join([f"- {client}" for client in clients_list])
+        else:
+            clients_content = 'No clients listed'
+        
+        with open(os.path.join(company_path, 'clients.txt'), 'w', encoding='utf-8') as f:
+            f.write(clients_content)
     
     def get_pending_submissions(self) -> list:
         """Get list of pending company submissions"""
