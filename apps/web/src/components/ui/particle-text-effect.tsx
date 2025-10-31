@@ -147,12 +147,16 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
   const frameCountRef = useRef(0)
   const wordIndexRef = useRef(0)
 
-  const pixelSteps = 3
+  // Mobile optimization
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+  const pixelSteps = isMobile ? 6 : 3  // Fewer particles on mobile
   const drawAsPoints = true
 
   const generateRandomPos = (x: number, y: number, mag: number): Vector2D => {
-    const randomX = Math.random() * 1200
-    const randomY = Math.random() * 300
+    const canvasWidth = isMobile ? 800 : 1200
+    const canvasHeight = isMobile ? 200 : 300
+    const randomX = Math.random() * canvasWidth
+    const randomY = Math.random() * canvasHeight
 
     const direction = {
       x: randomX - x,
@@ -177,9 +181,10 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
     offscreenCanvas.height = canvas.height
     const offscreenCtx = offscreenCanvas.getContext("2d")!
 
-    // Draw text
+    // Draw text - responsive font size
     offscreenCtx.fillStyle = "white"
-    offscreenCtx.font = "bold 240px Arial"
+    const fontSize = isMobile ? 160 : 240
+    offscreenCtx.font = `bold ${fontSize}px Arial`
     offscreenCtx.textAlign = "center"
     offscreenCtx.textBaseline = "middle"
     offscreenCtx.fillText(word, canvas.width / 2, canvas.height / 2)
@@ -230,10 +235,12 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
           particle.pos.x = randomPos.x
           particle.pos.y = randomPos.y
 
-          particle.maxSpeed = Math.random() * 4 + 2
+          // Faster speeds for mobile
+          const speedMultiplier = isMobile ? 2 : 1
+          particle.maxSpeed = (Math.random() * 4 + 2) * speedMultiplier
           particle.maxForce = particle.maxSpeed * 0.05
           particle.particleSize = Math.random() * 4 + 4
-          particle.colorBlendRate = Math.random() * 0.02 + 0.005
+          particle.colorBlendRate = (Math.random() * 0.02 + 0.005) * (isMobile ? 2 : 1)
 
           particles.push(particle)
         }
@@ -300,8 +307,9 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
     const canvas = canvasRef.current
     if (!canvas) return
 
-    canvas.width = 1200
-    canvas.height = 300
+    // Responsive canvas size
+    canvas.width = isMobile ? 800 : 1200
+    canvas.height = isMobile ? 200 : 300
 
     // Initialize with first word
     nextWord(words[0], canvas)
@@ -320,7 +328,7 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
     <canvas
       ref={canvasRef}
       className="w-full max-w-4xl h-auto"
-      style={{ maxWidth: "100%", height: "300px", border: "none", outline: "none" }}
+      style={{ maxWidth: "100%", height: isMobile ? "200px" : "300px", border: "none", outline: "none" }}
     />
   )
 }
