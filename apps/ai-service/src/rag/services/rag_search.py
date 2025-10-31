@@ -176,9 +176,17 @@ class RAGSearchService:
             top_clients = self._extract_top_clients(company_data)
             logo_url = self._extract_logo_url(company_data)
             enhanced_about = self._generate_enhanced_about(company_data, company_name)
-            enhanced_use_cases = self._generate_enhanced_use_cases(company_data, company_name)
+            enhanced_use_cases = self._generate_enhanced_use_cases(company_data, company_name, query, industries_served)
             phone_number = self._extract_phone_number(company_data)
             linkedin_url = self._extract_linkedin_url(company_data)
+            
+            # Extract new market fields
+            trial_available = self._extract_trial_available(company_data)
+            customer_segments = self._extract_customer_segments(company_data)
+            usp_tagline = self._extract_usp_tagline(company_data)
+            deployment_type = self._extract_deployment_type(company_data)
+            ideal_scenarios = self._extract_ideal_scenarios(company_data)
+            tagline = self._extract_tagline(company_data)
             
             company_obj = {
                 "name": company_name,
@@ -202,7 +210,13 @@ class RAGSearchService:
                 "enhancedAbout": enhanced_about,
                 "enhancedUseCases": enhanced_use_cases,
                 "phoneNumber": phone_number,
-                "linkedin_url": linkedin_url
+                "linkedin_url": linkedin_url,
+                "trialAvailable": trial_available,
+                "customerSegments": customer_segments,
+                "uspTagline": usp_tagline,
+                "deploymentType": deployment_type,
+                "idealScenarios": ideal_scenarios,
+                "tagline": tagline
             }
             companies_list.append(company_obj)
             logger.info(f"Added company {company_name} to results")
@@ -500,13 +514,17 @@ Write a detailed description that is EXACTLY 150 words describing what {company_
             description = self._extract_description(company_data)
             return description if description != "AI company providing innovative solutions" else f"{company_name} specializes in innovative AI solutions, delivering cutting-edge technology that transforms business operations."
     
-    def _generate_enhanced_use_cases(self, company_data: Dict[str, str], company_name: str) -> List[str]:
-        """Generate enhanced use cases from RAG data with 10-12 word limit using LLM"""
+    def _generate_enhanced_use_cases(self, company_data: Dict[str, str], company_name: str, query: str = "", industries_served: List[str] = None) -> List[str]:
+        """Generate enhanced use cases from RAG data with 10-12 word limit using LLM, contextual to search query and industries served"""
         try:
             # Get company info for context
             info_text = company_data.get('company_info', '')
             features_text = company_data.get('features', '')
             use_cases_text = company_data.get('use_cases', '')
+            
+            # Extract industries served if not provided
+            if not industries_served:
+                industries_served = self._extract_industries_served(company_data)
             
             # Clean corrupted use cases text (fix character-per-line issue)
             if use_cases_text and len(use_cases_text.split('\n')) > 20:
@@ -514,18 +532,24 @@ Write a detailed description that is EXACTLY 150 words describing what {company_
                 cleaned_text = ''.join([line.replace('-', '').strip() for line in use_cases_text.split('\n')])
                 use_cases_text = cleaned_text
             
-            # Combine context for LLM
+            # Combine context for LLM with query and industry context
             context = f"Company: {company_name}\nInfo: {info_text}\nFeatures: {features_text}\nUse Cases: {use_cases_text}"
+            if industries_served:
+                context += f"\nIndustries Served: {', '.join(industries_served)}"
             
             # Use LLM to generate proper use cases
             from config.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, AI_MODEL
             import requests
             
-            prompt = f"""Based on the following company information, generate exactly 3 industry-specific use cases.
+            # Create contextual prompt based on search query and industries
+            query_context = f"\nUser Search Query: '{query}'\nIMPORTANT: Generate use cases that are relevant to '{query}' and show how {company_name} addresses this specific need." if query else ""
+            industry_context = f"\nFocus on these industries: {', '.join(industries_served[:3])}" if industries_served else ""
+            
+            prompt = f"""Based on the following company information, generate exactly 3 industry-specific use cases that are relevant to the search query and target industries.
 
-{context}
+{context}{query_context}{industry_context}
 
-Generate 3 practical use cases that show how {company_name} can be used in real business scenarios. Each use case must be EXACTLY 10-12 words long and focus on specific industry applications.
+Generate 3 practical use cases that show how {company_name} can be used in real business scenarios. Each use case must be EXACTLY 10-12 words long and focus on specific industry applications that relate to the search query{' and target the mentioned industries' if industries_served else ''}.
 
 Return only the 3 use cases, one per line, no bullets or numbers."""
             
@@ -537,7 +561,7 @@ Return only the 3 use cases, one per line, no bullets or numbers."""
             payload = {
                 "model": AI_MODEL,
                 "messages": [
-                    {"role": "system", "content": "Generate concise, industry-specific use cases that are exactly 10-12 words each."},
+                    {"role": "system", "content": "Generate concise, industry-specific use cases that are exactly 10-12 words each and relevant to the search context."},
                     {"role": "user", "content": prompt}
                 ],
                 "temperature": 0.7,
@@ -569,13 +593,61 @@ Return only the 3 use cases, one per line, no bullets or numbers."""
         except Exception as e:
             logger.error(f"Failed to generate use cases for {company_name}: {e}")
         
-        # Fallback to category-based use cases
+        # Fallback to contextual use cases based on query and industries
+        return self._generate_contextual_fallback_use_cases(company_data, company_name, query, industries_served)
+    
+    def _generate_contextual_fallback_use_cases(self, company_data: Dict[str, str], company_name: str, query: str = "", industries_served: List[str] = None) -> List[str]:
+        """Generate fallback use cases that are contextual to search query and industries served"""
         category = self._extract_category(company_data)
-        if 'voice' in company_name.lower() or 'voice' in category.lower():
+        query_lower = query.lower() if query else ""
+        
+        # Industry-specific use cases based on industries served
+        if industries_served:
+            industry_cases = []
+            for industry in industries_served[:3]:
+                industry_lower = industry.lower()
+                if 'healthcare' in industry_lower or 'medical' in industry_lower:
+                    industry_cases.append("Streamline patient data management and automate healthcare workflow processes")
+                elif 'finance' in industry_lower or 'banking' in industry_lower:
+                    industry_cases.append("Automate financial reporting and enhance fraud detection with AI analytics")
+                elif 'retail' in industry_lower or 'ecommerce' in industry_lower:
+                    industry_cases.append("Personalize customer shopping experience and optimize inventory management systems")
+                elif 'education' in industry_lower:
+                    industry_cases.append("Create personalized learning paths and automate student assessment processes")
+                elif 'manufacturing' in industry_lower:
+                    industry_cases.append("Optimize production schedules and predict equipment maintenance needs accurately")
+                elif 'real estate' in industry_lower:
+                    industry_cases.append("Automate property valuation and enhance client communication with AI assistants")
+                else:
+                    industry_cases.append(f"Streamline {industry_lower} operations with intelligent automation and data insights")
+            
+            if len(industry_cases) >= 3:
+                return industry_cases[:3]
+        
+        # Query-specific use cases
+        if 'voice' in query_lower or 'voice' in company_name.lower() or 'voice' in category.lower():
             return [
                 "Automate customer service calls with intelligent voice response systems",
                 "Handle appointment scheduling through conversational AI voice assistants",
                 "Process phone orders using natural language understanding voice technology"
+            ]
+        elif 'chatbot' in query_lower or 'chat' in query_lower:
+            return [
+                "Deploy intelligent chatbots for 24/7 customer support and engagement",
+                "Automate lead qualification through conversational AI chat interfaces",
+                "Provide instant product recommendations via smart chat assistant technology"
+            ]
+        elif 'analytics' in query_lower or 'data' in query_lower:
+            return [
+                "Transform raw business data into actionable insights and predictive analytics",
+                "Automate reporting workflows and generate real-time performance dashboards",
+                "Identify market trends and customer patterns through advanced data analysis"
+            ]
+        elif 'automation' in query_lower or 'workflow' in query_lower:
+            return [
+                "Streamline repetitive business processes with intelligent workflow automation tools",
+                "Reduce manual data entry through smart document processing and extraction",
+                "Optimize task scheduling and resource allocation with AI-powered automation"
             ]
         elif 'AI' in category or 'Machine Learning' in category:
             return [
@@ -604,6 +676,65 @@ Return only the 3 use cases, one per line, no bullets or numbers."""
         for line in info_text.split('\n'):
             if line.startswith('LinkedIn:'):
                 return line.replace('LinkedIn:', '').strip()
+        return ""
+    
+    def _extract_trial_available(self, company_data: Dict[str, str]) -> bool:
+        """Extract trial availability from market_info.txt"""
+        market_info = company_data.get('market_info', '')
+        for line in market_info.split('\n'):
+            if 'Free Trial/Demo Available:' in line:
+                return 'Yes' in line
+        return False
+    
+    def _extract_customer_segments(self, company_data: Dict[str, str]) -> List[str]:
+        """Extract customer segments from market_info.txt"""
+        market_info = company_data.get('market_info', '')
+        for line in market_info.split('\n'):
+            if line.startswith('Customer Segments:'):
+                segments_str = line.replace('Customer Segments:', '').strip()
+                return [segment.strip() for segment in segments_str.split(',') if segment.strip()]
+        return []
+    
+    def _extract_usp_tagline(self, company_data: Dict[str, str]) -> str:
+        """Extract USP tagline from market_info.txt"""
+        market_info = company_data.get('market_info', '')
+        for line in market_info.split('\n'):
+            if line.startswith('Unique Selling Proposition:'):
+                return line.replace('Unique Selling Proposition:', '').strip()
+        return ""
+    
+    def _extract_deployment_type(self, company_data: Dict[str, str]) -> List[str]:
+        """Extract deployment types from market_info.txt"""
+        market_info = company_data.get('market_info', '')
+        for line in market_info.split('\n'):
+            if line.startswith('Deployment Options:'):
+                types_str = line.replace('Deployment Options:', '').strip()
+                return [type_item.strip() for type_item in types_str.split(',') if type_item.strip()]
+        return []
+    
+    def _extract_ideal_scenarios(self, company_data: Dict[str, str]) -> List[str]:
+        """Extract ideal scenarios from market_info.txt"""
+        market_info = company_data.get('market_info', '')
+        for line in market_info.split('\n'):
+            if line.startswith('Ideal Customer Types:'):
+                scenarios_str = line.replace('Ideal Customer Types:', '').strip()
+                return [scenario.strip() for scenario in scenarios_str.split(',') if scenario.strip()]
+        return []
+    
+    def _extract_tagline(self, company_data: Dict[str, str]) -> str:
+        """Extract company tagline from market_info.txt or company_info.txt"""
+        # First check market_info.txt
+        market_info = company_data.get('market_info', '')
+        for line in market_info.split('\n'):
+            if line.startswith('Company Tagline:'):
+                return line.replace('Company Tagline:', '').strip()
+        
+        # Then check company_info.txt
+        info_text = company_data.get('company_info', '')
+        for line in info_text.split('\n'):
+            if line.startswith('Tagline:'):
+                return line.replace('Tagline:', '').strip()
+        
         return ""
     
     def _generate_rag_suggestions(self, query: str, matching_companies: List[Dict[str, Any]]) -> List[str]:

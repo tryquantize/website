@@ -22,7 +22,7 @@ function Hero() {
           <div className="flex gap-6 sm:gap-8 flex-col items-center">
             <ParticleTextEffect words={["Welcome", "to", "intelligent", "Search"]} />
 
-            <p className="text-base sm:text-lg md:text-xl leading-relaxed tracking-tight text-white/80 max-w-2xl text-center font-bold px-4">
+            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl leading-relaxed tracking-tight text-white/80 max-w-3xl text-center font-bold px-4">
               An AI Search Engine that Quantizes infinite information
             </p>
           </div>

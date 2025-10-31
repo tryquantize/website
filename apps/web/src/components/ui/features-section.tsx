@@ -45,7 +45,7 @@ const features = [
 ];
 
 export default function FeaturesSection() {
-  const { ref, isVisible } = useScrollAnimation(0.1);
+  const { ref, inView: isVisible } = useScrollAnimation(0.1);
 
   return (
     <section ref={ref} className="mb-24">

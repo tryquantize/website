@@ -330,9 +330,9 @@ def auto_fill_company():
         
         logger.info(f"Auto-filling company: {company_name}")
         
-        # Import and use Scrapy-based auto-fill service
-        from services.company_autofill_scrapy import CompanyAutoFillScrapyService
-        autofill_service = CompanyAutoFillScrapyService()
+        # Import and use the updated auto-fill service
+        from services.company_autofill import CompanyAutoFillService
+        autofill_service = CompanyAutoFillService()
         
         result = autofill_service.auto_fill_company(company_name, website_url, linkedin_url)
         

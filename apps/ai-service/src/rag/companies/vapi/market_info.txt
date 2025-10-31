@@ -1,0 +1,6 @@
+Customer Segments: B2B, B2C
+Deployment Options: Cloud, API
+Ideal Customer Types: SMBs, Enterprises, Startups
+Free Trial/Demo Available: Yes
+Unique Selling Proposition: Fastest API for Voice AI
+Company Tagline: Revolutionizing business communications with AI

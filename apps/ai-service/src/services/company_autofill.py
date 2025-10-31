@@ -271,7 +271,13 @@ class CompanyAutoFillService:
             "features": "key features and capabilities based on available content",
             "useCases": "use cases and applications based on available content",
             "companyStage": "company stage like Series A, Public, etc if mentioned",
-            "topClients": ["notable clients or partners if mentioned"]
+            "topClients": ["notable clients or partners if mentioned"],
+            "tagline": "company tagline or slogan if found",
+            "uspTagline": "unique selling proposition or differentiator if mentioned",
+            "customerSegments": ["customer segments like B2B, B2C, D2C if mentioned"],
+            "deploymentType": ["deployment types like Cloud, On-premise, Hybrid if mentioned"],
+            "idealScenarios": ["ideal customer types like SMBs, Enterprises, Startups if mentioned"],
+            "trialAvailable": "true if free trial/demo is mentioned, false otherwise"
         }}
         
         EXTRACTION GUIDELINES:
@@ -283,6 +289,12 @@ class CompanyAutoFillService:
         6. If no specific information is found, return empty string or empty array for that field
         7. DO NOT make up information, but DO extract and summarize what is available
         8. Even with limited content, try to infer basic category from company name or URL domain
+        9. For new fields:
+           - customerSegments: Look for mentions of B2B, B2C, D2C, enterprise, consumer
+           - deploymentType: Look for cloud, on-premise, hybrid, SaaS, API mentions
+           - idealScenarios: Look for target customers like SMBs, enterprises, startups
+           - trialAvailable: Look for free trial, demo, freemium mentions
+           - uspTagline: Look for unique selling propositions or competitive advantages
         
         IMPORTANT: Work with whatever content is available. Even partial information is valuable.
         """
@@ -361,28 +373,61 @@ class CompanyAutoFillService:
             domain = website_url.replace('https://', '').replace('http://', '').replace('www.', '').split('/')[0]
             if '.ai' in domain:
                 basic_data['category'] = 'Artificial Intelligence'
+                basic_data['customerSegments'] = ['B2B']
+                basic_data['deploymentType'] = ['Cloud', 'API']
             elif '.tech' in domain or 'tech' in company_name.lower():
                 basic_data['category'] = 'Technology'
+                basic_data['customerSegments'] = ['B2B']
             elif 'software' in company_name.lower():
                 basic_data['category'] = 'Software'
+                basic_data['customerSegments'] = ['B2B']
         
         # Basic description if we have company name
         if company_name:
             basic_data['description'] = f"{company_name} is a company. For more detailed information, please visit their website or LinkedIn page."
+            basic_data['tagline'] = f"Innovative solutions by {company_name}"
         
         return basic_data
+    
+    def _create_empty_data(self) -> Dict[str, Any]:
+        """Create empty data structure"""
+        return {
+            "phoneNumber": "",
+            "founded": "",
+            "headquarters": "",
+            "products": [],
+            "description": "",
+            "category": "",
+            "employees": "",
+            "industriesServed": [],
+            "pricingRanges": [],
+            "pricingModel": [],
+            "features": "",
+            "useCases": "",
+            "companyStage": "",
+            "topClients": [],
+            "tagline": "",
+            "uspTagline": "",
+            "customerSegments": [],
+            "deploymentType": [],
+            "idealScenarios": [],
+            "trialAvailable": False
+        }
     
     def _count_filled_fields(self, data: Dict[str, Any]) -> int:
         """Count how many fields have meaningful data"""
         count = 0
         for key, value in data.items():
-            if key in ['phoneNumber', 'founded', 'headquarters', 'category', 'employees', 'companyStage']:
+            if key in ['phoneNumber', 'founded', 'headquarters', 'category', 'employees', 'companyStage', 'tagline', 'uspTagline']:
                 if value and str(value).strip():
                     count += 1
-            elif key in ['products', 'industriesServed', 'pricingRanges', 'pricingModel', 'topClients']:
+            elif key in ['products', 'industriesServed', 'pricingRanges', 'pricingModel', 'topClients', 'customerSegments', 'deploymentType', 'idealScenarios']:
                 if value and len(value) > 0:
                     count += 1
             elif key in ['description', 'features', 'useCases']:
                 if value and len(str(value).strip()) > 30:
+                    count += 1
+            elif key == 'trialAvailable':
+                if isinstance(value, bool) and value:
                     count += 1
         return count

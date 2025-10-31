@@ -64,6 +64,7 @@ export class MemoryStorage implements IStorage {
   private contactRequests: ContactRequest[] = [];
   private searchQueries: SearchQuery[] = [];
   private toolAnalytics: ToolAnalytics[] = [];
+  private engagementData: {[companyName: string]: {views: number, clicks: number, saves: number}} = {};
 
   async getUser(id: string): Promise<User | undefined> {
     return this.users.find(u => u.id === id);
@@ -260,5 +261,17 @@ export class MemoryStorage implements IStorage {
     return this.toolAnalytics
       .filter(ta => ta.toolId === toolId)
       .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
+  async recordEngagement(companyName: string, action: 'view' | 'click' | 'save'): Promise<void> {
+    if (!this.engagementData[companyName]) {
+      this.engagementData[companyName] = { views: 0, clicks: 0, saves: 0 };
+    }
+    
+    this.engagementData[companyName][action + 's']++;
+  }
+
+  async getEngagementData(): Promise<{[companyName: string]: {views: number, clicks: number, saves: number}}> {
+    return this.engagementData;
   }
 }

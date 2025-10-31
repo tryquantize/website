@@ -53,7 +53,8 @@ class DataLoader:
             'reviews': '',
             'integrations': '',
             'alternatives': '',
-            'clients': ''
+            'clients': '',
+            'market_info': ''
         }
         
         try:
@@ -66,7 +67,7 @@ class DataLoader:
             # Load text files
             text_files = [
                 'company_info.txt', 'pricing.txt', 'features.txt', 
-                'use_cases.txt', 'reviews.txt', 'integrations.txt', 'alternatives.txt', 'clients.txt'
+                'use_cases.txt', 'reviews.txt', 'integrations.txt', 'alternatives.txt', 'clients.txt', 'market_info.txt'
             ]
             
             for file_name in text_files:

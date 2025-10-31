@@ -49,6 +49,13 @@ class CompanySubmissionService:
                     'error': 'At least one industry served is required'
                 }
             
+            # Validate that at least one customer segment is selected
+            if not form_data.get('customerSegments') or len(form_data.get('customerSegments', [])) == 0:
+                return {
+                    'success': False,
+                    'error': 'At least one customer segment is required'
+                }
+            
             # Generate company folder name
             company_folder = self._generate_folder_name(form_data['companyName'])
             
@@ -111,6 +118,9 @@ class CompanySubmissionService:
         
         # Create clients.txt
         self._create_clients_file(company_path, form_data)
+        
+        # Create market_info.txt (new file for market and deployment info)
+        self._create_market_info_file(company_path, form_data)
     
     def _create_links_file(self, company_path: str, form_data: Dict[str, Any]):
         """Create links.json file"""
@@ -162,6 +172,12 @@ class CompanySubmissionService:
             f"Pricing Ranges: {', '.join(form_data.get('pricingRanges', ['Contact for pricing']))}",
             f"Pricing Models: {', '.join(form_data.get('pricingModel', []))}",
             f"Top Clients: {', '.join(form_data.get('topClients', []))}",
+            f"Tagline: {form_data.get('tagline', 'N/A')}",
+            f"USP/Differentiator: {form_data.get('uspTagline', 'N/A')}",
+            f"Customer Segments: {', '.join(form_data.get('customerSegments', []))}",
+            f"Deployment Types: {', '.join(form_data.get('deploymentType', []))}",
+            f"Ideal For: {', '.join(form_data.get('idealScenarios', []))}",
+            f"Trial Available: {'Yes' if form_data.get('trialAvailable', False) else 'No'}",
             "",
             "Products/Services:",
             products_text
@@ -187,9 +203,14 @@ class CompanySubmissionService:
     
     def _create_features_file(self, company_path: str, form_data: Dict[str, Any]):
         """Create features.txt file"""
-        features_list = form_data.get('features', [])
-        if features_list:
-            features_content = '\n'.join([f"- {feature}" for feature in features_list])
+        features_text = form_data.get('features', '')
+        if features_text:
+            # Split features text into lines and format as bullet points
+            features_lines = [line.strip() for line in features_text.split('\n') if line.strip()]
+            if features_lines:
+                features_content = '\n'.join([f"- {line}" if not line.startswith('-') else line for line in features_lines])
+            else:
+                features_content = features_text
         else:
             features_content = '- AI-powered solutions\n- Easy integration\n- Professional support'
         
@@ -198,9 +219,14 @@ class CompanySubmissionService:
     
     def _create_use_cases_file(self, company_path: str, form_data: Dict[str, Any]):
         """Create use_cases.txt file"""
-        use_cases_list = form_data.get('useCases', [])
-        if use_cases_list:
-            use_cases_content = '\n'.join([f"- {use_case}" for use_case in use_cases_list])
+        use_cases_text = form_data.get('useCases', '')
+        if use_cases_text:
+            # Split use cases text into lines and format as bullet points
+            use_cases_lines = [line.strip() for line in use_cases_text.split('\n') if line.strip()]
+            if use_cases_lines:
+                use_cases_content = '\n'.join([f"- {line}" if not line.startswith('-') else line for line in use_cases_lines])
+            else:
+                use_cases_content = use_cases_text
         else:
             use_cases_content = 'Business Applications:\n- Automation\n- Analytics\n- Customer service'
         
@@ -217,6 +243,44 @@ class CompanySubmissionService:
         
         with open(os.path.join(company_path, 'clients.txt'), 'w', encoding='utf-8') as f:
             f.write(clients_content)
+    
+    def _create_market_info_file(self, company_path: str, form_data: Dict[str, Any]):
+        """Create market_info.txt file with new market and deployment information"""
+        market_lines = []
+        
+        # Customer Segments
+        customer_segments = form_data.get('customerSegments', [])
+        if customer_segments:
+            market_lines.append(f"Customer Segments: {', '.join(customer_segments)}")
+        
+        # Deployment Types
+        deployment_types = form_data.get('deploymentType', [])
+        if deployment_types:
+            market_lines.append(f"Deployment Options: {', '.join(deployment_types)}")
+        
+        # Ideal Scenarios
+        ideal_scenarios = form_data.get('idealScenarios', [])
+        if ideal_scenarios:
+            market_lines.append(f"Ideal Customer Types: {', '.join(ideal_scenarios)}")
+        
+        # Trial Availability
+        trial_available = form_data.get('trialAvailable', False)
+        market_lines.append(f"Free Trial/Demo Available: {'Yes' if trial_available else 'No'}")
+        
+        # USP/Differentiator
+        usp_tagline = form_data.get('uspTagline', '')
+        if usp_tagline:
+            market_lines.append(f"Unique Selling Proposition: {usp_tagline}")
+        
+        # Company Tagline
+        tagline = form_data.get('tagline', '')
+        if tagline:
+            market_lines.append(f"Company Tagline: {tagline}")
+        
+        market_content = '\n'.join(market_lines) if market_lines else 'No additional market information provided.'
+        
+        with open(os.path.join(company_path, 'market_info.txt'), 'w', encoding='utf-8') as f:
+            f.write(market_content)
     
     def get_pending_submissions(self) -> list:
         """Get list of pending company submissions"""

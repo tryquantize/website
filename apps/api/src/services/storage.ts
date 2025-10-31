@@ -58,6 +58,10 @@ export interface IStorage {
   recordToolView(toolId: string): Promise<void>;
   recordToolClick(toolId: string): Promise<void>;
   getToolAnalytics(toolId: string): Promise<ToolAnalytics[]>;
+  
+  // Engagement tracking
+  recordEngagement(companyName: string, action: 'view' | 'click' | 'save'): Promise<void>;
+  getEngagementData(): Promise<{[companyName: string]: {views: number, clicks: number, saves: number}}>;
 }
 
 // Use memory storage for all operations

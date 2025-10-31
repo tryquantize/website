@@ -13,6 +13,7 @@ import Featured_05 from "@/components/ui/globe-feature-section";
 import FeaturesSection from "@/components/ui/features-section";
 import { FeatureCarousel, type ImageSet } from "@/components/ui/animated-feature-carousel";
 import { motion, useInView } from "framer-motion";
+import { Search, Bot, Megaphone, Zap, Target, Scale, Sparkles, Brain, Trophy } from "lucide-react";
 
 
 // Story Cards Component with animations
@@ -22,47 +23,47 @@ function StoryCardsGrid() {
 
   const storyCards = [
     {
-      icon: "🔍",
+      icon: Search,
       title: "The Problem",
       content: "Google search is a disaster. You spend hours trying to find a product, startup, or service, and what do you get? SEO spam. Paid ads. Generic blog lists written by people who've never used the tools they're ranking."
     },
     {
-      icon: "🤖",
+      icon: Bot,
       title: "Current Solutions Fall Short",
       content: "Even 'smart' tools like Perplexity just skim the surface. You might find something promising… then you're dumped into an endless maze of forms, demos, and 'contact us' pages just to get a simple answer."
     },
     {
-      icon: "📢",
+      icon: Megaphone,
       title: "Discovery Arbitrage",
       content: "The current discovery process is a joke. Great companies and incredible products are buried because they can't win the SEO or ad-spend war. Meanwhile, users waste hours sifting through noise, only to settle for whoever shouts the loudest."
     },
     {
-      icon: "⚡",
+      icon: Zap,
       title: "Our Solution",
       content: "We're fixing this. Me and Yashwardhan Sable are building Quantize, an AI-powered search engine that connects you instantly to the exact product, company, startup, solution or freelancer you need."
     },
     {
-      icon: "🎯",
+      icon: Target,
       title: "Instant Connection",
       content: "No more 20 irrelevant links. No more guessing which landing page is worth your time. Type in what you're looking for, and our system surfaces the best-fit solutions, with one click, you can chat with the company, get a quote, use the product directly, or talk to a real human."
     },
     {
-      icon: "⚖️",
+      icon: Scale,
       title: "Leveling the Playing Field",
       content: "This isn't just about convenience. It's about fixing a massive discovery arbitrage. It's about giving visibility back to the companies doing great work, not just the ones gaming the algorithm."
     },
     {
-      icon: "✨",
+      icon: Sparkles,
       title: "The Vision",
       content: "Imagine replacing three hours of Googling and second-guessing with one clear, custom-fit recommendation, and an instant path to action."
     },
     {
-      icon: "🧠",
+      icon: Brain,
       title: "Intelligence First",
       content: "We're not here to 'index the web.' We're here to weaponize intelligence for search. To make finding a tool, startup, product, or solution feel like magic."
     },
     {
-      icon: "🏆",
+      icon: Trophy,
       title: "Merit-Based Discovery",
       content: "And to finally give visibility back to the companies doing great work, not just the ones who know how to game the algorithm."
     }
@@ -120,7 +121,9 @@ function StoryCardsGrid() {
             }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-2xl">{card.icon}</span>
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                <card.icon className="w-5 h-5 text-black" />
+              </div>
               <h4 className="font-semibold text-lg text-blue-400">{card.title}</h4>
             </div>
             <p className="text-sm leading-relaxed text-white/90">{card.content}</p>

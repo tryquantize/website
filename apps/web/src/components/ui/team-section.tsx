@@ -38,7 +38,7 @@ export default function TeamSection() {
       linkedin: "https://www.linkedin.com/in/adityasurana7/"
     },
     {
-      name: "Yashwardhan Sable",
+      name: "Yashaswi Singhania",
       designation: "Co-Founder & CTO", 
       description: "IIT BHU graduate with deep expertise in machine learning, neural networks, and distributed systems architecture.",
       secondLine: "Spearheading AI research initiatives, model optimization, and building scalable infrastructure for next-gen search.",
@@ -48,8 +48,8 @@ export default function TeamSection() {
       linkedin: "#"
     },
     {
-      name: "Yashaswi Singhania",
-      designation: "Founding Engineer & Head of Engineering",
+      name: "Subhash Kumar",
+      designation: "Co-Founder & CMO",
       description: "IIT BHU graduate specializing in full-stack development, system architecture, and performance optimization.",
       secondLine: "Building robust, scalable systems that power millions of searches while maintaining sub-second response times.",
       thirdLine: "Expert in React, Node.js, Python, and cloud infrastructure with experience in high-traffic applications.",

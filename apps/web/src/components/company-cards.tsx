@@ -1,7 +1,7 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, ExternalLink, ArrowLeft, Send, Heart, Building2, GitCompare, X, Loader2, MapPin, Users, Calendar, TrendingUp, DollarSign, Target, Briefcase, Award, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageCircle, ExternalLink, ArrowLeft, Send, Heart, Building2, GitCompare, X, Loader2, MapPin, Users, Calendar, TrendingUp, DollarSign, Target, Briefcase, Award, ChevronDown, ChevronUp, Handshake, Eye, MousePointer, RotateCcw } from "lucide-react";
 import { useFavorites } from "@/contexts/favorites-context";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
@@ -37,15 +37,37 @@ interface Company {
   enhancedAbout?: string;
   enhancedUseCases?: string[];
   tagline?: string;
+  // New fields
+  trialAvailable?: boolean;
+  customerSegments?: string[];
+  uspTagline?: string;
+  deploymentType?: string[];
+  idealScenarios?: string[];
 }
 
 interface CompanyCardsProps {
   companies: Company[];
   webSearchEnabled?: boolean;
   searchQuery?: string;
+  tinderMode?: boolean;
+  onTinderModeChange?: (mode: boolean) => void;
+  currentCardIndex?: number;
+  onCardIndexChange?: (index: number) => void;
+  onSwipe?: (direction: 'left' | 'right') => void;
+  onReset?: () => void;
 }
 
-export function CompanyCards({ companies, webSearchEnabled, searchQuery }: CompanyCardsProps) {
+export function CompanyCards({ 
+  companies, 
+  webSearchEnabled, 
+  searchQuery, 
+  tinderMode = false,
+  onTinderModeChange,
+  currentCardIndex = 0,
+  onCardIndexChange,
+  onSwipe,
+  onReset
+}: CompanyCardsProps) {
   const [chatStates, setChatStates] = useState<{[key: number]: boolean}>({});
   const [messages, setMessages] = useState<{[key: number]: Array<{text: string, isUser: boolean}>}>({});
   const [inputValues, setInputValues] = useState<{[key: number]: string}>({});
@@ -57,10 +79,58 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
   const [showComparisonPopup, setShowComparisonPopup] = useState(false);
   const [comparisonResult, setComparisonResult] = useState<string>("");
   const [isLoadingComparison, setIsLoadingComparison] = useState(false);
+  const [engagementData, setEngagementData] = useState<{[key: string]: {views: number, clicks: number, saves: number}}>({});
+  const [swipedCards, setSwipedCards] = useState<Set<number>>(new Set());
 
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { currentUser } = useFirebaseAuth();
   const { showFavoritesNotification } = useNotification();
+
+  // Track engagement
+  const trackEngagement = async (companyName: string, action: 'view' | 'click' | 'save') => {
+    try {
+      await apiRequest('POST', '/api/engagement/track', {
+        companyName,
+        action
+      });
+      
+      // Update local state
+      setEngagementData(prev => ({
+        ...prev,
+        [companyName]: {
+          views: prev[companyName]?.views || 0,
+          clicks: prev[companyName]?.clicks || 0,
+          saves: prev[companyName]?.saves || 0,
+          [action + 's']: (prev[companyName]?.[action + 's'] || 0) + 1
+        }
+      }));
+    } catch (error) {
+      console.error('Failed to track engagement:', error);
+    }
+  };
+
+  // Load engagement data on mount
+  React.useEffect(() => {
+    const loadEngagementData = async () => {
+      try {
+        const response = await apiRequest('GET', '/api/engagement/data');
+        const data = await response.json();
+        if (data.success) {
+          setEngagementData(data.engagement);
+        }
+      } catch (error) {
+        console.error('Failed to load engagement data:', error);
+      }
+    };
+    loadEngagementData();
+  }, []);
+
+  // Track views when companies are displayed
+  React.useEffect(() => {
+    companies.forEach(company => {
+      trackEngagement(company.name, 'view');
+    });
+  }, [companies]);
 
   const handleChatClick = (index: number) => {
     setChatStates(prev => ({...prev, [index]: true}));
@@ -87,10 +157,71 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
     setInputValues(prev => ({...prev, [index]: ""}));
   };
 
-  const handleVisitWebsite = (website: string) => {
+  const handleVisitWebsite = (website: string, companyName: string) => {
     if (website && website !== "#") {
+      trackEngagement(companyName, 'click');
       window.open(website, "_blank", "noopener,noreferrer");
     }
+  };
+
+  const handlePartnerRequest = (companyName: string) => {
+    trackEngagement(companyName, 'click');
+    // For now, open email client with partnership inquiry
+    const subject = encodeURIComponent(`Partnership Inquiry - ${companyName}`);
+    const body = encodeURIComponent(`Hi ${companyName} team,\n\nI'm interested in exploring partnership opportunities with your company. I found your profile through Quantize and would love to discuss potential collaboration.\n\nBest regards`);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+  };
+
+  const handleSwipe = (direction: 'left' | 'right') => {
+    const company = companies[currentCardIndex];
+    
+    if (direction === 'right') {
+      // Add to favorites
+      const companyId = `company_${currentCardIndex}_${company.name}`;
+      trackEngagement(company.name, 'save');
+      addToFavorites({
+        id: companyId,
+        type: 'company',
+        name: company.name,
+        description: company.description,
+        features: company.features,
+        pricing: company.pricing,
+        website: company.website,
+        category: company.category,
+        specifications: company.specifications,
+        location: company.location,
+        about: company.about,
+        linkedin_url: company.linkedin_url,
+        rating: company.rating,
+        companyStage: company.companyStage,
+        industriesServed: company.industriesServed,
+        pricingRanges: company.pricingRanges,
+        pricingModel: company.pricingModel,
+        employees: company.employees,
+        productsServices: company.productsServices,
+        topClients: company.topClients,
+        logoUrl: company.logoUrl,
+        founded: company.founded,
+        enhancedAbout: company.enhancedAbout,
+        enhancedUseCases: company.enhancedUseCases,
+        tagline: company.tagline,
+        trialAvailable: company.trialAvailable,
+        customerSegments: company.customerSegments,
+        uspTagline: company.uspTagline,
+        deploymentType: company.deploymentType,
+        idealScenarios: company.idealScenarios
+      }, showFavoritesNotification);
+    }
+    
+    setSwipedCards(prev => new Set([...prev, currentCardIndex]));
+    onCardIndexChange?.(currentCardIndex + 1);
+    onSwipe?.(direction);
+  };
+
+  const resetTinderMode = () => {
+    onCardIndexChange?.(0);
+    setSwipedCards(new Set());
+    onReset?.();
   };
 
   const handleCompareToggle = (index: number) => {
@@ -203,6 +334,10 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
     if (hasData(company.industriesServed)) sections.push('industries');
     if (hasData(company.productsServices)) sections.push('products');
     if (hasData(company.topClients)) sections.push('clients');
+    if (hasData(company.customerSegments)) sections.push('segments');
+    if (hasData(company.deploymentType)) sections.push('deployment');
+    if (hasData(company.idealScenarios)) sections.push('scenarios');
+    if (company.trialAvailable) sections.push('trial');
     return sections;
   };
 
@@ -219,13 +354,419 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
       case 'industries': return <Target className="w-4 h-4 text-white" />;
       case 'products': return <Award className="w-4 h-4 text-white" />;
       case 'clients': return <Building2 className="w-4 h-4 text-white" />;
+      case 'segments': return <Target className="w-4 h-4 text-white" />;
+      case 'deployment': return <Building2 className="w-4 h-4 text-white" />;
+      case 'scenarios': return <Briefcase className="w-4 h-4 text-white" />;
+      case 'trial': return <Award className="w-4 h-4 text-white" />;
       default: return <Briefcase className="w-4 h-4 text-white" />;
     }
   };
 
+  if (companies.length === 0) {
+    return null;
+  }
+
   return (
     <div className="mt-6">
-      <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2" style={{scrollbarWidth: 'thin'}}>
+
+      {tinderMode ? (
+        /* Tinder Mode View - Using existing cards */
+        <div className="relative h-[700px] flex items-center justify-center px-4">
+          {currentCardIndex >= companies.length ? (
+            <div className="text-center text-white">
+              <Heart className="w-16 h-16 mx-auto mb-4 text-pink-500" />
+              <h3 className="text-2xl font-bold mb-2">All Done!</h3>
+              <p className="text-white/70 mb-4">You've reviewed all companies</p>
+              <Button onClick={resetTinderMode} className="bg-pink-500 hover:bg-pink-600">
+                Start Over
+              </Button>
+            </div>
+          ) : (
+            <div className="relative w-full max-w-2xl h-[500px]">
+              {/* Stack of existing cards in tinder style */}
+              {companies.slice(currentCardIndex, currentCardIndex + 3).map((company, stackIndex) => {
+                const actualIndex = currentCardIndex + stackIndex;
+                const isTop = stackIndex === 0;
+                const availableSections = getAvailableSections(company);
+                const isExpanded = true; // Force expanded in tinder mode
+                const cardHeight = "auto";
+                
+                return (
+                  <div
+                    key={actualIndex}
+                    className={`absolute inset-0 transition-all duration-300 ${
+                      isTop ? 'z-30 scale-100' : stackIndex === 1 ? 'z-20 scale-95 translate-y-2' : 'z-10 scale-90 translate-y-4'
+                    }`}
+                    style={{
+                      transform: `scale(${1 - stackIndex * 0.05}) translateY(${stackIndex * 8}px)`,
+                      opacity: 1 - stackIndex * 0.2
+                    }}
+                  >
+                    {/* Use exact same card structure from grid view */}
+                    <GradientCardBase className="min-w-[600px] max-w-[600px] h-[500px] overflow-hidden" width="600px" height={cardHeight}>
+                      {chatStates[actualIndex] ? (
+                        <div className="space-y-3 h-full flex flex-col p-4">
+                          <div className="flex items-center justify-between">
+                            <h5 className="text-white text-base font-medium">{company.name}</h5>
+                            <Button
+                              onClick={() => handleBackClick(actualIndex)}
+                              size="sm"
+                              variant="outline"
+                              className="border-white/20 text-white/80 hover:bg-white/10 text-xs"
+                            >
+                              <ArrowLeft className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          
+                          <div className="bg-black/20 rounded-lg p-3 flex-1 overflow-y-auto space-y-2">
+                            {(messages[actualIndex] || []).map((msg, msgIndex) => (
+                              <div key={msgIndex} className={`text-xs ${msg.isUser ? 'text-right' : 'text-left'}`}>
+                                <span className={`inline-block px-2 py-1 rounded ${msg.isUser ? 'bg-blue-600 text-white' : 'bg-white/10 text-white/80'}`}>
+                                  {msg.text}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="flex space-x-2">
+                            <Input
+                              value={inputValues[actualIndex] || ""}
+                              onChange={(e) => setInputValues(prev => ({...prev, [actualIndex]: e.target.value}))}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(actualIndex)}
+                              placeholder="Type your message..."
+                              className="flex-1 h-8 text-xs bg-white/5 border-white/20 text-white"
+                            />
+                            <Button
+                              onClick={() => handleSendMessage(actualIndex)}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                            >
+                              <Send className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3 h-full flex flex-col p-4">
+                          {/* Copy exact expanded card content from grid view */}
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center space-x-3">
+                              <motion.div
+                                className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden"
+                                style={{
+                                  background: company.logoUrl ? "transparent" : "linear-gradient(225deg, #171c2c 0%, #121624 100%)",
+                                  boxShadow: "0 4px 8px -1px rgba(0, 0, 0, 0.2), inset 1px 1px 3px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.4)"
+                                }}
+                              >
+                                {company.logoUrl ? (
+                                  <img src={company.logoUrl} alt={`${company.name} logo`} className="w-full h-full object-cover" />
+                                ) : (
+                                  <Building2 className="w-5 h-5 text-white" />
+                                )}
+                              </motion.div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <h5 className="text-white text-lg font-semibold">{company.name}</h5>
+                                  </div>
+                                </div>
+                                <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{company.category}</span>
+                              </div>
+                            </div>
+                            {currentUser && (
+                              <div className="flex space-x-1">
+                                <Button
+                                  onClick={() => {
+                                    const companyId = `company_${actualIndex}_${company.name}`;
+                                    if (isFavorite(companyId)) {
+                                      removeFromFavorites(companyId);
+                                    } else {
+                                      trackEngagement(company.name, 'save');
+                                      addToFavorites({
+                                        id: companyId,
+                                        type: 'company',
+                                        name: company.name,
+                                        description: company.description,
+                                        features: company.features,
+                                        pricing: company.pricing,
+                                        website: company.website,
+                                        category: company.category
+                                      }, showFavoritesNotification);
+                                    }
+                                  }}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="p-1 h-auto"
+                                >
+                                  <Heart className={`w-4 h-4 ${isFavorite(`company_${actualIndex}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* All expanded content from original cards */}
+                          <div className="space-y-4 flex-1 overflow-y-auto pr-2" style={{maxHeight: '350px', scrollbarWidth: 'thin'}}>
+                            <div className="grid grid-cols-4 gap-3 text-xs">
+                              {hasData(company.location) && (
+                                <div>
+                                  <div className="flex items-center gap-1 mb-1">
+                                    <MapPin className="w-3 h-3 text-white/60" />
+                                    <span className="font-semibold text-white">Location</span>
+                                  </div>
+                                  <div className="text-white/80">{company.location}</div>
+                                </div>
+                              )}
+                              {hasData(company.employees) && (
+                                <div>
+                                  <div className="flex items-center gap-1 mb-1">
+                                    <Users className="w-3 h-3 text-white/60" />
+                                    <span className="font-semibold text-white">Employees</span>
+                                  </div>
+                                  <div className="text-white/80">{company.employees}</div>
+                                </div>
+                              )}
+                              {hasData(company.founded) && (
+                                <div>
+                                  <div className="flex items-center gap-1 mb-1">
+                                    <Calendar className="w-3 h-3 text-white/60" />
+                                    <span className="font-semibold text-white">Founded</span>
+                                  </div>
+                                  <div className="text-white/80">{company.founded}</div>
+                                </div>
+                              )}
+                              {hasData(company.companyStage) && (
+                                <div>
+                                  <div className="flex items-center gap-1 mb-1">
+                                    <TrendingUp className="w-3 h-3 text-white/60" />
+                                    <span className="font-semibold text-white">Stage</span>
+                                  </div>
+                                  <div className="text-white/80">{company.companyStage}</div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {(hasData(company.specifications) || hasData(company.features)) && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Briefcase className="w-4 h-4 text-white/60" />
+                                  <h6 className="text-sm font-semibold text-white">Key Specifications</h6>
+                                </div>
+                                <div className="space-y-1">
+                                  {company.specifications ? company.specifications.slice(0, 5).map((spec, i) => (
+                                    <div key={i} className="text-xs text-white/80">• {spec}</div>
+                                  )) : (
+                                    company.features && company.features.slice(0, 5).map((feature, i) => (
+                                      <div key={i} className="text-xs text-white/80">• {feature}</div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {hasData(company.customerSegments) && (
+                              <div>
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Target className="w-3 h-3 text-white/60" />
+                                  <span className="font-semibold text-white">Customer Segments</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {company.customerSegments.map((segment, i) => (
+                                    <span key={i} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
+                                      {segment}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {hasData(company.deploymentType) && (
+                              <div>
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Building2 className="w-3 h-3 text-white/60" />
+                                  <span className="font-semibold text-white">Deployment</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {company.deploymentType.map((type, i) => (
+                                    <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">
+                                      {type}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {hasData(company.idealScenarios) && (
+                              <div>
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Briefcase className="w-3 h-3 text-white/60" />
+                                  <span className="font-semibold text-white">Ideal For</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {company.idealScenarios.map((scenario, i) => (
+                                    <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">
+                                      {scenario}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {company.trialAvailable && (
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                  <span className="text-green-300 font-medium text-sm">Free Trial Available</span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {hasData(company.productsServices) && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Award className="w-4 h-4 text-white/60" />
+                                  <h6 className="text-sm font-semibold text-white">Products & Services</h6>
+                                </div>
+                                <div className="space-y-1">
+                                  {company.productsServices.slice(0, 3).map((product, i) => (
+                                    <div key={i} className="text-xs text-white/80 leading-relaxed">• {product}</div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {hasMeaningfulPricing(company) && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <DollarSign className="w-4 h-4 text-white/60" />
+                                  <h6 className="text-sm font-semibold text-white">Pricing Information</h6>
+                                </div>
+                                <div className="text-xs">
+                                  {hasData(company.pricingRanges) && (
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-white/60">Ranges:</span>
+                                      <div className="flex flex-wrap gap-1">
+                                        {company.pricingRanges.map((range, i) => (
+                                          <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded">
+                                            {range}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {hasData(company.pricingModel) && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-white/60">Models:</span>
+                                      <div className="flex flex-wrap gap-1">
+                                        {company.pricingModel.map((model, i) => (
+                                          <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
+                                            {model}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {hasData(company.pricing) && !hasData(company.pricingRanges) && !hasData(company.pricingModel) && (
+                                    <div className="text-white/80">{company.pricing}</div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {hasData(company.enhancedUseCases) && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Target className="w-4 h-4 text-white/60" />
+                                  <h6 className="text-sm font-semibold text-white">Use Cases</h6>
+                                </div>
+                                <div className="space-y-1">
+                                  {(company.enhancedUseCases as string[]).slice(0, 3).map((useCase, i) => (
+                                    <div key={i} className="text-xs text-white/80">• {useCase}</div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {hasData(company.enhancedAbout) && (
+                              <div>
+                                <div className="text-sm font-semibold text-white py-2 border-t border-white/10">
+                                  About Company
+                                </div>
+                                <div className="text-xs text-white/80 bg-white/5 p-3 rounded leading-relaxed max-h-32 overflow-y-auto">
+                                  {company.enhancedAbout}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex space-x-1 mt-auto">
+                            <Button
+                              onClick={() => handleChatClick(actualIndex)}
+                              size="sm"
+                              className="flex-1 bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
+                            >
+                              <MessageCircle className="w-3 h-3 mr-1" />
+                              Chat
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                if ((company as any).phoneNumber) {
+                                  trackEngagement(company.name, 'click');
+                                  window.open(`tel:${(company as any).phoneNumber}`, '_self');
+                                } else {
+                                  alert(`No phone number available for ${company.name}`);
+                                }
+                              }}
+                              size="sm"
+                              className="flex-1 bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
+                            >
+                              📞 Call
+                            </Button>
+                            <Button
+                              onClick={() => handlePartnerRequest(company.name)}
+                              size="sm"
+                              className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium hover:from-green-600 hover:to-blue-600 text-xs px-2"
+                              title="Partner with this company"
+                            >
+                              <Handshake className="w-3 h-3 mr-1" />
+                              Partner
+                            </Button>
+                            {company.website && company.website !== "#" && (
+                              <Button
+                                onClick={() => handleVisitWebsite(company.website, company.name)}
+                                size="sm"
+                                className="bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </GradientCardBase>
+                  </div>
+                );
+              })}
+              
+              {/* Swipe buttons */}
+              <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex gap-6">
+                <Button
+                  onClick={() => handleSwipe('left')}
+                  className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-lg"
+                >
+                  <X className="w-8 h-8" />
+                </Button>
+                <Button
+                  onClick={() => handleSwipe('right')}
+                  className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg"
+                >
+                  <Heart className="w-8 h-8" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Original Grid View */
+        <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2" style={{scrollbarWidth: 'thin'}}>
         {companies.map((company, index) => {
           const availableSections = getAvailableSections(company);
           const isExpanded = expandedCards[index];
@@ -336,6 +877,7 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
                           if (isFavorite(companyId)) {
                             removeFromFavorites(companyId);
                           } else {
+                            trackEngagement(company.name, 'save');
                             addToFavorites({
                               id: companyId,
                               type: 'company',
@@ -361,7 +903,12 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
                               founded: company.founded,
                               enhancedAbout: company.enhancedAbout,
                               enhancedUseCases: company.enhancedUseCases,
-                              tagline: company.tagline
+                              tagline: company.tagline,
+                              trialAvailable: company.trialAvailable,
+                              customerSegments: company.customerSegments,
+                              uspTagline: company.uspTagline,
+                              deploymentType: company.deploymentType,
+                              idealScenarios: company.idealScenarios
                             }, showFavoritesNotification);
                           }
                         }}
@@ -381,17 +928,34 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
                     className="cursor-pointer flex-1 flex flex-col justify-between"
                     onClick={() => toggleCardExpansion(index)}
                   >
-                    {/* Company Tagline */}
-                    {hasData(company.tagline) && (
+                    {/* USP Tagline or Company Tagline */}
+                    {(hasData(company.uspTagline) || hasData(company.tagline)) && (
                       <div className="mb-3">
                         <p className="text-xs text-white/70 leading-relaxed line-clamp-2">
-                          {company.tagline!.length > 80 ? company.tagline!.substring(0, 80) + '...' : company.tagline}
+                          {company.uspTagline ? 
+                            (company.uspTagline.length > 80 ? company.uspTagline.substring(0, 80) + '...' : company.uspTagline) :
+                            (company.tagline!.length > 80 ? company.tagline!.substring(0, 80) + '...' : company.tagline)
+                          }
                         </p>
                       </div>
                     )}
                     
-                    {/* Expand Arrow */}
-                    <div className="flex justify-end mb-2">
+                    {/* Engagement Stats */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3 text-xs text-white/60">
+                        <div className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          <span>{engagementData[company.name]?.views || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MousePointer className="w-3 h-3" />
+                          <span>{engagementData[company.name]?.clicks || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Heart className="w-3 h-3" />
+                          <span>{engagementData[company.name]?.saves || 0}</span>
+                        </div>
+                      </div>
                       <ChevronDown className="w-4 h-4 text-white/60" />
                     </div>
                     
@@ -402,7 +966,7 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleVisitWebsite(company.website);
+                              handleVisitWebsite(company.website, company.name);
                             }}
                             className="text-white/60 hover:text-blue-400 transition-colors"
                             title="Visit Website"
@@ -480,6 +1044,63 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
                             <span className="font-semibold text-white">Stage</span>
                           </div>
                           <div className="text-white/80">{company.companyStage}</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* New Fields Section */}
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      {hasData(company.customerSegments) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Target className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Customer Segments</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {company.customerSegments!.map((segment, i) => (
+                              <span key={i} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
+                                {segment}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {hasData(company.deploymentType) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Building2 className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Deployment</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {company.deploymentType!.map((type, i) => (
+                              <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">
+                                {type}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {hasData(company.idealScenarios) && (
+                        <div className="col-span-2">
+                          <div className="flex items-center gap-1 mb-1">
+                            <Briefcase className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Ideal For</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {company.idealScenarios!.map((scenario, i) => (
+                              <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">
+                                {scenario}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {company.trialAvailable && (
+                        <div className="col-span-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-green-300 font-medium text-sm">Free Trial Available</span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -664,6 +1285,7 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
                     <Button
                       onClick={() => {
                         if ((company as any).phoneNumber) {
+                          trackEngagement(company.name, 'click');
                           window.open(`tel:${(company as any).phoneNumber}`, '_self');
                         } else {
                           alert(`No phone number available for ${company.name}`);
@@ -674,9 +1296,18 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
                     >
                       📞 Call
                     </Button>
+                    <Button
+                      onClick={() => handlePartnerRequest(company.name)}
+                      size="sm"
+                      className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium hover:from-green-600 hover:to-blue-600 text-xs px-2"
+                      title="Partner with this company"
+                    >
+                      <Handshake className="w-3 h-3 mr-1" />
+                      Partner
+                    </Button>
                     {company.website && company.website !== "#" && (
                       <Button
-                        onClick={() => handleVisitWebsite(company.website)}
+                        onClick={() => handleVisitWebsite(company.website, company.name)}
                         size="sm"
                         className="bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
                       >
@@ -692,8 +1323,10 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
         })}
       </div>
       
-      {/* Compare Section */}
-      {selectedForComparison.size >= 2 && (
+      )}
+      
+      {/* Compare Section - only show in grid mode */}
+      {!tinderMode && selectedForComparison.size >= 2 && (
         <div className="mt-6 bg-black/20 backdrop-blur-3xl p-4 border border-white/10 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">

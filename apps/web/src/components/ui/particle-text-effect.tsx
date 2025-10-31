@@ -147,12 +147,12 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
   const frameCountRef = useRef(0)
   const wordIndexRef = useRef(0)
 
-  const pixelSteps = 6
+  const pixelSteps = 3
   const drawAsPoints = true
 
   const generateRandomPos = (x: number, y: number, mag: number): Vector2D => {
-    const randomX = Math.random() * 800
-    const randomY = Math.random() * 200
+    const randomX = Math.random() * 1200
+    const randomY = Math.random() * 300
 
     const direction = {
       x: randomX - x,
@@ -179,7 +179,7 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
 
     // Draw text
     offscreenCtx.fillStyle = "white"
-    offscreenCtx.font = "bold 160px Arial"
+    offscreenCtx.font = "bold 240px Arial"
     offscreenCtx.textAlign = "center"
     offscreenCtx.textBaseline = "middle"
     offscreenCtx.fillText(word, canvas.width / 2, canvas.height / 2)
@@ -288,7 +288,7 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
 
     // Auto-advance words
     frameCountRef.current++
-    if (frameCountRef.current % 180 === 0) {
+    if (frameCountRef.current % 270 === 0) {
       wordIndexRef.current = (wordIndexRef.current + 1) % words.length
       nextWord(words[wordIndexRef.current], canvas)
     }
@@ -300,8 +300,8 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
     const canvas = canvasRef.current
     if (!canvas) return
 
-    canvas.width = 800
-    canvas.height = 200
+    canvas.width = 1200
+    canvas.height = 300
 
     // Initialize with first word
     nextWord(words[0], canvas)
@@ -320,7 +320,7 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
     <canvas
       ref={canvasRef}
       className="w-full max-w-4xl h-auto"
-      style={{ maxWidth: "100%", height: "200px", border: "none", outline: "none" }}
+      style={{ maxWidth: "100%", height: "300px", border: "none", outline: "none" }}
     />
   )
 }

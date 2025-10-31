@@ -1,0 +1,23 @@
+Company: Hyperspell
+Founded: 2025
+Headquarters: San Francisco
+Description: Hyperspell enhances AI agents with sophisticated memory capabilities, enabling them to recall, reason, and retain knowledge throughout the organization.
+Website: https://www.hyperspell.com
+LinkedIn: https://www.linkedin.com/company/hyperspell/
+Phone: 
+Category: Artificial Intelligence
+Employees: 6
+Company Stage: Seed
+Industries Served: B2B, Artificial Intelligence, Developer Tools, Machine Learning, Infrastructure, SaaS
+Pricing Ranges: $1,000-$2,500
+Pricing Models: Freemium
+Top Clients: 
+Tagline: Memory for AI Agents.
+USP/Differentiator: Gives AI agents memory.
+Customer Segments: B2B, B2C
+Deployment Types: Cloud
+Ideal For: Enterprises, Startups
+Trial Available: Yes
+
+Products/Services:
+- Hyperspell API: Gives AI agents memory and connects to tools like Slack, Gmail, Notion, and Drive.

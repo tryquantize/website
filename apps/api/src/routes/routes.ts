@@ -626,6 +626,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Engagement tracking routes
+  app.post("/api/engagement/track", async (req, res) => {
+    try {
+      const { companyName, action } = req.body;
+      
+      if (!companyName || !action) {
+        return res.status(400).json({ message: "Company name and action are required" });
+      }
+      
+      if (!['view', 'click', 'save'].includes(action)) {
+        return res.status(400).json({ message: "Invalid action. Must be view, click, or save" });
+      }
+      
+      await storage.recordEngagement(companyName, action);
+      res.json({ success: true, message: "Engagement recorded" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to record engagement" });
+    }
+  });
+
+  app.get("/api/engagement/data", async (req, res) => {
+    try {
+      const engagement = await storage.getEngagementData();
+      res.json({ success: true, engagement });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch engagement data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Copy, Building2, User, Brain, Mic, MicOff, PanelLeftClose, PanelLeftOpen, Loader2, Undo, ArrowRight } from "lucide-react";
+import { Search, Sparkles, Copy, Building2, User, Brain, Mic, MicOff, PanelLeftClose, PanelLeftOpen, Loader2, Undo, ArrowRight, Heart, RotateCcw } from "lucide-react";
 import { QuantizeLogo } from "@/components/quantize-logo";
 import { UserLogo } from "@/components/user-logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -24,6 +24,7 @@ import { NotificationProvider } from "@/contexts/notification-context";
 import { enhancePrompt } from "@/lib/promptEnhancer";
 import { useToast } from "@/hooks/use-toast";
 import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
+import { Component as RaycastBlueBackground } from "@/components/ui/raycast-animated-blue-background";
 
 
 
@@ -55,6 +56,23 @@ interface ContentItem {
   data: any;
 }
 
+const mockSearchResults = [
+  {
+    name: "Example Company 1",
+    description: "A sample company for demonstration",
+    category: "Technology",
+    pricing: "Free",
+    website: "https://example.com"
+  },
+  {
+    name: "Example Company 2", 
+    description: "Another sample company",
+    category: "Business",
+    pricing: "$10/month",
+    website: "https://example2.com"
+  }
+];
+
 export default function ResultsPage() {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
@@ -77,6 +95,8 @@ export default function ResultsPage() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [favoritesNotification, setFavoritesNotification] = useState({ show: false, itemName: '' });
+  const [tinderMode, setTinderMode] = useState(false);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   
   // WEB SEARCH STATE
@@ -741,7 +761,7 @@ export default function ResultsPage() {
     <div className="min-h-screen pb-32 relative">
       {/* Raycast Animation Background */}
       <div className="fixed inset-0 w-full h-full z-0">
-        <RaycastBackground />
+        {tinderMode ? <RaycastBlueBackground /> : <RaycastBackground />}
       </div>
       {/* Fixed Sidebar */}
       {showSidebar && (
@@ -869,6 +889,45 @@ export default function ResultsPage() {
           </div>
         )}
         
+        {/* Tinder Mode Toggle */}
+        {allCompanies.length > 0 && (
+          <div className="bg-black/20 backdrop-blur-xl p-4 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => {
+                    setTinderMode(!tinderMode);
+                    if (!tinderMode) {
+                      setCurrentCardIndex(0);
+                    }
+                  }}
+                  variant={tinderMode ? "default" : "outline"}
+                  className={`${tinderMode ? 'bg-pink-500 hover:bg-pink-600' : 'border-white/20 text-white hover:bg-white/10'} transition-all`}
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  Tinder Mode {tinderMode ? 'ON' : 'OFF'}
+                </Button>
+                {tinderMode && (
+                  <Button
+                    onClick={() => setCurrentCardIndex(0)}
+                    variant="outline"
+                    size="sm"
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                    Reset
+                  </Button>
+                )}
+              </div>
+              {tinderMode && (
+                <div className="text-white/60 text-sm">
+                  {currentCardIndex + 1} / {allCompanies.length}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
 
         
 
@@ -887,7 +946,16 @@ export default function ResultsPage() {
           if (currentTypes.has('product') && currentTypes.size === 1) {
             return <ProductCards products={allCompanies} />;
           } else if (currentTypes.has('company') && currentTypes.size === 1) {
-            return <CompanyCards companies={allCompanies} webSearchEnabled={webSearchEnabled} searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''} />;
+            return (
+              <CompanyCards 
+                companies={allCompanies} 
+                webSearchEnabled={webSearchEnabled} 
+                searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+                tinderMode={tinderMode}
+                currentCardIndex={currentCardIndex}
+                onCardIndexChange={setCurrentCardIndex}
+              />
+            );
           } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
             return <FreelancerCards freelancers={allCompanies} />;
           } else {
@@ -901,7 +969,14 @@ export default function ResultsPage() {
             }));
             return (
               <div className="mt-6">
-                <CompanyCards companies={companies} webSearchEnabled={webSearchEnabled} searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''} />
+                <CompanyCards 
+                  companies={companies} 
+                  webSearchEnabled={webSearchEnabled} 
+                  searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+                  tinderMode={tinderMode}
+                  currentCardIndex={currentCardIndex}
+                  onCardIndexChange={setCurrentCardIndex}
+                />
                 {products.length > 0 && <ProductToolCards products={products} />}
               </div>
             );

@@ -1,0 +1,6 @@
+Customer Segments: B2B, B2C
+Deployment Options: Cloud
+Ideal Customer Types: Enterprises, Startups
+Free Trial/Demo Available: Yes
+Unique Selling Proposition: Gives AI agents memory.
+Company Tagline: Memory for AI Agents.

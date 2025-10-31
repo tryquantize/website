@@ -1,0 +1,24 @@
+Company: Legora
+Founded: 2022
+Headquarters: Stockholdm
+Description: Legora is building a platform to unlock collaboration between lawyers and clients, focusing on enhancing the review, drafting, and delivery of legal projects through AI.
+Website: https://legora.com/
+LinkedIn: https://www.linkedin.com/company/wearelegora/
+Phone: 
+Category: Legal Technology
+Employees: 175+
+Company Stage: Seed
+Industries Served: Consulting, Legal
+Pricing Ranges: $1,000-$2,500
+Pricing Models: Usage-based
+Top Clients: 
+Tagline: Innovative solutions by Legora
+USP/Differentiator: Empowering exceptional lawyers through the world's first truly collaborative AI for lawyers.
+Customer Segments: B2B
+Deployment Types: Hybrid
+Ideal For: SMBs, Startups
+Trial Available: Yes
+
+Products/Services:
+- Legora Platform: A collaborative AI workspace for lawyers, enabling them to review, draft, and deliver projects together.
+- Word Add-In: Integrates Legora’s reviewing and drafting capabilities into Microsoft Word.
