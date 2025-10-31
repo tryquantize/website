@@ -27,7 +27,11 @@ class LLMEnricher:
         
         try:
             response = self._call_llm(prompt)
-            return response
+            if response and len(response.strip()) > 10:
+                return response
+            else:
+                logger.warning("LLM returned empty/short response, using fallback")
+                return self._fallback_formatting(query, matching_companies)
         except Exception as e:
             logger.error(f"LLM enrichment failed: {e}")
             # Fallback to simple formatting
@@ -125,57 +129,18 @@ Response:"""
     def _fallback_formatting(self, query: str, matching_companies: List[Dict[str, Any]]) -> str:
         """Simple fallback formatting when LLM fails"""
         if not matching_companies:
-            return f"I couldn't find any companies in our database that specifically match '{query}'. This might be because your search is very specific or the companies you're looking for aren't in our current database. Try using broader terms or enable web search for more comprehensive results."
+            return f"No companies found matching '{query}' in our database."
         
         company_names = [company.get('company_name', 'Unknown') for company in matching_companies[:3]]
         
         if len(company_names) == 1:
-            return f"Based on our database, {company_names[0]} is a great option for {query.lower()}. They specialize in AI-powered solutions and can help with your requirements. Check out their details in the company cards below for more information about their features and pricing."
+            return f"Found {company_names[0]} for {query.strip()}. Check the company card below for detailed information about their AI voice solutions."
         elif len(company_names) == 2:
-            return f"Based on our database, {company_names[0]} and {company_names[1]} are excellent options for {query.lower()}. Both companies offer specialized AI solutions that can meet your needs. Review their company cards below to compare features, pricing, and capabilities."
+            return f"Found {company_names[0]} and {company_names[1]} for {query.strip()}. Both offer AI voice agent solutions - compare their features and pricing below."
         else:
-            return f"Based on our database, we found several great options for {query.lower()} including {company_names[0]}, {company_names[1]}, and {company_names[2]}. These companies offer various AI-powered solutions that can help with your requirements. Check out their detailed information in the company cards below to find the best fit for your needs."
+            return f"Found several AI voice agent providers including {company_names[0]}, {company_names[1]}, and {company_names[2]}. Review the company cards below to find the best solution for your needs."
     
-    def format_company_comparison(self, companies: List[Dict[str, Any]]) -> str:
-        """Format company comparison using only RAG data"""
-        if len(companies) < 2:
-            return "Need at least 2 companies for comparison."
-        
-        comparison_context = self._prepare_comparison_context(companies)
-        
-        prompt = f"""STRICT INSTRUCTION: Compare these companies using ONLY the provided data.
 
-{comparison_context}
-
-Create a brief comparison focusing on:
-1. Key differences in features
-2. Pricing differences (if available)
-3. Best use cases for each
-
-Use ONLY the information provided above. Do not add external knowledge.
-
-Comparison:"""
-        
-        try:
-            return self._call_llm(prompt)
-        except Exception as e:
-            logger.error(f"Comparison formatting failed: {e}")
-            return "Comparison data formatting is currently unavailable."
-    
-    def _prepare_comparison_context(self, companies: List[Dict[str, Any]]) -> str:
-        """Prepare context for company comparison"""
-        context = "COMPANIES TO COMPARE:\n\n"
-        
-        for company in companies:
-            company_data = company.get('data', {})
-            company_name = company.get('company_name', 'Unknown')
-            
-            context += f"{company_name}:\n"
-            context += f"- Info: {company_data.get('company_info', 'N/A')}\n"
-            context += f"- Pricing: {company_data.get('pricing', 'N/A')}\n"
-            context += f"- Features: {company_data.get('features', 'N/A')}\n\n"
-        
-        return context
     
     def generate_key_specifications(self, company_name: str, features_text: str, use_cases_text: str, query: str = "") -> List[str]:
         """Generate 5 short key specifications using LLM from features and use cases, tailored to search query"""
@@ -244,99 +209,3 @@ Specifications:"""
         
         return response.json()['choices'][0]['message']['content'].strip()
     
-    def generate_enhanced_about(self, company_name: str, company_info: str, features: str, use_cases: str) -> str:
-        """Generate enhanced about paragraph focusing on company mission, vision, and expertise"""
-        try:
-            prompt = f"""Create a compelling 150-word about paragraph for {company_name}. Focus ONLY on what the company does, vision, mission, expertise, and value proposition. DO NOT include team size, location, year, pricing, or client names.
-
-Company Info: {company_info}
-Features: {features}
-Use Cases: {use_cases}
-
-Write exactly 150 words:"""
-            
-            payload = {
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": "Write compelling company about sections focusing on value proposition and expertise only."},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.7,
-                "max_tokens": 200
-            }
-            
-            response = requests.post(f"{self.base_url}/chat/completions", 
-                headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}, 
-                json=payload)
-            
-            if response.status_code == 200:
-                return response.json()['choices'][0]['message']['content'].strip()
-            else:
-                raise Exception(f"API error: {response.status_code}")
-                
-        except Exception as e:
-            logger.error(f"Enhanced about generation failed: {e}")
-            return f"{company_name} specializes in innovative AI solutions, delivering cutting-edge technology that transforms business operations. With expertise spanning multiple domains and a commitment to excellence, they provide tailored solutions addressing specific industry challenges while maintaining the highest standards of quality and reliability."
-    
-    def generate_enhanced_use_cases(self, company_name: str, use_cases_text: str, industries_served: List[str]) -> List[str]:
-        """Generate 2-3 enhanced use case bullet points (15 words each) from use cases and industries"""
-        try:
-            industries_str = ', '.join(industries_served) if industries_served else 'various industries'
-            
-            prompt = f"""Create exactly 3 use case bullet points for {company_name}. Each bullet point should be exactly 15 words long and focus on specific industry applications.
-
-Use Cases Data:
-{use_cases_text}
-
-Industries Served: {industries_str}
-
-Generate 3 specific use case bullet points (exactly 15 words each) that combine the use cases with the industries served. Format as a simple list.
-
-Use Cases:"""
-            
-            payload = {
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": "Generate specific use case bullet points that are exactly 15 words each, focusing on industry applications."},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.5,
-                "max_tokens": 150
-            }
-            
-            response = requests.post(f"{self.base_url}/chat/completions", 
-                headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}, 
-                json=payload)
-            
-            if response.status_code == 200:
-                response_text = response.json()['choices'][0]['message']['content'].strip()
-                
-                # Parse response into list
-                use_cases = []
-                for line in response_text.split('\n'):
-                    line = line.strip().lstrip('•-*').strip()
-                    if line and not line.startswith('Use Cases:'):
-                        use_cases.append(line)
-                
-                # Ensure we have exactly 3 use cases
-                if len(use_cases) >= 3:
-                    return use_cases[:3]
-                else:
-                    fallback_cases = [
-                        "Business process automation and optimization solutions",
-                        "Data analytics and insights for decision making", 
-                        "Customer experience enhancement through AI integration"
-                    ]
-                    while len(use_cases) < 3:
-                        use_cases.append(fallback_cases[len(use_cases)])
-                    return use_cases[:3]
-            else:
-                raise Exception(f"API error: {response.status_code}")
-                
-        except Exception as e:
-            logger.error(f"Enhanced use cases generation failed: {e}")
-            return [
-                "Business process automation and optimization solutions",
-                "Data analytics and insights for decision making",
-                "Customer experience enhancement through AI integration"
-            ]

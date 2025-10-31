@@ -14,43 +14,15 @@ class CompanyEnrichmentAgent:
         from config.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL
         self.api_key = OPENROUTER_API_KEY
         self.base_url = OPENROUTER_BASE_URL
-        self.model = "openai/gpt-3.5-turbo"  # Faster model for enrichment
+        from config.config import AI_MODEL
+        self.model = AI_MODEL
         # Initialize both Exa search and RAG data
         self.exa_search = ExaSearchService()
         from rag.services.data_loader import DataLoader
         self.data_loader = DataLoader()
         self.companies_data = self.data_loader.load_all_companies()
-        
-        # Test API connection on initialization
-        self._test_connection()
     
-    def _test_connection(self):
-        """Test if the API connection works"""
-        try:
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            payload = {
-                "model": self.model,
-                "messages": [{"role": "user", "content": "test"}],
-                "max_tokens": 5
-            }
-            
-            response = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers=headers,
-                json=payload
-            )
-            
-            if response.status_code == 200:
-                logger.info("Company enrichment agent API connection successful")
-            else:
-                logger.error(f"API connection failed: {response.status_code} - {response.text}")
-                
-        except Exception as e:
-            logger.error(f"API connection test failed: {str(e)}")
+
     
     def enrich_company_data(self, companies: List[Dict[str, Any]], query: str, locations: List[str] = None, web_search_enabled: bool = True) -> List[Dict[str, Any]]:
         """Enrich company data using specialized agents in parallel"""
@@ -121,7 +93,7 @@ class CompanyEnrichmentAgent:
         else:
             enriched_company['location'] = "Global"
         enriched_company['enhancedAbout'] = about
-
+        enriched_company['enhancedUseCases'] = use_cases
         enriched_company['linkedin_url'] = linkedin_url
         if not enriched_company.get('website') or enriched_company['website'] == '#':
             enriched_company['website'] = website
@@ -403,10 +375,10 @@ Return only the URL, no other text."""
 Company: {company_name}
 User's Search Query: {query}
 
-Generate 3 specific, practical use cases that demonstrate how {company_name} addresses or relates to "{query}". Each use case must be:
+Generate 3 specific, industry-focused use cases that demonstrate how {company_name} addresses "{query}". Each use case must be:
 1. Directly relevant to the search query "{query}"
-2. Realistic and practical for {company_name}
-3. EXACTLY 15 words long
+2. Industry-specific and practical for {company_name}
+3. EXACTLY 10-12 words long
 
 Return only the use cases, one per line, no bullets or numbers."""
                 
@@ -416,8 +388,15 @@ Return only the use cases, one per line, no bullets or numbers."""
                 
                 if response:
                     use_cases = [s.strip() for s in response.split('\n') if s.strip() and len(s.strip()) > 10]
-                    if use_cases and len(use_cases) >= 1:
-                        return use_cases[:3]
+                    # Filter use cases to ensure they're 10-12 words
+                    filtered_cases = []
+                    for case in use_cases:
+                        word_count = len(case.split())
+                        if 10 <= word_count <= 12:
+                            filtered_cases.append(case)
+                    
+                    if filtered_cases and len(filtered_cases) >= 1:
+                        return filtered_cases[:3]
                 
                 logger.warning(f"Could not generate use cases for {company_name}")
                 return []
@@ -445,7 +424,7 @@ Company Data:
 
 User's Search Query: {query}
 
-Generate 3 specific use cases that show how {company_name} addresses "{query}". Each use case must be EXACTLY 15 words long and focus on practical applications. Return only the use cases, one per line, no bullets or numbers."""
+Generate 3 specific, industry-focused use cases that show how {company_name} addresses "{query}". Each use case must be EXACTLY 10-12 words long and focus on practical business applications. Return only the use cases, one per line, no bullets or numbers."""
                     
                     response = self._make_sync_request(prompt)
                     if response:

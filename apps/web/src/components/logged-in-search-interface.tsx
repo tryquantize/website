@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Brain, Sparkles, Building2, User, Package, Mic, MicOff, Loader2, Undo, Globe } from "lucide-react";
+import { Search, Brain, Sparkles, Building2, User, Package, Loader2, Undo, Globe } from "lucide-react";
 import { LocationSelector } from "@/components/location-selector";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,95 +16,56 @@ interface LoggedInSearchInterfaceProps {
   onSearchResults?: (results: any) => void;
 }
 
-
-
 export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInterfaceProps) {
   const [query, setQuery] = useState(() => {
-    // Auto-fill with pending search query if exists
     const pendingQuery = localStorage.getItem('pending-search-query');
     if (pendingQuery) {
-      localStorage.removeItem('pending-search-query'); // Clear after using
+      localStorage.removeItem('pending-search-query');
       return pendingQuery;
     }
     return "";
   });
   
-  // Voice input temporarily disabled
   const { user } = useAuth();
   const { currentUser } = useFirebaseAuth();
   const [, setLocation] = useLocation();
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-
   const [isSearching, setIsSearching] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [placeholder, setPlaceholder] = useState("");
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [selectedModel, setSelectedModel] = useState("Claude 3.5 Haiku");
+  const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showScrollSuggestions, setShowScrollSuggestions] = useState(false);
-  
-  // WEB SEARCH TOGGLE STATE
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
-  
-  // PROMPT ENHANCEMENT STATE
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [queryHistory, setQueryHistory] = useState<string[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
-  
-  // Toast notifications
   const { toast } = useToast();
-  
-  // Temporary disable voice input
-  const isListening = false;
-  const transcript = '';
-  const startListening = () => {};
-  const stopListening = () => {};
-  const resetTranscript = () => {};
 
-  // Get user's first name
   const firstName = currentUser?.displayName?.split(' ')[0] || 
                    currentUser?.email?.split('@')[0] || 
                    user?.name?.split(' ')[0] || 
                    'User';
 
-  // Dynamic greeting based on time and occasions
   const getGreeting = () => {
     const now = new Date();
-    const month = now.getMonth() + 1; // 1-12
+    const month = now.getMonth() + 1;
     const day = now.getDate();
     const hour = now.getHours();
 
-    // Special occasions
-    if (month === 12 && day === 25) {
-      return `Merry Christmas ${firstName}`;
-    }
-    if (month === 1 && day === 1) {
-      return `Happy New Year ${firstName}`;
-    }
-    if (month === 12 && day === 31) {
-      return `Happy New Year's Eve ${firstName}`;
-    }
-    if (month === 10 && day === 31) {
-      return `Happy Halloween ${firstName}`;
-    }
-    if (month === 2 && day === 14) {
-      return `Happy Valentine's Day ${firstName}`;
-    }
-    if (month === 7 && day === 4) {
-      return `Happy 4th of July ${firstName}`;
-    }
+    if (month === 12 && day === 25) return `Merry Christmas ${firstName}`;
+    if (month === 1 && day === 1) return `Happy New Year ${firstName}`;
+    if (month === 12 && day === 31) return `Happy New Year's Eve ${firstName}`;
+    if (month === 10 && day === 31) return `Happy Halloween ${firstName}`;
+    if (month === 2 && day === 14) return `Happy Valentine's Day ${firstName}`;
+    if (month === 7 && day === 4) return `Happy 4th of July ${firstName}`;
 
-    // Time-based greetings
-    if (hour >= 5 && hour < 12) {
-      return `Good morning ${firstName}`;
-    } else if (hour >= 12 && hour < 17) {
-      return `Good afternoon ${firstName}`;
-    } else if (hour >= 17 && hour < 22) {
-      return `Good evening ${firstName}`;
-    } else {
-      return `Good evening ${firstName}`;
-    }
+    if (hour >= 5 && hour < 12) return `Good morning ${firstName}`;
+    if (hour >= 12 && hour < 17) return `Good afternoon ${firstName}`;
+    if (hour >= 17 && hour < 22) return `Good evening ${firstName}`;
+    return `Good evening ${firstName}`;
   };
 
   const greeting = getGreeting();
@@ -122,9 +83,6 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     "Mistral 7B Instruct"
   ];
 
-  /**
-   * PROMPT ENHANCEMENT HANDLER
-   */
   const handlePromptEnhancement = async () => {
     if (!query.trim() || isEnhancing) return;
     
@@ -159,9 +117,6 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     }
   };
 
-  /**
-   * UNDO ENHANCEMENT HANDLER
-   */
   const handleUndo = () => {
     if (currentHistoryIndex < 0 || queryHistory.length === 0) return;
     
@@ -184,7 +139,6 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     "Hire the perfect freelancer"
   ];
 
-  // Typewriter effect
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     let currentText = "";
@@ -254,14 +208,12 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const isMetaKey = e.metaKey || e.ctrlKey;
     
-    // Cmd/Ctrl + E: Enhance prompt
     if (isMetaKey && e.key === 'e') {
       e.preventDefault();
       handlePromptEnhancement();
       return;
     }
     
-    // Cmd/Ctrl + Z: Undo enhancement
     if (isMetaKey && e.key === 'z' && !e.shiftKey) {
       e.preventDefault();
       handleUndo();
@@ -500,7 +452,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                       setShowModelDropdown(!showModelDropdown);
                     }}
                     className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors aspect-square touch-manipulation ${
-                      selectedModel && selectedModel !== "Claude 3.5 Haiku" ? 'text-yellow-400' : 'text-white'
+                      selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
                     }`}
                   >
                     <Brain className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-5.5 sm:w-5.5" />

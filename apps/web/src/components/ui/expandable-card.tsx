@@ -4,12 +4,7 @@ import React, { useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
-  GitBranch,
-  Github,
-  MessageSquare,
   Star,
-  Users,
-  CheckCircle2,
   ExternalLink,
   Edit,
   Trash2,
@@ -23,8 +18,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress as ProgressBar } from "@/components/ui/progress";
 import {
   Tooltip,
   TooltipContent,

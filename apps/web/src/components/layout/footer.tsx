@@ -1,43 +1,27 @@
-/* File Overview
-  Path: client/src/components/layout/footer.tsx
-  Purpose: Layout UI components (shared page structure like header and footer).
-
-  Reading tip for newcomers:
-  - Scan the exports at the bottom to see what the rest of the app imports from here
-  - Follow the data flow via function parameters and return values
-*/
-
 import { Link } from "wouter";
-import { Bot, Sparkles, Linkedin, Twitter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useNavigation } from "@/hooks/use-navigation";
+import { Linkedin, Twitter } from "lucide-react";
 import { QuantizeLogo } from "@/components/quantize-logo";
 
 
-export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
-  const { navigateWithLoading } = useNavigation();
+export function Footer() {
   return (
-    <>
-     
-
-      {/* Footer */}
-      <footer className="bg-black/20 backdrop-blur-md border-t border-white/10 py-12">
+    <footer className="bg-black/20 backdrop-blur-md border-t border-white/10 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Company info */}
             <div>
               <div className="flex items-center space-x-3 mb-4">
-                <QuantizeLogo size={32} />
+                <QuantizeLogo size={70} />
                 <h3 className="font-bold text-lg bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">Quantize</h3>
               </div>
-              <p className="text-white/80 text-sm">
+              <p className="text-white/120 text-sm">
                 An AI Search Engine that Quantizes infinite information.
               </p>
               <div className="flex gap-4 mt-4">
                 <a href="https://www.linkedin.com/company/tryquantize/" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300">
                   <Linkedin className="w-4 h-4" />
                 </a>
-                <a href="https://x.com/theadityasurana" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300">
+                <a href="https://x.com/tryquantize" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300">
                   <Twitter className="w-4 h-4" />
                 </a>
               </div>
@@ -105,10 +89,9 @@ export function Footer({ showJoinUs = false }: { showJoinUs?: boolean }) {
 
           <div className="border-t border-white/10 mt-8 pt-8 text-center text-sm text-white/70">
             <p>&copy; 2025 Quantize. All rights reserved.</p>
-            <p className="mt-2">Made by Aditya Surana</p>
+            <p className="mt-2">Made by Aditya Surana </p>
           </div>
         </div>
       </footer>
-    </>
   );
 }

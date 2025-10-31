@@ -1,0 +1,17 @@
+Company: Crustdata
+Founded: 2023
+Headquarters: San Francisco, US
+Description: A real-time company and people data provider that powers products and sales processes with fresh, trusted data. Their mission is to make company and people data accessible in the easiest and most reliable way possible.
+Website: https://crustdata.com/
+LinkedIn: https://www.linkedin.com/company/crustdata/
+Phone: 
+Category: B2B Data Platform / Software Development
+Employees: 11-50
+Company Stage: Seed
+Industries Served: SaaS
+Pricing Ranges: $100-$500
+Pricing Models: Subscription
+Top Clients: 
+
+Products/Services:
+- A real-time company and people data provider

@@ -1,4 +1,3 @@
-import React from 'react';
 import { QuantizeLogo } from '@/components/quantize-logo';
 
 interface NewConversationStateProps {

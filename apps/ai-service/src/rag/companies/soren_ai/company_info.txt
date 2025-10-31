@@ -1,0 +1,17 @@
+Company: Soren AI
+Founded: 2025
+Headquarters: San Francisco, California (inferred from similar YC companies)
+Description: Soren AI empowers development teams to accelerate AI application reliability through precision-driven dataset curation and domain-specific benchmarking solutions. By delivering comprehensive evaluation frameworks, the company dramatically reduces testing costs and development timelines, enabling organizations to validate AI performance with unprecedented efficiency and accuracy across specialized vertical markets.
+Website: https://soren-ai.com/
+LinkedIn: https://www.linkedin.com/company/soren-ai-inc/
+Phone: 
+Category: Software Development
+Employees: 1-10
+Company Stage: Seed
+Industries Served: EdTech, Fintech, Real Estate, Retail, E-commerce, SaaS, Legal, Logistics
+Pricing Ranges: $1,000-$2,500
+Pricing Models: Usage-based
+Top Clients: 
+
+Products/Services:
+- Making it easy to evaluate how reliable your AI is on any task

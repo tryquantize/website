@@ -1,14 +1,4 @@
-/* File Overview
-  Path: client/src/components/loading-transition.tsx
-  Purpose: Reusable React component used across pages.
-
-  Reading tip for newcomers:
-  - Scan the exports at the bottom to see what the rest of the app imports from here
-  - Follow the data flow via function parameters and return values
-*/
-
 import React, { useEffect, useState } from 'react';
-
 import { useLoading } from '@/contexts/loading-context';
 
 const quotes = [
@@ -41,8 +31,6 @@ export function LoadingTransition() {
           <div className="absolute inset-0 border-4 border-transparent border-t-white/70 border-r-white/40 rounded-full animate-spin" />
           <div className="absolute inset-2 border-4 border-transparent border-b-white/60 border-l-white/30 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
         </div>
-
-        {/* Quote */}
         <div className="text-sm text-gray-300 max-w-xs mx-auto">
           {quote}
         </div>

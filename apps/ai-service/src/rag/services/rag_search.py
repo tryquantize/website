@@ -14,15 +14,13 @@ class RAGSearchService:
         self.text_matcher = TextMatcher()
         self.llm_enricher = LLMEnricher()
         self.companies_data = {}
-        self.categories_data = {}
         self._load_all_data()
     
     def _load_all_data(self):
-        """Load all company and category data on initialization"""
+        """Load all company data on initialization"""
         try:
             self.companies_data = self.data_loader.load_all_companies()
-            self.categories_data = self.data_loader.load_all_categories()
-            logger.info(f"Loaded {len(self.companies_data)} companies and {len(self.categories_data)} categories")
+            logger.info(f"Loaded {len(self.companies_data)} companies")
         except Exception as e:
             logger.error(f"Failed to load RAG data: {e}")
     
@@ -57,9 +55,10 @@ class RAGSearchService:
                 # If still no matches, return helpful message
                 if not matching_companies:
                     logger.warning("No matching companies found even with relaxed criteria")
+                    location_msg = f" in {', '.join(selected_locations)}" if selected_locations else ""
                     return {
                         "query": query,
-                        "aiResponse": f"I couldn't find any companies in our database that specifically match '{query}'. This might be because your search is very specific or the companies you're looking for aren't in our current database. Try using broader terms or enable web search for more comprehensive results.",
+                        "aiResponse": f"I couldn't find any companies in our database that match '{query}'{location_msg}. Try broader search terms or enable web search for more comprehensive results.",
                         "suggestions": self._generate_fallback_suggestions(query),
                         "companies": [],
                         "citations": [],
@@ -69,13 +68,19 @@ class RAGSearchService:
                         "success": True
                     }
             
-            # Extract structured company data
-            companies_list = self._format_companies_for_response(matching_companies, query)
+            # Extract structured company data with location filtering
+            companies_list = self._format_companies_for_response(matching_companies, query, selected_locations)
             logger.info(f"Formatted {len(companies_list)} companies for response")
             
             # Use LLM only to enrich/format the existing RAG data
-            ai_response = self.llm_enricher.enrich_rag_data(query, matching_companies)
-            logger.info("LLM enrichment completed")
+            if companies_list:  # Only enrich if we have companies to show
+                ai_response = self.llm_enricher.enrich_rag_data(query, matching_companies)
+                logger.info("LLM enrichment completed")
+            else:
+                # No companies after location filtering
+                location_msg = f" in {', '.join(selected_locations)}" if selected_locations else ""
+                ai_response = f"I couldn't find any companies in our database that match '{query}'{location_msg}. Try using broader location terms or disable location filtering for more results."
+                logger.info("No companies after filtering - using fallback message")
             
             # Generate suggestions based on available RAG data
             suggestions = self._generate_rag_suggestions(query, matching_companies)
@@ -107,14 +112,47 @@ class RAGSearchService:
                 "error": str(e)
             }
     
-    def _format_companies_for_response(self, matching_companies: List[Dict[str, Any]], query: str = "") -> List[Dict[str, Any]]:
-        """Format company data for API response with proper enrichment"""
+    def _format_companies_for_response(self, matching_companies: List[Dict[str, Any]], query: str = "", selected_locations: List[str] = None) -> List[Dict[str, Any]]:
+        """Format company data for API response with proper enrichment and location filtering"""
         companies_list = []
+        logger.info(f"Formatting {len(matching_companies)} companies, selected_locations: {selected_locations}")
         
         for company_match in matching_companies[:15]:  # Limit to 15 companies
             # Get the actual company data from the match structure
             company_data = company_match.get('data', {})
             company_name = company_match.get('company_name', 'Unknown')
+            logger.info(f"Processing company: {company_name}, data keys: {list(company_data.keys())}")
+            
+            # Extract location first for filtering
+            location = self._extract_location(company_data)
+            logger.info(f"Company {company_name} location: '{location}'")
+            
+            # Filter by location if specified (only filter if locations are actually selected)
+            if selected_locations and len(selected_locations) > 0 and selected_locations != ['']:
+                location_match = False
+                company_location_lower = location.lower()
+                
+                for selected_location in selected_locations:
+                    if not selected_location or not selected_location.strip():
+                        continue
+                    
+                    selected_lower = selected_location.strip().lower()
+                    
+                    # Flexible location matching
+                    if (selected_lower in company_location_lower or 
+                        company_location_lower in selected_lower or
+                        # Bay Area matching
+                        (any(bay_city in selected_lower for bay_city in ['san francisco', 'sf']) and 
+                         any(bay_city in company_location_lower for bay_city in ['san francisco', 'san mateo', 'mountain view', 'palo alto', 'california', 'ca'])) or
+                        # USA matching
+                        (selected_lower in ['usa', 'united states'] and 
+                         any(us_indicator in company_location_lower for us_indicator in ['usa', 'united states', 'california', 'ca', 'ny', 'texas', 'tx']))):
+                        location_match = True
+                        break
+                
+                if not location_match:
+                    logger.info(f"Skipping {company_name} - location '{location}' doesn't match {selected_locations}")
+                    continue  # Skip this company if location doesn't match
             
             # Extract key information from RAG data
             description = self._extract_description(company_data)
@@ -124,7 +162,6 @@ class RAGSearchService:
             category = self._extract_category(company_data)
             
             # Add all enhanced form fields
-            location = self._extract_location(company_data)
             founded = self._extract_founded(company_data)
             about = self._extract_about_us(company_data)
             key_specs = self._extract_key_specifications(company_data, query)
@@ -143,7 +180,7 @@ class RAGSearchService:
             phone_number = self._extract_phone_number(company_data)
             linkedin_url = self._extract_linkedin_url(company_data)
             
-            companies_list.append({
+            company_obj = {
                 "name": company_name,
                 "description": description,
                 "features": features,
@@ -163,10 +200,14 @@ class RAGSearchService:
                 "topClients": top_clients,
                 "logoUrl": logo_url,
                 "enhancedAbout": enhanced_about,
+                "enhancedUseCases": enhanced_use_cases,
                 "phoneNumber": phone_number,
                 "linkedin_url": linkedin_url
-            })
+            }
+            companies_list.append(company_obj)
+            logger.info(f"Added company {company_name} to results")
         
+        logger.info(f"Returning {len(companies_list)} companies")
         return companies_list
     
     def _extract_company_name(self, company_data: Dict[str, str]) -> str:
@@ -401,22 +442,153 @@ class RAGSearchService:
         return ""
     
     def _generate_enhanced_about(self, company_data: Dict[str, str], company_name: str) -> str:
-        """Generate enhanced about paragraph using LLM"""
         try:
-            company_info = company_data.get('company_info', '')
-            features = company_data.get('features', '')
-            use_cases = company_data.get('use_cases', '')
+            # Get raw data from RAG
+            info_text = company_data.get('company_info', '')
+            features_text = company_data.get('features', '')
+            use_cases_text = company_data.get('use_cases', '')
             
-            # Use LLM enricher to generate enhanced about paragraph
-            enhanced_about = self.llm_enricher.generate_enhanced_about(
-                company_name, company_info, features, use_cases
-            )
+            # Combine all available data
+            combined_context = f"Company Info: {info_text}\nFeatures: {features_text}\nUse Cases: {use_cases_text}"
             
-            return enhanced_about
+            if combined_context.strip():
+                # Use LLM to generate enhanced description
+                from config.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, AI_MODEL
+                import requests
+                
+                prompt = f"""Based on the following company information about {company_name}, write a comprehensive company description.
+
+Company Data:
+{combined_context}
+
+Write a detailed description that is EXACTLY 150 words describing what {company_name} does, their services/products, and their unique value proposition. Focus on their capabilities and what makes them stand out. Return only the description text, no formatting."""
+                
+                headers = {
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                    "Content-Type": "application/json"
+                }
+                
+                payload = {
+                    "model": AI_MODEL,
+                    "messages": [
+                        {"role": "system", "content": "You are a professional business writer. Write clear, engaging company descriptions."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.7,
+                    "max_tokens": 200
+                }
+                
+                response = requests.post(
+                    f"{OPENROUTER_BASE_URL}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    response_data = response.json()
+                    enhanced_description = response_data['choices'][0]['message']['content'].strip()
+                    if len(enhanced_description) > 50:
+                        return enhanced_description
+            
+            # Fallback to original description
+            description = self._extract_description(company_data)
+            return description if description != "AI company providing innovative solutions" else f"{company_name} specializes in innovative AI solutions, delivering cutting-edge technology that transforms business operations."
             
         except Exception as e:
-            logger.error(f"Failed to generate enhanced about: {e}")
-            return f"{company_name} specializes in innovative AI solutions, focusing on delivering cutting-edge technology that transforms business operations. With a commitment to excellence and customer success, they provide tailored solutions that address specific industry challenges while maintaining the highest standards of quality and reliability."
+            logger.error(f"Failed to generate enhanced about for {company_name}: {e}")
+            description = self._extract_description(company_data)
+            return description if description != "AI company providing innovative solutions" else f"{company_name} specializes in innovative AI solutions, delivering cutting-edge technology that transforms business operations."
+    
+    def _generate_enhanced_use_cases(self, company_data: Dict[str, str], company_name: str) -> List[str]:
+        """Generate enhanced use cases from RAG data with 10-12 word limit using LLM"""
+        try:
+            # Get company info for context
+            info_text = company_data.get('company_info', '')
+            features_text = company_data.get('features', '')
+            use_cases_text = company_data.get('use_cases', '')
+            
+            # Clean corrupted use cases text (fix character-per-line issue)
+            if use_cases_text and len(use_cases_text.split('\n')) > 20:
+                # Likely corrupted - reconstruct
+                cleaned_text = ''.join([line.replace('-', '').strip() for line in use_cases_text.split('\n')])
+                use_cases_text = cleaned_text
+            
+            # Combine context for LLM
+            context = f"Company: {company_name}\nInfo: {info_text}\nFeatures: {features_text}\nUse Cases: {use_cases_text}"
+            
+            # Use LLM to generate proper use cases
+            from config.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, AI_MODEL
+            import requests
+            
+            prompt = f"""Based on the following company information, generate exactly 3 industry-specific use cases.
+
+{context}
+
+Generate 3 practical use cases that show how {company_name} can be used in real business scenarios. Each use case must be EXACTLY 10-12 words long and focus on specific industry applications.
+
+Return only the 3 use cases, one per line, no bullets or numbers."""
+            
+            headers = {
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": AI_MODEL,
+                "messages": [
+                    {"role": "system", "content": "Generate concise, industry-specific use cases that are exactly 10-12 words each."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7,
+                "max_tokens": 150
+            }
+            
+            response = requests.post(
+                f"{OPENROUTER_BASE_URL}/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                response_data = response.json()
+                use_cases_text = response_data['choices'][0]['message']['content'].strip()
+                use_cases = [s.strip() for s in use_cases_text.split('\n') if s.strip()]
+                
+                # Validate word count
+                valid_cases = []
+                for case in use_cases:
+                    word_count = len(case.split())
+                    if 10 <= word_count <= 12:
+                        valid_cases.append(case)
+                
+                if len(valid_cases) >= 3:
+                    return valid_cases[:3]
+            
+        except Exception as e:
+            logger.error(f"Failed to generate use cases for {company_name}: {e}")
+        
+        # Fallback to category-based use cases
+        category = self._extract_category(company_data)
+        if 'voice' in company_name.lower() or 'voice' in category.lower():
+            return [
+                "Automate customer service calls with intelligent voice response systems",
+                "Handle appointment scheduling through conversational AI voice assistants",
+                "Process phone orders using natural language understanding voice technology"
+            ]
+        elif 'AI' in category or 'Machine Learning' in category:
+            return [
+                "Automate repetitive business processes using advanced artificial intelligence algorithms",
+                "Enhance customer experience through personalized AI-driven recommendations and support",
+                "Improve decision making with real-time data insights and predictive analytics"
+            ]
+        else:
+            return [
+                "Streamline daily operations through intelligent workflow automation and optimization tools",
+                "Increase team productivity with smart collaboration features and automated task management",
+                "Scale business efficiently using data-driven insights and performance monitoring dashboards"
+            ]
     
     def _extract_phone_number(self, company_data: Dict[str, str]) -> str:
         """Extract phone number from RAG data"""
@@ -433,27 +605,6 @@ class RAGSearchService:
             if line.startswith('LinkedIn:'):
                 return line.replace('LinkedIn:', '').strip()
         return ""
-    
-    def _generate_enhanced_use_cases(self, company_data: Dict[str, str], company_name: str) -> List[str]:
-        """Generate enhanced use cases using LLM from use cases and industries data"""
-        try:
-            use_cases_text = company_data.get('use_cases', '')
-            industries_served = self._extract_industries_served(company_data)
-            
-            # Use LLM enricher to generate enhanced use cases
-            enhanced_use_cases = self.llm_enricher.generate_enhanced_use_cases(
-                company_name, use_cases_text, industries_served
-            )
-            
-            return enhanced_use_cases
-            
-        except Exception as e:
-            logger.error(f"Failed to generate enhanced use cases: {e}")
-            return [
-                "Business process automation and optimization solutions",
-                "Data analytics and insights for decision making",
-                "Customer experience enhancement through AI integration"
-            ]
     
     def _generate_rag_suggestions(self, query: str, matching_companies: List[Dict[str, Any]]) -> List[str]:
         """Generate suggestions based on available RAG data"""
@@ -504,30 +655,7 @@ class RAGSearchService:
         
         return suggestions[:5]
     
-    def get_company_details(self, company_name: str) -> Dict[str, Any]:
-        """Get detailed company information for comparison"""
-        try:
-            # Normalize company name
-            normalized_name = company_name.lower().replace(' ', '_').replace('.', '')
-            
-            # Find company in loaded data
-            company_data = self.companies_data.get(normalized_name)
-            if not company_data:
-                return {}
-            
-            # Extract comprehensive details
-            return {
-                'company_info': company_data.get('company_info', ''),
-                'features_detailed': company_data.get('features', ''),
-                'use_cases': company_data.get('use_cases', ''),
-                'pricing_details': company_data.get('pricing', ''),
-                'clients': company_data.get('clients', ''),
-                'links': company_data.get('links', {})
-            }
-            
-        except Exception as e:
-            logger.error(f"Failed to get company details for {company_name}: {e}")
-            return {}
+
     
     def reload_data(self):
         """Reload all RAG data (useful for updates)"""

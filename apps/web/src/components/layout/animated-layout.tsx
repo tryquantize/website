@@ -1,6 +1,3 @@
-import { motion, AnimatePresence } from 'framer-motion'
-import { useLocation } from 'wouter'
-
 interface AnimatedLayoutProps {
   children: React.ReactNode
 }

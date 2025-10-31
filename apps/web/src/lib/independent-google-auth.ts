@@ -17,30 +17,18 @@ const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
 export const handleIndependentGoogleAuth = async () => {
-  console.log('Independent Google auth clicked');
-  
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    console.log('Google sign-in successful:', result.user);
-    
-    // Redirect to the specified URL
     window.location.href = 'https://quantize.site/home';
-    
     return { success: true, user: result.user };
   } catch (error: any) {
-    console.error('Google sign-in error:', error);
-    
-    if (error.code === 'auth/popup-closed-by-user') {
-      console.log('User closed the popup');
-    } else if (error.code === 'auth/popup-blocked') {
+    if (error.code === 'auth/popup-blocked') {
       alert('Popup was blocked. Please allow popups and try again.');
     } else if (error.code === 'auth/unauthorized-domain') {
       alert('This domain is not authorized for Google sign-in. Please contact support.');
-    } else {
-      console.error('Full error details:', error);
+    } else if (error.code !== 'auth/popup-closed-by-user') {
       alert(`Google sign-in failed: ${error.message}. Please try again.`);
     }
-    
     return { success: false, error: error.message };
   }
 };

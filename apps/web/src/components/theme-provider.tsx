@@ -1,26 +1,17 @@
-/* File Overview
-  Path: client/src/components/theme-provider.tsx
-  Purpose: Reusable React component used across pages.
-
-  Reading tip for newcomers:
-  - Scan the exports at the bottom to see what the rest of the app imports from here
-  - Follow the data flow via function parameters and return values
-*/
-
 import { createContext, useContext, useEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 
-type ThemeProviderProps = {
+interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: Theme;
   storageKey?: string;
-};
+}
 
-type ThemeProviderState = {
+interface ThemeProviderState {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-};
+}
 
 const initialState: ThemeProviderState = {
   theme: "system",

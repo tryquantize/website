@@ -1,21 +1,17 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from multiple locations
-load_dotenv()  # Load from current directory
-load_dotenv('../../.env.local')  # Load from root directory
-load_dotenv('.env')  # Load from ai-service directory
+# Load environment variables
+load_dotenv()
+load_dotenv('../../.env.local')
+load_dotenv('.env')
 
-# OpenRouter API Configuration - use working keys from dev.sh
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
+# API Configuration
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-
-# Exa Search API Configuration - use working keys from dev.sh
 EXA_API_KEY = os.getenv("EXA_API_KEY") or "6f5297ca-2851-4af0-b458-4bd461b4dbd1"
 EXA_BASE_URL = "https://api.exa.ai"
-
-# AI Model Configuration
-AI_MODEL = "anthropic/claude-3.5-haiku"
+AI_MODEL = "openai/gpt-4o-mini"
 
 # Model mapping for different LLMs
 MODEL_MAPPING = {
@@ -90,7 +86,7 @@ INSTRUCTIONS:
 	9.	End with a general statement about what to look for when choosing products globally.
 """
 
-# Flask Configuration - Local Development Only
-FLASK_HOST = "localhost"  # Local only
-FLASK_PORT = 5002  # Fixed local port
-FLASK_DEBUG = True  # Enable debug for local development
+# Flask Configuration
+FLASK_HOST = "localhost"
+FLASK_PORT = 5002
+FLASK_DEBUG = True

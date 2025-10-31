@@ -1,20 +1,9 @@
-/* File Overview
-  Path: client/src/components/tool-card.tsx
-  Purpose: Reusable React component used across pages.
-
-  Reading tip for newcomers:
-  - Scan the exports at the bottom to see what the rest of the app imports from here
-  - Follow the data flow via function parameters and return values
-*/
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Bookmark, ExternalLink } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/lib/auth";
-
 import { motion } from "framer-motion";
 import { useState } from "react";
 import type { AiTool } from "@shared/schemas/schema";
@@ -26,8 +15,6 @@ interface ToolCardProps {
 }
 
 export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [isHovered, setIsHovered] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -55,13 +42,13 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const centerX = rect.left + rect.width / 2
-    const centerY = rect.top + rect.height / 2
-    const deltaX = (e.clientX - centerX) / rect.width
-    const deltaY = (e.clientY - centerY) / rect.height
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const deltaX = (e.clientX - centerX) / rect.width;
+    const deltaY = (e.clientY - centerY) / rect.height;
 
-    setMousePosition({ x: deltaX * 10, y: deltaY * 10 })
+    setMousePosition({ x: deltaX * 10, y: deltaY * 10 });
   };
 
   const cardVariants = {
@@ -116,7 +103,6 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
         className="h-full bg-gradient-to-br from-black/40 via-black/60 to-black/80 backdrop-blur-xl border border-white/10 overflow-hidden relative"
         data-testid={`tool-card-${tool.id}`}
       >
-        {/* Animated border gradient */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100"
           animate={{
@@ -171,7 +157,6 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
           {tool.oneLiner || tool.description}
         </p>
 
-        {/* Features/Tags */}
         {tool.features && tool.features.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {tool.features.slice(0, 3).map((feature, index) => (
@@ -187,7 +172,6 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
           </div>
         )}
 
-        {/* Rating placeholder - would be calculated from user reviews */}
         <div className="flex items-center space-x-4 text-sm text-white/70">
           <div className="flex items-center space-x-1">
             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
@@ -196,7 +180,6 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
           <span>1k+ users</span>
         </div>
 
-        {/* Why Recommended - only show if there's a search query */}
         {searchQuery && (
           <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
             <p className="text-sm text-primary/80">
@@ -205,7 +188,6 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex items-center justify-between pt-2">
           <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <motion.button
@@ -242,15 +224,12 @@ export function ToolCard({ tool, searchQuery, onContact }: ToolCardProps) {
           </div>
         </div>
 
-        {/* Hover overlay effect */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-t from-blue-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100"
           transition={{ duration: 0.3 }}
         />
       </CardContent>
     </Card>
-    
-    {/* Floating elements */}
     <motion.div
       className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100"
       animate={isHovered ? {

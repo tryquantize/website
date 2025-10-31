@@ -1,22 +1,10 @@
-/* File Overview
-  Path: client/src/App.tsx
-  Purpose: Top-level React component that wires up app-wide providers (Query Client, Theme,
-  Loading context, Tooltip) and defines the SPA routes using Wouter. Also renders shared
-  layout elements like the Header and Footer.
-
-  Reading tip for newcomers:
-  - Start at <App /> and then follow <Router /> to see how routes map to page components
-  - The Header and Footer render across all pages; the <main> area is where each route appears
-*/
-
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
-
-import { LoadingProvider, useLoading } from "@/contexts/loading-context";
+import { LoadingProvider } from "@/contexts/loading-context";
 import { LoadingTransition } from "@/components/loading-transition";
 import { FirebaseAuthProvider, useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { FavoritesProvider } from "@/contexts/favorites-context";
@@ -25,13 +13,13 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AnimatedLayout } from "@/components/layout/animated-layout";
 import { Analytics } from "@vercel/analytics/react";
+
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import ProductsPage from "@/pages/Products";
 import Dashboard from "@/pages/dashboard";
 import Admin from "@/pages/admin";
 import Register from "@/pages/auth/register";
-
 import ResultsPage from "@/pages/results";
 import WaitlistPage from "@/pages/waitlist";
 import WaitlistAdminPage from "@/pages/waitlist-admin";
@@ -48,7 +36,6 @@ import { PricingPage } from "@/pages/pricing";
 import AddCompanyPage from "@/pages/add-company";
 
 function Router() {
-  const { isLoading, fromPage, toPage } = useLoading();
   const [location] = useLocation();
   
   return (
@@ -78,7 +65,6 @@ function Router() {
                   <Route path="/waitlist" component={WaitlistPage} />
                   <Route path="/waitlist-admin" component={WaitlistAdminPage} />
                   <Route path="/onboarding" component={OnboardingPage} />
-
                   <Route path="/search-transition" component={SearchTransition} />
                   <Route path="/results" component={ResultsPage} />
                   <Route path="/favorites" component={FavoritesPage} />
@@ -90,7 +76,7 @@ function Router() {
                   <Route component={NotFound} />
                 </Switch>
               </div>
-              {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/glowing-search-demo' && location !== '/home' && location !== '/dashboard' && <Footer showJoinUs={location === '/'} />}
+              {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/glowing-search-demo' && location !== '/home' && location !== '/dashboard' && <Footer />}
             </div>
           </main>
         </div>

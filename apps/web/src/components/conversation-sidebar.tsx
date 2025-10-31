@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ArrowRight, Brain, Building2, User, Package, Sparkles, Loader2, Undo, Plus, MessageSquare, ArrowLeft, Globe } from 'lucide-react';
+import { Search, ArrowRight, Brain, Building2, User, Package, Sparkles, Loader2, Plus, MessageSquare, ArrowLeft, Globe } from 'lucide-react';
 import { LocationSelector } from '@/components/location-selector';
 import { Input } from '@/components/ui/input';
 import { QuantizeLogo } from '@/components/quantize-logo';
@@ -21,7 +21,7 @@ interface ConversationSidebarProps {
   conversationHistory?: Array<{question: string, answer: string, citations?: Array<{id: number, title: string, url: string}>, relatedQuestions?: string[]}>;
 }
 
-export function ConversationSidebar({ onNewConversation, onSelectConversation, isMinimized, relatedQuestions = [], onQuestionClick, aiResponse, citations = [], currentQuery, conversationHistory = [] }: ConversationSidebarProps) {
+export function ConversationSidebar({ onSelectConversation, isMinimized, relatedQuestions = [], onQuestionClick, aiResponse, citations = [], currentQuery, conversationHistory = [] }: ConversationSidebarProps) {
   const [followUpQuery, setFollowUpQuery] = useState('');
   const [isLoadingFollowUp, setIsLoadingFollowUp] = useState(false);
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
@@ -168,12 +168,7 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('Conversation history clicked');
-                      setShowConversationHistory(true);
-                    }}
+                    onClick={() => setShowConversationHistory(true)}
                     className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition"
                   >
                     <MessageSquare className="h-4 w-4" />
@@ -192,12 +187,7 @@ export function ConversationSidebar({ onNewConversation, onSelectConversation, i
           <div>
             <div className="flex items-center space-x-3 mb-4">
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('Back button clicked');
-                  setShowConversationHistory(false);
-                }}
+                onClick={() => setShowConversationHistory(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition"
               >
                 <ArrowLeft className="h-4 w-4" />

@@ -1,0 +1,17 @@
+Company: Nurix AI 
+Founded: 2024
+Headquarters: Mountain View, CA
+Description: Nurix is a GenAI services company building bespoke AI solutions for enterprises, focused on revolutionizing customer engagement through intelligent, adaptive AI solutions that drive efficiency, satisfaction, and growth.
+Website: https://www.nurix.ai/
+LinkedIn: https://www.linkedin.com/company/nurixai/
+Phone: 
+Category: Artificial Intelligence, Enterprise AI Solutions
+Employees: 51-200
+Company Stage: Series B
+Industries Served: E-commerce, Marketing, Banking
+Pricing Ranges: $2,500-$5,000
+Pricing Models: Subscription
+Top Clients: 
+
+Products/Services:
+- AI Voice Agents for Sales and Marketing

@@ -1,4 +1,3 @@
-import os
 import logging
 from typing import Dict, Any
 from openai import OpenAI
@@ -31,7 +30,7 @@ class TextEnhancementService:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert business copywriter specializing in AI company descriptions. Your task is to enhance and improve text while maintaining accuracy and professionalism."
+                        "content": "You are an expert business copywriter specializing in AI company descriptions. Your task is to enhance and improve text while maintaining accuracy and professionalism. IMPORTANT: Return ONLY the enhanced text without any metadata, introductory phrases, asterisks, hyphens, bullet points, or formatting. Just provide the clean, enhanced content directly."
                     },
                     {
                         "role": "user",
@@ -44,9 +43,8 @@ class TextEnhancementService:
             
             enhanced_text = response.choices[0].message.content.strip()
             
-            # Clean up the response (remove quotes if present)
-            if enhanced_text.startswith('"') and enhanced_text.endswith('"'):
-                enhanced_text = enhanced_text[1:-1]
+            # Clean up the response thoroughly
+            enhanced_text = self._clean_enhanced_text(enhanced_text)
             
             return {
                 'success': True,
@@ -70,6 +68,46 @@ class TextEnhancementService:
         else:
             return 100  # Default
     
+    def _clean_enhanced_text(self, text: str) -> str:
+        """Clean enhanced text to remove metadata and formatting"""
+        # Remove quotes
+        if text.startswith('"') and text.endswith('"'):
+            text = text[1:-1]
+        
+        # Remove common metadata prefixes
+        prefixes_to_remove = [
+            "Enhanced version:",
+            "Here's the enhanced version:",
+            "Enhanced text:",
+            "Improved version:",
+            "Here's an enhanced",
+            "Here's the improved",
+            "Enhanced:",
+            "Improved:"
+        ]
+        
+        for prefix in prefixes_to_remove:
+            if text.lower().startswith(prefix.lower()):
+                text = text[len(prefix):].strip()
+        
+        # Remove asterisks and hyphens at the beginning of lines
+        lines = text.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            line = line.strip()
+            # Remove bullet points
+            if line.startswith('* '):
+                line = line[2:].strip()
+            elif line.startswith('- '):
+                line = line[2:].strip()
+            elif line.startswith('• '):
+                line = line[2:].strip()
+            
+            if line:  # Only add non-empty lines
+                cleaned_lines.append(line)
+        
+        return ' '.join(cleaned_lines).strip()
+    
     def _create_enhancement_prompt(self, text: str, text_type: str, context: Dict[str, Any]) -> str:
         """Create a context-aware prompt for text enhancement"""
         
@@ -92,14 +130,7 @@ Task: Enhance this product/service description to be more compelling and detaile
 
 Original text: "{text}"
 
-Please improve this by:
-1. Making it more specific and detailed
-2. Adding technical capabilities where appropriate
-3. Highlighting unique value propositions
-4. Using professional business language
-5. Keeping it concise but informative (ONE LINE ONLY, maximum 15 words)
-
-Enhanced version:"""
+Please improve this by making it more specific, detailed, and professional. Keep it concise (ONE LINE ONLY, maximum 15 words). Return ONLY the enhanced text without any metadata or formatting:"""
         
         elif text_type == 'feature':
             return f"""
@@ -109,14 +140,7 @@ Task: Enhance this feature description to be more compelling and specific.
 
 Original text: "{text}"
 
-Please improve this by:
-1. Adding specific technical details or metrics where appropriate
-2. Explaining the business value or benefit
-3. Using professional terminology
-4. Making it more concrete and measurable
-5. Creating a comprehensive 200-300 word paragraph with detailed explanations
-
-Enhanced version:"""
+Please improve this by adding specific technical details, business value, and professional terminology. Create a comprehensive 200-300 word paragraph. Return ONLY the enhanced text without any metadata, bullet points, or formatting:"""
         
         elif text_type == 'useCase':
             return f"""
@@ -126,14 +150,7 @@ Task: Enhance this use case description to be more specific and compelling.
 
 Original text: "{text}"
 
-Please improve this by:
-1. Adding specific industry context or scenarios
-2. Including quantifiable benefits or outcomes
-3. Making it more concrete with real-world applications
-4. Using professional business language
-5. Creating a comprehensive 200-300 word paragraph with detailed use case scenarios
-
-Enhanced version:"""
+Please improve this by adding specific industry context, quantifiable benefits, and real-world applications. Create a comprehensive 200-300 word paragraph with detailed use case scenarios. Return ONLY the enhanced text without any metadata, bullet points, or formatting:"""
         
         else:
             return f"""
@@ -143,6 +160,4 @@ Task: Enhance and improve this text to be more professional and compelling.
 
 Original text: "{text}"
 
-Please improve this text while maintaining its core meaning and keeping it concise.
-
-Enhanced version:"""
+Please improve this text while maintaining its core meaning and keeping it concise. Return ONLY the enhanced text without any metadata or formatting:"""

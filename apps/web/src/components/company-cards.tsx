@@ -35,7 +35,8 @@ interface Company {
   logoUrl?: string;
   founded?: string;
   enhancedAbout?: string;
-
+  enhancedUseCases?: string[];
+  tagline?: string;
 }
 
 interface CompanyCardsProps {
@@ -193,7 +194,7 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
   const getAvailableSections = (company: Company) => {
     const sections = [];
     if (hasData(company.specifications) || hasData(company.features)) sections.push('specifications');
-
+    if (hasData(company.enhancedUseCases)) sections.push('usecases');
     if (hasMeaningfulPricing(company)) sections.push('pricing');
     if (hasData(company.location)) sections.push('location');
     if (hasData(company.employees)) sections.push('employees');
@@ -209,7 +210,7 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
   const getSectionIcon = (section: string) => {
     switch (section) {
       case 'specifications': return <Briefcase className="w-4 h-4 text-white" />;
-
+      case 'usecases': return <Target className="w-4 h-4 text-white" />;
       case 'pricing': return <DollarSign className="w-4 h-4 text-white" />;
       case 'location': return <MapPin className="w-4 h-4 text-white" />;
       case 'employees': return <Users className="w-4 h-4 text-white" />;
@@ -358,7 +359,9 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
                               topClients: company.topClients,
                               logoUrl: company.logoUrl,
                               founded: company.founded,
-                              enhancedAbout: company.enhancedAbout
+                              enhancedAbout: company.enhancedAbout,
+                              enhancedUseCases: company.enhancedUseCases,
+                              tagline: company.tagline
                             }, showFavoritesNotification);
                           }
                         }}
@@ -378,6 +381,15 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
                     className="cursor-pointer flex-1 flex flex-col justify-between"
                     onClick={() => toggleCardExpansion(index)}
                   >
+                    {/* Company Tagline */}
+                    {hasData(company.tagline) && (
+                      <div className="mb-3">
+                        <p className="text-xs text-white/70 leading-relaxed line-clamp-2">
+                          {company.tagline!.length > 80 ? company.tagline!.substring(0, 80) + '...' : company.tagline}
+                        </p>
+                      </div>
+                    )}
+                    
                     {/* Expand Arrow */}
                     <div className="flex justify-end mb-2">
                       <ChevronDown className="w-4 h-4 text-white/60" />
@@ -577,6 +589,21 @@ export function CompanyCards({ companies, webSearchEnabled, searchQuery }: Compa
                           {hasData(company.pricing) && !hasData(company.pricingRanges) && !hasData(company.pricingModel) && (
                             <div className="text-white/80 mt-2">{company.pricing}</div>
                           )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Use Cases */}
+                    {hasData(company.enhancedUseCases) && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Target className="w-4 h-4 text-white/60" />
+                          <h6 className="text-sm font-semibold text-white">Use Cases</h6>
+                        </div>
+                        <div className="space-y-1">
+                          {(company.enhancedUseCases as string[]).slice(0, 3).map((useCase, i) => (
+                            <div key={i} className="text-xs text-white/80">• {useCase}</div>
+                          ))}
                         </div>
                       </div>
                     )}

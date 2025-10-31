@@ -1,17 +1,8 @@
-/* File Overview
-  Path: client/src/pages/results.tsx
-  Purpose: A top-level page component rendered based on the current route.
-
-  Reading tip for newcomers:
-  - Scan the exports at the bottom to see what the rest of the app imports from here
-  - Follow the data flow via function parameters and return values
-*/
-
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Package, Building, UserCheck, Lightbulb as Solution, Sparkles, Clock, ArrowRight, Lightbulb, Copy, Edit, Wrench, Building2, User, Brain, ChevronDown, LogOut, Mic, MicOff, PanelLeftClose, PanelLeftOpen, DollarSign, Target, Loader2, Undo } from "lucide-react";
+import { Search, Sparkles, Copy, Building2, User, Brain, Mic, MicOff, PanelLeftClose, PanelLeftOpen, Loader2, Undo, ArrowRight } from "lucide-react";
 import { QuantizeLogo } from "@/components/quantize-logo";
 import { UserLogo } from "@/components/user-logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -34,75 +25,7 @@ import { enhancePrompt } from "@/lib/promptEnhancer";
 import { useToast } from "@/hooks/use-toast";
 import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
 
-// Mock search results - in real app this would come from API
-const mockSearchResults = [
-  {
-    id: 1,
-    name: "OpenAI GPT-4",
-    description: "Advanced AI language model for enterprise applications. GPT-4 is OpenAI's most advanced system, producing safer and more useful responses.",
-    category: "AI/ML",
-    pricing: "$0.03 per 1K tokens",
-    rating: 4.8,
-    reviews: 1247,
-    growth: "+45%",
-    engagement: 92,
-    logo: "🤖",
-    color: "bg-blue-500",
-    url: "https://openai.com"
-  },
-  {
-    id: 2,
-    name: "Anthropic Claude Pro",
-    description: "Constitutional AI assistant for business use. Claude helps with writing, analysis, math, coding, and more.",
-    category: "AI/ML",
-    pricing: "$20/month",
-    rating: 4.7,
-    reviews: 892,
-    growth: "+38%",
-    engagement: 88,
-    logo: "🧠",
-    color: "bg-purple-500",
-    url: "https://anthropic.com"
-  },
-  {
-    id: 3,
-    name: "Midjourney AI",
-    description: "Create stunning visuals with AI-powered art generation. Transform your ideas into beautiful images with advanced AI technology.",
-    category: "Creative",
-    pricing: "$10/month",
-    rating: 4.9,
-    reviews: 2156,
-    growth: "+67%",
-    engagement: 95,
-    logo: "🎨",
-    color: "bg-pink-500",
-    url: "https://midjourney.com"
-  }
-];
 
-// Mock similar products data
-const mockSimilarProducts = [
-  {
-    id: 101,
-    name: "Jasper AI",
-    category: "AI/ML",
-    pricing: "$39/month",
-    rating: 4.6,
-    logo: "✍️",
-    color: "bg-purple-500",
-    url: "https://jasper.ai"
-  },
-  {
-    id: 102,
-    name: "Copy.ai",
-    category: "AI/ML",
-    pricing: "$36/month",
-    rating: 4.5,
-    logo: "📝",
-    color: "bg-blue-600",
-    url: "https://copy.ai"
-  }
-];
 
 interface Company {
   name: string;
@@ -143,7 +66,7 @@ export default function ResultsPage() {
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [placeholder, setPlaceholder] = useState("");
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [selectedModel, setSelectedModel] = useState("Claude 3.5 Haiku");
+  const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [allCompanies, setAllCompanies] = useState<Company[]>([]);
   const { pinnedCards } = useFavorites();

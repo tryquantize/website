@@ -1,119 +1,41 @@
-/* File Overview
-  Path: client/src/components/search-interface.tsx
-  Purpose: Reusable React component used across pages.
-
-  Reading tip for newcomers:
-  - Scan the exports at the bottom to see what the rest of the app imports from here
-  - Follow the data flow via function parameters and return values
-*/
-
-// React hooks for state management and lifecycle
 import { useState, useEffect } from "react";
-
-// Routing for navigation
 import { useLocation } from "wouter";
-
-// UI components
-import { Button } from "@/components/ui/button";                    // Reusable button component
-import { Input } from "@/components/ui/input";                      // Form input component
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Tooltip components
-
-import { AnimatedSearchBar } from "@/components/ui/animated-search-bar"; // Enhanced search bar
-import { LoadingSpinner } from "@/components/ui/loading-spinner";    // Premium loading animations
-
-// Icons from Lucide React
-import { Search, Lightbulb, Sparkles, Wrench, Building2, Package, User, TrendingUp, Brain, ChevronDown, Loader2, Undo, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Search, Sparkles, Building2, Package, User, Brain, Loader2, Undo, Globe } from "lucide-react";
 import { LocationSelector } from "@/components/location-selector";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/lib/auth";
+import { enhancePrompt } from "@/lib/promptEnhancer";
+import { useToast } from "@/hooks/use-toast";
 
-// Data fetching and API
-import { useMutation } from "@tanstack/react-query";               // React Query for API calls
-import { apiRequest } from "@/lib/queryClient";                    // API request utility
-
-// Authentication
-import { useAuth } from "@/lib/auth";                              // User authentication state
-
-// Prompt Enhancement
-import { enhancePrompt } from "@/lib/promptEnhancer";               // Prompt enhancement utility
-import { useToast } from "@/hooks/use-toast";                       // Toast notifications
-
-/**
- * SEARCH INTERFACE PROPS
- * 
- * Optional callback function to handle search results
- * Allows parent components to receive and process search data
- */
 interface SearchInterfaceProps {
-  onSearchResults?: (results: any) => void;                        // Callback for search results
+  onSearchResults?: (results: any) => void;
 }
 
 
 
-/**
- * SEARCH INTERFACE COMPONENT
- * 
- * Main search component for the homepage with advanced features:
- * 
- * KEY FEATURES:
- * 1. Typewriter Effect: Animated placeholder text that cycles through different phrases
- * 2. Live Search Suggestions: Real-time filtering of suggestions as user types
- * 3. Keyboard Navigation: Arrow keys and Enter support for suggestions
- * 4. Type Filters: Toggle buttons for different content types (tools, companies, etc.)
- * 5. Search Animations: Smooth transitions and loading states
- * 6. Glassmorphism Design: Modern semi-transparent styling with backdrop blur
- * 
- * ANIMATION STATES:
- * - Default: Centered hero layout with large search bar
- * - Transitioning: Fade out animation when search begins
- * - Searching: Full-screen loading animation with cosmic rings
- * 
- * TYPEWRITER EFFECT:
- * - Cycles through 5 different placeholder phrases
- * - Each phrase types out letter by letter, pauses, then deletes
- * - Creates engaging, dynamic user experience
- */
 export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
-  // SEARCH STATE
-  const [query, setQuery] = useState("");                          // Current search query
-  
-  // HERO TEXT ANIMATION STATE
-  const [flickerWord, setFlickerWord] = useState("Startup");        // Word that flickers in hero text
-  
-  // SCROLL STATE FOR MOBILE
+  const [query, setQuery] = useState("");
+  const [flickerWord, setFlickerWord] = useState("Startup");
   const [showMobileSuggestions, setShowMobileSuggestions] = useState(false);
-  
-  // USER AND NAVIGATION
-  const { user } = useAuth();                                      // Current user for personalization
-  const [, setLocation] = useLocation();                          // Navigation function
-  
-  // TYPE FILTER STATE
-  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set()); // Selected content types
-  
-  // LOCATION FILTER STATE
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]); // Selected locations
-  
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  
-  // ANIMATION STATES
-  const [isSearching, setIsSearching] = useState(false);           // Full-screen search animation
-  const [isTransitioning, setIsTransitioning] = useState(false);   // Fade out transition
-  
-  // TYPEWRITER EFFECT STATE
-  const [placeholder, setPlaceholder] = useState("");              // Current placeholder text
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0); // Index of current phrase
-  
-  // MODEL SELECTION STATE
-  const [selectedModel, setSelectedModel] = useState("Claude 3.5 Haiku");
+  const [placeholder, setPlaceholder] = useState("");
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
   const [showModelDropdown, setShowModelDropdown] = useState(false);
-  
-  // WEB SEARCH TOGGLE STATE
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
-  
-  // PROMPT ENHANCEMENT STATE
-  const [isEnhancing, setIsEnhancing] = useState(false);           // Enhancement loading state
-  const [queryHistory, setQueryHistory] = useState<string[]>([]);  // Query history for undo
-  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1); // Current position in history
-  
-  // Toast notifications
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [queryHistory, setQueryHistory] = useState<string[]>([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
   const { toast } = useToast();
 
   const llmModels = [
@@ -129,10 +51,6 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     "Mistral 7B Instruct"
   ];
 
-  /**
-   * PROMPT ENHANCEMENT HANDLER
-   * Transforms basic user input into detailed, comprehensive search prompt
-   */
   const handlePromptEnhancement = async () => {
     if (!query.trim() || isEnhancing) return;
     
@@ -146,11 +64,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         companySize: user?.company?.size
       });
       
-      // Update query history for undo functionality
       setQueryHistory(prev => [...prev, originalQuery]);
       setCurrentHistoryIndex(queryHistory.length);
-      
-      // Update query with enhanced version
       setQuery(enhancedQuery);
       
       toast({
@@ -170,10 +85,6 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     }
   };
 
-  /**
-   * UNDO ENHANCEMENT HANDLER
-   * Reverts enhanced prompts back to original
-   */
   const handleUndo = () => {
     if (currentHistoryIndex < 0 || queryHistory.length === 0) return;
     
@@ -188,206 +99,119 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     }
   };
 
-  /**
-   * HERO TEXT FLICKER WORDS
-   * Words that cycle in the main hero text "Find the right [WORD]"
-   * Creates dynamic, engaging headline that shows different use cases
-   */
   const flickerWords = ["Startup", "Solution", "Product", "Service", "Company"];
   
-  /**
-   * TYPEWRITER PLACEHOLDER PHRASES
-   * Array of phrases that cycle in the search bar placeholder
-   * Each phrase represents a different use case or search intent
-   * Designed to guide users and show the breadth of available content
-   */
   const placeholderPhrases = [
-    "Ask anything...",                                            // General search prompt
-    "Look for the right product",                                // Product-focused search
-    "What are you looking for?",                                 // Open-ended question
-    "Connect with the right startup",                            // Startup connection
-    "Hire the perfect freelancer"                                // Freelancer hiring
+    "Ask anything...",
+    "Look for the right product",
+    "What are you looking for?",
+    "Connect with the right startup",
+    "Hire the perfect freelancer",
+    "Partner with the right company"
   ];
 
-  /**
-   * HERO TEXT FLICKER ANIMATION
-   * 
-   * Cycles through different words in the hero text every 4 seconds
-   * Creates dynamic headline that showcases different use cases
-   * Slower timing (4s) allows users to read and process each word
-   */
   useEffect(() => {
     const interval = setInterval(() => {
       setFlickerWord(prev => {
-        // Find current word index and move to next
         const currentIndex = flickerWords.indexOf(prev);
         const nextIndex = (currentIndex + 1) % flickerWords.length;
         return flickerWords[nextIndex];
       });
-    }, 4000);                                                     // 4 second intervals
+    }, 4000);
 
-    // Cleanup interval on component unmount
     return () => clearInterval(interval);
   }, []);
 
-  /**
-   * TYPEWRITER EFFECT FOR SEARCH PLACEHOLDER
-   * 
-   * Creates animated placeholder text that:
-   * 1. Types out each phrase letter by letter (100ms per character)
-   * 2. Pauses for 2 seconds when complete
-   * 3. Deletes the phrase letter by letter (50ms per character)
-   * 4. Moves to next phrase after 500ms pause
-   * 5. Cycles through all phrases infinitely
-   * 
-   * This creates an engaging, dynamic search experience that guides users
-   * and demonstrates the variety of searches possible
-   */
   useEffect(() => {
-    let timeout: NodeJS.Timeout;                                  // Timeout for animation timing
-    let currentText = "";                                         // Current displayed text
-    let isDeleting = false;                                       // Whether we're deleting or typing
-    let charIndex = 0;                                            // Current character position
+    let timeout: NodeJS.Timeout;
+    let currentText = "";
+    let isDeleting = false;
+    let charIndex = 0;
     
-    /**
-     * TYPEWRITER ANIMATION FUNCTION
-     * Recursive function that handles the typing/deleting animation
-     */
     const typeWriter = () => {
       const currentPhrase = placeholderPhrases[currentPhraseIndex];
       
-      // TYPING PHASE: Add characters one by one
       if (!isDeleting && charIndex < currentPhrase.length) {
-        currentText += currentPhrase.charAt(charIndex);           // Add next character
-        setPlaceholder(currentText);                              // Update display
-        charIndex++;                                              // Move to next character
-        timeout = setTimeout(typeWriter, 100);                    // 100ms between characters
-        
-      // DELETING PHASE: Remove characters one by one
+        currentText += currentPhrase.charAt(charIndex);
+        setPlaceholder(currentText);
+        charIndex++;
+        timeout = setTimeout(typeWriter, 100);
       } else if (isDeleting && charIndex > 0) {
-        currentText = currentPhrase.substring(0, charIndex - 1);  // Remove last character
-        setPlaceholder(currentText);                              // Update display
-        charIndex--;                                              // Move back one character
-        timeout = setTimeout(typeWriter, 50);                     // 50ms between deletions (faster)
-        
-      // PAUSE PHASE: Finished typing, pause before deleting
+        currentText = currentPhrase.substring(0, charIndex - 1);
+        setPlaceholder(currentText);
+        charIndex--;
+        timeout = setTimeout(typeWriter, 50);
       } else if (!isDeleting && charIndex === currentPhrase.length) {
         timeout = setTimeout(() => {
-          isDeleting = true;                                      // Switch to deleting mode
-          typeWriter();                                           // Continue animation
-        }, 2000);                                                 // 2 second pause
-        
-      // NEXT PHRASE: Finished deleting, move to next phrase
+          isDeleting = true;
+          typeWriter();
+        }, 2000);
       } else if (isDeleting && charIndex === 0) {
-        isDeleting = false;                                       // Switch back to typing mode
-        setCurrentPhraseIndex((prev) => (prev + 1) % placeholderPhrases.length); // Next phrase
-        timeout = setTimeout(typeWriter, 500);                    // 500ms pause before next phrase
+        isDeleting = false;
+        setCurrentPhraseIndex((prev) => (prev + 1) % placeholderPhrases.length);
+        timeout = setTimeout(typeWriter, 500);
       }
     };
     
-    // Start the typewriter animation
     typeWriter();
-    
-    // Cleanup timeout on component unmount or phrase change
     return () => clearTimeout(timeout);
-  }, [currentPhraseIndex]);                                       // Re-run when phrase index changes
+  }, [currentPhraseIndex]);
 
 
 
-  /**
-   * SEARCH API MUTATION
-   * 
-   * Handles the actual search API call using React Query
-   * Provides loading states, error handling, and success callbacks
-   * 
-   * FEATURES:
-   * - Sends search query and user ID to backend
-   * - Calls parent callback with results
-   * - Clears search input on success
-   * - Automatic error handling via React Query
-   */
   const searchMutation = useMutation({
-    // API call function
     mutationFn: async (searchQuery: string) => {
       const response = await apiRequest("POST", "/api/search", {
-        query: searchQuery,                                       // User's search query
-        userId: user?.id,                                         // User ID for personalization
-        selectedModel,                                            // Selected LLM model
-        selectedTypes: Array.from(selectedTypes),                // Selected filter types
-        selectedLocations,                                        // Selected locations
-        webSearchEnabled                                          // Web search toggle state
+        query: searchQuery,
+        userId: user?.id,
+        selectedModel,
+        selectedTypes: Array.from(selectedTypes),
+        selectedLocations,
+        webSearchEnabled
       });
-      return response.json();                                   // Parse JSON response
+      return response.json();
     },
-    // Success handler
     onSuccess: (data) => {
       if (onSearchResults) {
-        onSearchResults(data);                                    // Pass results to parent
+        onSearchResults(data);
       }
-      setQuery("");                                              // Clear search input
+      setQuery("");
     }
-    // Error handling is automatic via React Query
   });
 
-  /**
-   * SEARCH EXECUTION HANDLER
-   * 
-   * Orchestrates the search process with authentication check:
-   * 1. Validates query is not empty
-   * 2. Checks if user is logged in
-   * 3. If not logged in, shows transition and redirects to auth page
-   * 4. If logged in, proceeds with search animation and results
-   */
   const handleSearch = () => {
-    if (!query.trim()) return;                                    // Don't search empty queries
+    if (!query.trim()) return;
     
-    // Check if user is logged in
     if (!user) {
-      // Store query for after login
       localStorage.setItem('pending-search-query', query.trim());
       setLocation('/auth');
       return;
     }
     
-    // Navigate directly to results page
     const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
     const locationsParam = selectedLocations.length > 0 ? `&locations=${selectedLocations.join(',')}` : '';
     const webSearchParam = webSearchEnabled ? '&websearch=true' : '&websearch=false';
     setLocation(`/results?q=${encodeURIComponent(query)}${typesParam}${locationsParam}${webSearchParam}`);
   };
 
-  /**
-   * KEYBOARD NAVIGATION HANDLER
-   * 
-   * Provides keyboard support with authentication check:
-   * - Enter: Execute search
-   * - Ctrl/Cmd + E: Enhance prompt
-   * - Ctrl/Cmd + Z: Undo enhancement
-   * 
-   * Redirects to auth page if user not logged in
-   */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const isMetaKey = e.metaKey || e.ctrlKey;
     
-    // Cmd/Ctrl + E: Enhance prompt
     if (isMetaKey && e.key === 'e') {
       e.preventDefault();
       handlePromptEnhancement();
       return;
     }
     
-    // Cmd/Ctrl + Z: Undo enhancement
     if (isMetaKey && e.key === 'z' && !e.shiftKey) {
       e.preventDefault();
       handleUndo();
       return;
     }
     
-    // ENTER KEY: Execute search
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       
-      // Check if user is logged in
       if (!user) {
         if (query.trim()) {
           localStorage.setItem('pending-search-query', query.trim());
@@ -402,29 +226,21 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
 
 
 
-  /**
-   * SUGGESTION TILE CLICK HANDLER
-   * 
-   * Handles clicks on the quick suggestion tiles below the search bar
-   * Updates the query in search bar for user to modify or search
-   */
   const handleSuggestionTileClick = (suggestion: string) => {
-    setQuery(suggestion);                                         // Update query in search bar
-    // Note: User must now click search or press Enter to proceed
+    setQuery(suggestion);
   };
 
   const quickSuggestions = [
     "AI-powered lead generation for B2B sales",
-    "Automated video editing for short-form content  $5000",
+    "Automated video editing for short-form content",
     "AI email assistant for busy professionals",
     "Voice-based AI receptionist for local businesses",
-    "Predictive analytics for e-commerce growth under $3000",
-    // keep a couple of earlier ideas
+    "Predictive analytics for e-commerce growth",
     "Content creation tools for marketing",
     "Customer service automation",
   ];
 
-  const [suggestionIndex, setSuggestionIndex] = useState(0);
+
   const [visibleCount, setVisibleCount] = useState(quickSuggestions.length);
   
   const extraSuggestions = [
@@ -493,12 +309,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     setVisibleCount(quickSuggestions.length);
   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSuggestionIndex((i) => (i + 1) % quickSuggestions.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [quickSuggestions.length]);
+
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -523,22 +334,15 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  /**
-   * TYPE FILTER TOGGLE FUNCTION
-   * 
-   * Manages the selection state of content type filters
-   * Uses Set data structure for efficient add/remove operations
-   * Allows multiple types to be selected simultaneously
-   */
   function toggleType(id: string) {
     setSelectedTypes((prev) => {
-      const next = new Set(prev);                                 // Create new Set to avoid mutation
+      const next = new Set(prev);
       if (next.has(id)) {
-        next.delete(id);                                          // Remove if already selected
+        next.delete(id);
       } else {
-        next.add(id);                                             // Add if not selected
+        next.add(id);
       }
-      return next;                                                // Return new Set
+      return next;
     });
   }
 
@@ -549,7 +353,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
       }`}>
       {/* Centered hero - Mobile optimized */}
       <div className={`text-center transition-all duration-1000 ease-out px-4 sm:px-6 ${
-        isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'mb-0 opacity-100 scale-100 translate-y-0'
+'mb-0 opacity-100 scale-100 translate-y-0'
       }`}>
         <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-3 sm:mb-4 md:mb-6 leading-tight text-center" style={{ fontFamily: 'Instrument Serif, serif' }}>
           <span className="text-white block">
@@ -578,7 +382,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         }`}>
           {/* Search input area - mobile optimized */}
           <div className="relative px-3 xs:px-4 sm:px-6 flex items-center h-[48px] xs:h-[50px] sm:h-[55px] md:h-[60px]">
-            {/* Undo button (only show if there's history) - Mobile optimized */}
+
             {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
               <TooltipProvider>
                 <Tooltip>
@@ -598,7 +402,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               </TooltipProvider>
             )}
             
-            {/* Prompt enhancer button - Mobile optimized */}
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -624,7 +428,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               </Tooltip>
             </TooltipProvider>
             
-            {/* Search button - Mobile optimized */}
+
             <button
               aria-label="Search"
               onClick={handleSearch}
@@ -639,7 +443,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
               )}
             </button>
 
-            {/* Input - Mobile optimized */}
+
             <Input
               type="text"
               placeholder={placeholder}
@@ -652,10 +456,10 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
             />
           </div>
 
-          {/* Bottom row - Icons - mobile optimized */}
+
           <div className="relative border-t border-white/10 px-3 xs:px-4 sm:px-6 py-1 h-[30px] xs:h-[32px] sm:h-[34px] md:h-[36px]">
             <div className="flex items-center justify-between">
-              {/* Left - Brain icon, model name, and Location selector - Mobile optimized */}
+
               <div className="relative flex items-center space-x-1.5 sm:space-x-2">
                 <div className="relative">
                   <button
@@ -694,9 +498,9 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                   )}
                 </div>
                 
-                <span className="text-xs text-white/70 hidden xs:inline sm:inline truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px]">{selectedModel || "Claude 3.5 Haiku"}</span>
+                <span className="text-xs text-white/70 hidden xs:inline sm:inline truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px]">{selectedModel || "GPT-4o Mini"}</span>
                 
-                {/* Web Search Toggle - Before Location */}
+
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -739,10 +543,10 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                 )}
               </div>
 
-              {/* Right - Filter buttons - Mobile optimized */}
+
               <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2.5">
                 <TooltipProvider>
-                  {/* Company */}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -760,7 +564,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     </TooltipTrigger>
                     <TooltipContent>Company</TooltipContent>
                   </Tooltip>
-                  {/* Freelancer */}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -778,7 +582,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                     </TooltipTrigger>
                     <TooltipContent>Freelancer</TooltipContent>
                   </Tooltip>
-                  {/* Product */}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
@@ -804,7 +608,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
 
 
         
-        {/* Enhancement feedback - Mobile optimized */}
+
         {isEnhancing && (
           <div className="absolute top-full left-0 right-0 mt-2 mx-2 xs:mx-0 p-2.5 xs:p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
             <div className="flex items-center gap-2 text-blue-300 text-xs xs:text-sm">
@@ -815,9 +619,9 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         )}
       </div>
 
-      {/* Quick Suggestions - Mobile optimized with better visibility */}
+
       <div className={`${showMobileSuggestions ? 'flex md:flex' : 'hidden md:flex'} flex-wrap justify-center gap-1.5 xs:gap-2 mt-3 xs:mt-4 px-3 xs:px-4 transition-all duration-1000 ease-out ${
-        isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
+'opacity-100 scale-100 translate-y-0'
       }`}>
         {visibleSuggestions.map((suggestion, index) => (
           <Button
@@ -854,7 +658,7 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
         )}
       </div>
       
-      {/* Loading State - Mobile optimized */}
+
       {isSearching && (
         <div className="fixed inset-0 flex flex-col items-center justify-center z-30 animate-fade-in px-4">
           <div className="relative mb-6 xs:mb-8">

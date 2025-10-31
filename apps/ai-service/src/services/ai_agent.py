@@ -690,105 +690,27 @@ Example format:
                 }
             ]
 
+
+
+
+
     def compare_companies(self, companies: List[Dict[str, Any]]) -> str:
-        """
-        Compare multiple companies by reading their individual RAG folders and generating a comprehensive analysis
-        """
         try:
-            import os
+            companies_text = "\n\n".join([
+                f"Company: {company.get('name', 'Unknown')}\n"
+                f"Description: {company.get('description', 'N/A')}\n"
+                f"Features: {', '.join(company.get('features', []))}\n"
+                f"Pricing: {company.get('pricing', 'N/A')}\n"
+                f"Category: {company.get('category', 'N/A')}"
+                for company in companies
+            ])
             
-            # Read detailed company information from individual folders
-            detailed_companies = []
-            rag_companies_path = os.path.join(os.path.dirname(__file__), '..', 'rag', 'companies')
+            prompt = f"""Compare these companies and provide a friendly, informative comparison to help users make an informed decision:
+
+{companies_text}
+
+Write exactly 200 words in paragraph form (no bullet points, no numbering, no headers, no asterisks, no hashtags). Use a conversational, friendly tone that helps users understand the key differences and make the best choice for their needs. Focus on practical insights about pricing, features, and which solution might work best for different scenarios. Write as continuous paragraphs without any formatting symbols."""
             
-            for company in companies:
-                company_name = company.get('name', '').lower().replace(' ', '_').replace('.', '').replace('-', '_')
-                company_folder = os.path.join(rag_companies_path, company_name)
-                
-                company_details = {
-                    'name': company.get('name', 'Unknown'),
-                    'basic_info': company.get('description', ''),
-                    'category': company.get('category', ''),
-                    'website': company.get('website', ''),
-                    'company_info': '',
-                    'features': '',
-                    'pricing': '',
-                    'use_cases': ''
-                }
-                
-                # Read company_info.txt
-                company_info_path = os.path.join(company_folder, 'company_info.txt')
-                if os.path.exists(company_info_path):
-                    try:
-                        with open(company_info_path, 'r', encoding='utf-8') as f:
-                            company_details['company_info'] = f.read().strip()
-                    except Exception as e:
-                        logger.warning(f"Could not read company_info.txt for {company_name}: {e}")
-                
-                # Read features.txt
-                features_path = os.path.join(company_folder, 'features.txt')
-                if os.path.exists(features_path):
-                    try:
-                        with open(features_path, 'r', encoding='utf-8') as f:
-                            company_details['features'] = f.read().strip()
-                    except Exception as e:
-                        logger.warning(f"Could not read features.txt for {company_name}: {e}")
-                
-                # Read pricing.txt
-                pricing_path = os.path.join(company_folder, 'pricing.txt')
-                if os.path.exists(pricing_path):
-                    try:
-                        with open(pricing_path, 'r', encoding='utf-8') as f:
-                            company_details['pricing'] = f.read().strip()
-                    except Exception as e:
-                        logger.warning(f"Could not read pricing.txt for {company_name}: {e}")
-                
-                # Read use_cases.txt
-                use_cases_path = os.path.join(company_folder, 'use_cases.txt')
-                if os.path.exists(use_cases_path):
-                    try:
-                        with open(use_cases_path, 'r', encoding='utf-8') as f:
-                            company_details['use_cases'] = f.read().strip()
-                    except Exception as e:
-                        logger.warning(f"Could not read use_cases.txt for {company_name}: {e}")
-                
-                detailed_companies.append(company_details)
-            
-            # Format comprehensive company data for LLM comparison
-            company_data = ""
-            for i, company in enumerate(detailed_companies, 1):
-                company_data += f"\n=== COMPANY {i}: {company['name']} ===\n"
-                
-                if company['company_info']:
-                    company_data += f"Company Information:\n{company['company_info']}\n\n"
-                
-                if company['features']:
-                    company_data += f"Features & Capabilities:\n{company['features']}\n\n"
-                
-                if company['pricing']:
-                    company_data += f"Pricing Details:\n{company['pricing']}\n\n"
-                
-                if company['use_cases']:
-                    company_data += f"Use Cases:\n{company['use_cases']}\n\n"
-                
-                company_data += "---\n"
-            
-            # Generate comprehensive comparison using LLM
-            comparison_prompt = f"""You are a friendly AI consultant helping someone choose between these companies. Based on the detailed information below, write a super friendly 300-word comparison report.
-
-{company_data}
-
-Write a comprehensive comparison that:
-1. Uses a warm, conversational tone (like talking to a best friend)
-2. Analyzes pricing differences and value propositions
-3. Compares key features and capabilities
-4. Considers different use cases and target audiences
-5. Gives a clear recommendation with reasoning
-6. Mentions scenarios where each company might be the better choice
-7. Focuses on helping the user make the best decision for their needs
-
-Start with "Hey there! 😊 I've looked into both companies for you, and here's what I found..." and keep that friendly, helpful energy throughout the entire response."""
-
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
@@ -799,11 +721,11 @@ Start with "Hey there! 😊 I've looked into both companies for you, and here's 
             payload = {
                 "model": self.model,
                 "messages": [
-                    {"role": "system", "content": "You are a super friendly AI consultant who provides detailed, helpful comparisons in a warm, conversational tone. Always be enthusiastic and supportive."},
-                    {"role": "user", "content": comparison_prompt}
+                    {"role": "system", "content": "You are a helpful advisor who writes friendly, conversational comparisons in plain paragraph format without any formatting symbols, bullet points, or headers. Always write exactly 200 words."},
+                    {"role": "user", "content": prompt}
                 ],
                 "temperature": 0.7,
-                "max_tokens": 500
+                "max_tokens": 300
             }
             
             response = requests.post(
@@ -814,21 +736,14 @@ Start with "Hey there! 😊 I've looked into both companies for you, and here's 
             
             if response.status_code == 200:
                 response_data = response.json()
-                comparison = response_data['choices'][0]['message']['content'].strip()
-                return comparison
+                return response_data['choices'][0]['message']['content'].strip()
             else:
-                # Friendly fallback comparison
-                company_names = [c['name'] for c in detailed_companies]
-                return f"Hey there! 😊 I've looked into {' and '.join(company_names)} for you! While I can't access all the detailed comparison data right now, both companies are solid choices. {company_names[0]} tends to be great for reliability and proven solutions, while {company_names[-1] if len(company_names) > 1 else company_names[0]} might offer more innovative features. I'd recommend checking their pricing pages and maybe trying their free trials to see which one feels right for your specific needs!"
+                return "When comparing these solutions, each offers unique advantages for different use cases. Consider your specific requirements, budget constraints, and technical needs when making your decision. The pricing structures vary significantly, so evaluate both immediate costs and long-term value. Some solutions excel in ease of use while others provide more advanced features for power users. Your team size and technical expertise should also influence your choice, as some platforms require more setup and maintenance than others. Take advantage of free trials when available to test functionality before committing. The best solution is ultimately the one that aligns most closely with your workflow and business objectives."
                 
         except Exception as e:
             logger.error(f"Company comparison failed: {str(e)}")
-            # Simple friendly fallback
-            company_names = [c.get('name', 'Company') for c in companies]
-            return f"Hey! 😊 I'm having trouble accessing the detailed company information right now, but I can tell you that {' and '.join(company_names)} are both excellent choices! I'd suggest visiting their websites to compare pricing and features directly. Sometimes the best way to decide is to try their free trials or demos - that way you can see which one clicks with your workflow. Trust your instincts!"
-
-
-
+            return "When comparing these solutions, each offers unique advantages for different use cases. Consider your specific requirements, budget constraints, and technical needs when making your decision. The pricing structures vary significantly, so evaluate both immediate costs and long-term value. Some solutions excel in ease of use while others provide more advanced features for power users. Your team size and technical expertise should also influence your choice, as some platforms require more setup and maintenance than others. Take advantage of free trials when available to test functionality before committing. The best solution is ultimately the one that aligns most closely with your workflow and business objectives."
+    
     def health_check(self) -> Dict[str, Any]:
         """
         Health check endpoint to verify the AI service is working

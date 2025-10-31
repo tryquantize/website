@@ -1,13 +1,4 @@
-/* File Overview
-  Path: client/src/components/layout/header.tsx
-  Purpose: Layout UI components (shared page structure like header and footer).
-
-  Reading tip for newcomers:
-  - Scan the exports at the bottom to see what the rest of the app imports from here
-  - Follow the data flow via function parameters and return values
-*/
-
-import { Link, useLocation, useRoute } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
     NavigationMenu,
@@ -19,15 +10,10 @@ import {
 } from "@/components/ui/navigation-menu";
 import { useAuth } from "@/lib/auth";
 import { useNavigation } from "@/hooks/use-navigation";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
-import { Search, Heart, Menu, X, MoveRight } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { Heart, Menu, X, MoveRight } from "lucide-react";
+import { useState } from "react";
 import { QuantizeLogo } from "@/components/quantize-logo";
-
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 
 export function Header() {
@@ -70,31 +56,28 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { currentUser, signOut: firebaseSignOut } = useFirebaseAuth();
   const { navigateWithLoading } = useNavigation();
-  
+  const [location, setLocation] = useLocation();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { scrollY } = useScroll();
+
+  const isResultsPage = location === '/results';
+  const isWaitlistPage = location === '/waitlist';
+  const isWelcomeTransitionPage = location === '/welcome-transition';
+
   const handleFirebaseLogout = async () => {
     try {
       await firebaseSignOut();
-      logout(); // Clear Zustand auth state
+      logout();
       setLocation('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }
   };
-  const [location, setLocation] = useLocation();
-  const isResultsPage = location === '/results';
-  const isWaitlistPage = location === '/waitlist';
-  const isWelcomeTransitionPage = location === '/welcome-transition';
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { scrollY } = useScroll();
 
-  // Handle navbar background change on scroll
   useMotionValueEvent(scrollY, "change", (latest) => {
     setIsScrolled(latest > 50);
   });
-
-
 
   const navVariants = {
     top: {
@@ -110,16 +93,6 @@ export function Header() {
     }
   };
 
-  const linkVariants = {
-    rest: { scale: 1, opacity: 0.7 },
-    hover: { 
-      scale: 1.05, 
-      opacity: 1,
-      transition: { duration: 0.2 }
-    },
-    tap: { scale: 0.95 }
-  };
-
 
 
   // Don't render header on welcome transition page
@@ -128,12 +101,11 @@ export function Header() {
   }
 
   return (
-    <>
-      <motion.header
-        className={`${isWaitlistPage ? 'fixed' : 'sticky'} top-0 z-50 border-b w-full`}
-        variants={navVariants}
-        animate={isScrolled ? 'scrolled' : 'top'}
-      >
+    <motion.header
+      className={`${isWaitlistPage ? 'fixed' : 'sticky'} top-0 z-50 border-b w-full`}
+      variants={navVariants}
+      animate={isScrolled ? 'scrolled' : 'top'}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         {isResultsPage ? (
           <div className="flex items-center justify-between h-14 sm:h-16 md:h-18">
@@ -143,7 +115,7 @@ export function Header() {
               transition={{ duration: 0.2 }}
             >
               <Link href="/home" className="flex items-center space-x-2" data-testid="logo-link">
-                <QuantizeLogo size={24} />
+                <QuantizeLogo size={64} />
                 <h1 className="text-base font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent whitespace-nowrap">
                   Quantize
                 </h1>
@@ -165,21 +137,11 @@ export function Header() {
               )}
               <Button 
                 size="sm" 
-                onClick={async () => {
-                  try {
-                    await firebaseSignOut();
-                    logout();
-                    setLocation('/');
-                  } catch (error) {
-                    console.error('Logout failed:', error);
-                  }
-                }}
+                onClick={handleFirebaseLogout}
                 className="bg-blue-600 text-white hover:bg-blue-700"
               >
                 Logout
               </Button>
-
-
             </div>
           </div>
         ) : (
@@ -191,15 +153,13 @@ export function Header() {
                   {navigationItems.map((item) => (
                     <NavigationMenuItem key={item.title}>
                       {item.href ? (
-                        <>
-                          <NavigationMenuLink asChild>
-                            <Link href={item.href}>
-                              <Button variant="ghost" className="text-white/70 hover:text-white">
-                                {item.title}
-                              </Button>
-                            </Link>
-                          </NavigationMenuLink>
-                        </>
+                        <NavigationMenuLink asChild>
+                          <Link href={item.href}>
+                            <Button variant="ghost" className="text-white/70 hover:text-white">
+                              {item.title}
+                            </Button>
+                          </Link>
+                        </NavigationMenuLink>
                       ) : (
                         <>
                           <NavigationMenuTrigger className="font-medium text-sm text-white/70 hover:text-white bg-transparent">
@@ -382,6 +342,5 @@ export function Header() {
         )}
       </div>
     </motion.header>
-    </>
   );
 }

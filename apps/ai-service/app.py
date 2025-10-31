@@ -216,15 +216,26 @@ def compare_companies():
                 "success": False
             }), 400
         
-        logger.info(f"Comparing {len(companies)} companies")
+        logger.info(f"Comparing {len(companies)} companies: {[c.get('name', 'Unknown') for c in companies]}")
         
         # Generate comparison using the AI agent
         comparison = ai_agent.compare_companies(companies)
         
-        return jsonify({
-            "comparison": comparison,
-            "success": True
-        }), 200
+        if comparison and "Unable to generate comparison" not in comparison:
+            return jsonify({
+                "comparison": comparison,
+                "success": True
+            }), 200
+        else:
+            # Fallback comparison
+            company_names = [c.get('name', 'Unknown') for c in companies]
+            fallback_comparison = f"Comparison between {', '.join(company_names)}: Each company offers unique solutions with different strengths. Consider your specific requirements, budget, and technical needs when choosing. Review the detailed company information above to make an informed decision."
+            
+            return jsonify({
+                "comparison": fallback_comparison,
+                "success": True,
+                "fallback": True
+            }), 200
         
     except Exception as e:
         logger.error(f"Error comparing companies: {str(e)}")
@@ -319,9 +330,9 @@ def auto_fill_company():
         
         logger.info(f"Auto-filling company: {company_name}")
         
-        # Import and use real auto-fill service
-        from services.company_autofill import CompanyAutoFillService
-        autofill_service = CompanyAutoFillService()
+        # Import and use Scrapy-based auto-fill service
+        from services.company_autofill_scrapy import CompanyAutoFillScrapyService
+        autofill_service = CompanyAutoFillScrapyService()
         
         result = autofill_service.auto_fill_company(company_name, website_url, linkedin_url)
         

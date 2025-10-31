@@ -349,24 +349,7 @@ class CompanyAutoFillService:
             logger.error(f"Error extracting company info: {str(e)}")
             return self._create_basic_company_data(company_name, website_url, linkedin_url)
     
-    def _create_empty_data(self) -> Dict[str, Any]:
-        """Create empty data structure - no fallbacks"""
-        return {
-            "phoneNumber": "",
-            "founded": "",
-            "headquarters": "",
-            "products": [],
-            "description": "",
-            "category": "",
-            "employees": "",
-            "industriesServed": [],
-            "pricingRanges": [],
-            "pricingModel": [],
-            "features": "",
-            "useCases": "",
-            "companyStage": "",
-            "topClients": []
-        }
+
     
     def _create_basic_company_data(self, company_name: str, website_url: str, linkedin_url: str) -> Dict[str, Any]:
         """Create basic company data when scraping fails but we still have URLs"""

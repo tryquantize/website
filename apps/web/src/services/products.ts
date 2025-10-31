@@ -1,7 +1,6 @@
 import type { Product } from "@/types";
 
 export async function fetchProducts(): Promise<Product[]> {
-  // Placeholder: wire to real API later
   return [
     { id: "p1", name: "VisionPro AI", category: "Computer Vision", description: "Image recognition at scale with simple APIs." },
     { id: "p2", name: "ChatFlow Studio", category: "Conversational AI", description: "Design, test, and deploy chat automations easily." },

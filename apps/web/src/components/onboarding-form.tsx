@@ -1,15 +1,4 @@
-/* File Overview
-  Path: client/src/components/onboarding-form.tsx
-  Purpose: A reusable onboarding form component that can be used in modals or standalone pages.
-           Handles multi-step form submission for AI tools/services with validation.
-
-  Reading tip for newcomers:
-  - This component manages a multi-step form with state validation
-  - Uses react-hook-form + zod for validation and framer-motion for transitions
-  - Can be used both in the onboarding page and in the dashboard modal
-*/
-
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,14 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
-import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
-import { Rocket, Building2, User2 } from "lucide-react";
 import type { AiTool } from "@shared/schemas/schema";
 
 const formSchema = z.object({
@@ -37,8 +22,6 @@ const formSchema = z.object({
 
 type OnboardingFormData = z.infer<typeof formSchema>;
 
-
-
 interface OnboardingFormProps {
   initialData?: AiTool;
   onSuccess: () => void;
@@ -48,7 +31,6 @@ interface OnboardingFormProps {
 export function OnboardingForm({ initialData, onSuccess, onCancel }: OnboardingFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-
   const [specificationInput, setSpecificationInput] = useState("");
 
   const form = useForm<OnboardingFormData>({
@@ -66,10 +48,7 @@ export function OnboardingForm({ initialData, onSuccess, onCancel }: OnboardingF
 
 
   const onSubmit = async (data: OnboardingFormData) => {
-    console.log('Form submission started with data:', data);
-    
     try {
-      // Create a proper tool object from the form data
       const toolData = {
         name: data.name,
         description: `[${data.listType}] ${data.description}`,
@@ -79,13 +58,7 @@ export function OnboardingForm({ initialData, onSuccess, onCancel }: OnboardingF
         pricingModel: "paid",
         startupId: "550e8400-e29b-41d4-a716-446655440000"
       };
-      
-      console.log('Form listType:', data.listType);
-      console.log('Submitting tool data:', toolData);
 
-      console.log('Sending tool data:', toolData);
-
-      // Temporarily store in localStorage for testing
       const existingTools = JSON.parse(localStorage.getItem('dashboardTools') || '[]');
       const newTool = {
         ...toolData,
@@ -95,8 +68,6 @@ export function OnboardingForm({ initialData, onSuccess, onCancel }: OnboardingF
       };
       existingTools.push(newTool);
       localStorage.setItem('dashboardTools', JSON.stringify(existingTools));
-      
-      console.log('Tool stored locally:', newTool);
       
       toast({ title: "Success!", description: "Your tool/service has been listed successfully!" });
       onSuccess();
@@ -119,14 +90,6 @@ export function OnboardingForm({ initialData, onSuccess, onCancel }: OnboardingF
     const current = form.getValues("keySpecifications") || [];
     form.setValue("keySpecifications", current.filter((_, i) => i !== index));
   };
-
-  const containerVariants = {
-    initial: { opacity: 0, filter: "blur(8px)", y: 16 },
-    animate: { opacity: 1, filter: "blur(0px)", y: 0 },
-    exit: { opacity: 0, filter: "blur(12px)", y: -16 },
-  };
-
-  const sectionTitleWrap = "bg-black/20 backdrop-blur-md rounded-xl p-4 border border-white/20";
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-black/80 p-6 rounded-xl">
@@ -193,14 +156,7 @@ export function OnboardingForm({ initialData, onSuccess, onCancel }: OnboardingF
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  const spec = specificationInput.trim();
-                  if (!spec) return;
-                  const current = form.getValues("keySpecifications") || [];
-                  if (current.includes(spec)) return;
-                  form.setValue("keySpecifications", [...current, spec]);
-                  setSpecificationInput("");
-                }}
+                onClick={addSpecification}
                 disabled={!specificationInput.trim()}
                 className="bg-white/10 border-white/20 text-white hover:bg-white/20"
               >
@@ -214,10 +170,7 @@ export function OnboardingForm({ initialData, onSuccess, onCancel }: OnboardingF
                   <button
                     type="button"
                     className="opacity-70 hover:opacity-100"
-                    onClick={() => {
-                      const current = form.getValues("keySpecifications") || [];
-                      form.setValue("keySpecifications", current.filter((_, i) => i !== idx));
-                    }}
+                    onClick={() => removeSpecification(idx)}
                   >
                     ×
                   </button>

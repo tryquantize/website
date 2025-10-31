@@ -1,12 +1,3 @@
-/* File Overview
-  Path: client/src/hooks/use-navigation.tsx
-  Purpose: Custom React hook encapsulating reusable logic.
-
-  Reading tip for newcomers:
-  - Scan the exports at the bottom to see what the rest of the app imports from here
-  - Follow the data flow via function parameters and return values
-*/
-
 import { useLocation } from 'wouter';
 import { useLoading } from '@/contexts/loading-context';
 

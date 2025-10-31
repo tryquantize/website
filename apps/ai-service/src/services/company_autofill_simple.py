@@ -3,12 +3,12 @@ from typing import Dict, Any
 import json
 import re
 import requests
+from config.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL
 
 logger = logging.getLogger(__name__)
 
 class SimpleCompanyAutoFillService:
     def __init__(self):
-        from config.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL
         self.api_key = OPENROUTER_API_KEY
         self.base_url = OPENROUTER_BASE_URL
     

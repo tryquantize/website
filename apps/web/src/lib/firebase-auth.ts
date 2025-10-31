@@ -12,14 +12,9 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-64FEYVFBNJ"
 };
 
-// Initialize Firebase
-console.log('Initializing Firebase with config:', firebaseConfig);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
-console.log('Firebase initialized successfully');
-console.log('Auth object:', auth);
-console.log('Google provider:', googleProvider);
 
 export { auth };
 export type { User };
@@ -98,29 +93,10 @@ export class FirebaseAuthService {
   }
 
   static async signInWithGoogle() {
-    console.log('FirebaseAuthService.signInWithGoogle called');
-    console.log('Auth object available:', !!auth);
-    console.log('Google provider available:', !!googleProvider);
-    
-    if (!auth) {
-      console.error('Firebase auth not initialized');
-      return { success: false, user: null, error: 'Firebase not initialized' };
-    }
-    
-    if (!googleProvider) {
-      console.error('Google provider not initialized');
-      return { success: false, user: null, error: 'Google provider not available' };
-    }
-    
     try {
-      console.log('Firebase: Starting Google sign-in popup...');
       const result = await signInWithPopup(auth, googleProvider);
-      console.log('Firebase: Google sign-in successful', result.user);
       return { success: true, user: result.user, error: null };
     } catch (error: any) {
-      console.error('Firebase: Google sign-in error', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
       
       let errorMessage = error.message;
       

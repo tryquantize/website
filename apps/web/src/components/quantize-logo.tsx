@@ -1,9 +1,9 @@
-type QuantizeLogoProps = {
-  size?: number; // px
+interface QuantizeLogoProps {
+  size?: number;
   className?: string;
-};
+}
 
-export function QuantizeLogo({ size = 28, className = "" }: QuantizeLogoProps) {
+export function QuantizeLogo({ size = 48, className = "" }: QuantizeLogoProps) {
   return (
     <img
       src="/quantizenobg.png"

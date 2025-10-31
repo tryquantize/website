@@ -1,0 +1,17 @@
+Company: SubImage
+Founded: 2024
+Headquarters: San Francisco, CA
+Description: SubImage delivers advanced cloud infrastructure mapping solutions that provide comprehensive visibility into complex digital ecosystems, empowering security teams to precisely identify, analyze, and mitigate potential vulnerabilities across interconnected cloud assets and network relationships.
+Website: https://www.subimage.io/
+LinkedIn: https://www.linkedin.com/company/subimagesec/
+Phone: 
+Category: Computer and Network Security
+Employees: 2-10
+Company Stage: Series A
+Industries Served: SaaS
+Pricing Ranges: $10,000-$25,000
+Pricing Models: Custom Quote
+Top Clients: 
+
+Products/Services:
+- cloud infrastructure mapping

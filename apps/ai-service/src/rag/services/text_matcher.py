@@ -21,13 +21,13 @@ class TextMatcher:
         matches = []
         
         for company_name, company_data in companies_data.items():
-            score = self._calculate_match_score(query_words, original_query, company_data)
+            score = self._calculate_match_score(query_words, original_query, company_data.get('data', company_data))
             
             # Only include companies that meet the minimum relevance threshold
             if score >= self.min_score_threshold:
                 matches.append({
                     'company_name': company_name,
-                    'data': company_data,
+                    'data': company_data.get('data', company_data),  # Handle nested data structure
                     'score': score
                 })
         
@@ -132,6 +132,10 @@ class TextMatcher:
     
     def _get_searchable_text(self, company_data: Dict[str, Any]) -> str:
         """Combine all text fields for searching"""
+        # Handle nested data structure
+        if 'data' in company_data:
+            company_data = company_data['data']
+            
         text_fields = [
             company_data.get('company_info', ''),
             company_data.get('pricing', ''),
