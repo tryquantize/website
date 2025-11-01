@@ -1,97 +1,29 @@
-import React, { useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface GradientCardBaseProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   width?: string;
   height?: string;
 }
 
-export const GradientCardBase = ({ 
-  children, 
-  className = "", 
-  width = "360px", 
-  height = "520px" 
-}: GradientCardBaseProps) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (cardRef.current) {
-      const rect = cardRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left - rect.width / 2;
-      const y = e.clientY - rect.top - rect.height / 2;
-      const rotateX = -(y / rect.height) * 3;
-      const rotateY = (x / rect.width) * 3;
-      setRotation({ x: rotateX, y: rotateY });
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setRotation({ x: 0, y: 0 });
-  };
-
+export function GradientCardBase({ children, className, width, height }: GradientCardBaseProps) {
   return (
-    <motion.div
-      ref={cardRef}
-      className={`relative rounded-[20px] overflow-hidden ${className}`}
-      style={{
-        width,
-        ...(height === "auto" ? { minHeight: "400px" } : { height }),
-        transformStyle: "preserve-3d",
-        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-      }}
-      initial={{ y: 0 }}
-      animate={{
-        y: isHovered ? -3 : 0,
-        rotateX: rotation.x,
-        rotateY: rotation.y,
-        perspective: 1000,
-      }}
-      transition={{
-        type: "spring",
-        stiffness: 300,
-        damping: 20
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
+    <div
+      className={cn(
+        "relative rounded-xl overflow-hidden",
+        "bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-gray-900/90",
+        "border border-white/10",
+        "backdrop-blur-sm",
+        className
+      )}
+      style={{ width, height }}
     >
-      {/* Blurred background */}
-      <motion.div
-        className="absolute inset-0 z-10"
-        style={{
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
-          backdropFilter: "blur(360px)",
-          border: "1px solid rgba(255, 255, 255, 0.2)",
-        }}
-        animate={{
-          backdropFilter: isHovered ? "blur(450px)" : "blur(360px)",
-          backgroundColor: isHovered ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.1)",
-        }}
-        transition={{
-          duration: 0.3,
-          ease: "easeOut"
-        }}
-      />
-
-      {/* Content */}
-      <motion.div
-        className={`relative z-20 ${height === "auto" ? "h-auto min-h-full" : "h-full"}`}
-        animate={{
-          rotateX: isHovered ? -rotation.x * 0.2 : 0,
-          rotateY: isHovered ? -rotation.y * 0.2 : 0
-        }}
-        transition={{
-          duration: 0.3,
-          ease: "easeOut"
-        }}
-      >
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-blue-500/10" />
+      <div className="relative z-10 h-full">
         {children}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
-};
+}

@@ -1,5 +1,6 @@
 import { useLocation } from 'wouter';
 import { useLoading } from '@/contexts/loading-context';
+import { useEffect } from 'react';
 
 const getPageName = (path: string): string => {
   if (path === '/') return 'Home';
@@ -17,6 +18,14 @@ export function useNavigation() {
   const [location, setLocation] = useLocation();
   const { startLoading, stopLoading } = useLoading();
 
+  // Scroll to top whenever location changes
+  useEffect(() => {
+    const mainElement = document.querySelector('main');
+    if (mainElement) {
+      mainElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [location]);
+
   const navigateWithLoading = (to: string) => {
     const fromPage = getPageName(location);
     const toPage = getPageName(to);
@@ -29,5 +38,9 @@ export function useNavigation() {
     }, 2000);
   };
 
-  return { navigateWithLoading, location };
+  const navigateInstant = (to: string) => {
+    setLocation(to);
+  };
+
+  return { navigateWithLoading, navigateInstant, location };
 }

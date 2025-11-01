@@ -13,6 +13,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AnimatedLayout } from "@/components/layout/animated-layout";
 import { Analytics } from "@vercel/analytics/react";
+import { useEffect } from "react";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -37,6 +38,14 @@ import AddCompanyPage from "@/pages/add-company";
 
 function Router() {
   const [location] = useLocation();
+  
+  // Scroll to top on route change
+  useEffect(() => {
+    const mainElement = document.querySelector('main');
+    if (mainElement) {
+      mainElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [location]);
   
   return (
     <>

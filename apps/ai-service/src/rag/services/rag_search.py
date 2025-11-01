@@ -127,7 +127,7 @@ class RAGSearchService:
             location = self._extract_location(company_data)
             logger.info(f"Company {company_name} location: '{location}'")
             
-            # Filter by location if specified (only filter if locations are actually selected)
+            # Strict location filtering when locations are selected
             if selected_locations and len(selected_locations) > 0 and selected_locations != ['']:
                 location_match = False
                 company_location_lower = location.lower()
@@ -138,7 +138,7 @@ class RAGSearchService:
                     
                     selected_lower = selected_location.strip().lower()
                     
-                    # Flexible location matching
+                    # Strict location matching
                     if (selected_lower in company_location_lower or 
                         company_location_lower in selected_lower or
                         # Bay Area matching
@@ -150,9 +150,10 @@ class RAGSearchService:
                         location_match = True
                         break
                 
+                # Skip ALL companies that don't match the selected location
                 if not location_match:
-                    logger.info(f"Skipping {company_name} - location '{location}' doesn't match {selected_locations}")
-                    continue  # Skip this company if location doesn't match
+                    logger.info(f"Skipping {company_name} - location '{location}' doesn't match selected locations {selected_locations}")
+                    continue
             
             # Extract key information from RAG data
             description = self._extract_description(company_data)

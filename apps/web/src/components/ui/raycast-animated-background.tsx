@@ -34,6 +34,7 @@ export const Component = () => {
   return (
     <div className={cn("flex flex-col items-center")}>
         <UnicornScene 
+        key="raycast-bg"
         production={true} projectId="cbmTT38A0CcuYxeiyj5H" width={width} height={height} />
     </div>
   );

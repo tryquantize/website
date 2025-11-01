@@ -1,0 +1,119 @@
+/* From Uiverse.io by alexruix */
+.gradient-company-card {
+  --background: linear-gradient(to left, #f7ba2b 0%, #ea5358 100%);
+  width: 380px;
+  height: 280px;
+  padding: 5px;
+  border-radius: 1rem;
+  overflow: visible;
+  background: #f7ba2b;
+  background: var(--background);
+  position: relative;
+  z-index: 1;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  flex: 0 0 380px;
+}
+
+.gradient-company-card.expanded {
+  width: 650px;
+  height: auto;
+  min-height: 500px;
+  cursor: default;
+  flex: 0 0 650px;
+  min-width: 650px;
+}
+
+.gradient-company-card.expanded::after {
+  opacity: 0.6;
+  transform: scale(0.9);
+}
+
+.gradient-company-card::after {
+  position: absolute;
+  content: "";
+  top: 30px;
+  left: 0;
+  right: 0;
+  z-index: -1;
+  height: 100%;
+  width: 100%;
+  transform: scale(0.8);
+  filter: blur(25px);
+  background: #f7ba2b;
+  background: var(--background);
+  transition: opacity .5s;
+}
+
+.gradient-company-card-info {
+  --color: #181818;
+  background: var(--color);
+  color: var(--color);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  border-radius: .7rem;
+  padding: 1rem;
+}
+
+.gradient-company-card .title {
+  font-weight: bold;
+  letter-spacing: .1em;
+  color: white;
+}
+
+/* Hover Effects */
+.gradient-company-card:hover::after {
+  opacity: 0;
+}
+
+.gradient-company-card:hover .gradient-company-card-info {
+  color: #f7ba2b;
+  transition: color 1s;
+}
+
+.gradient-company-card:hover .title {
+  color: #f7ba2b;
+}
+
+/* Compact Card Hover Effects */
+.gradient-company-card:not(.expanded):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(247, 186, 43, 0.3);
+}
+
+.gradient-company-card:not(.expanded):hover::after {
+  opacity: 0.8;
+  transform: scale(0.85);
+}
+
+/* Expanded Card Styles */
+.gradient-company-card.expanded:hover {
+  transform: none;
+}
+
+/* Tinder Mode Styles */
+.gradient-company-card.tinder-mode {
+  width: 600px;
+  height: 500px;
+  cursor: grab;
+}
+
+.gradient-company-card.tinder-mode:active {
+  cursor: grabbing;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .gradient-company-card {
+    width: 340px;
+    height: 260px;
+  }
+  
+  .gradient-company-card.expanded {
+    width: 95vw;
+    max-width: 500px;
+  }
+}

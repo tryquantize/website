@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import '@/styles/custom-input.css';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -543,14 +544,14 @@ export default function AddCompanyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white p-4">
+    <div className="min-h-screen bg-black p-4">
       <div className="relative z-10">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
+        <div>
           <Button
             variant="ghost"
             onClick={() => setLocation('/')}
-            className="text-black hover:text-gray-600"
+            className="text-white hover:text-gray-300"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
@@ -606,36 +607,36 @@ export default function AddCompanyPage() {
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Company Name *</label>
+                    <div className="input-group">
+                      <label className="label">Company Name *</label>
                       <Input
                         required
                         value={formData.companyName}
                         onChange={(e) => handleInputChange('companyName', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                        className="input"
                         placeholder="e.g., OpenAI"
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Website *</label>
+                    <div className="input-group">
+                      <label className="label">Website *</label>
                       <Input
                         required
                         type="url"
                         value={formData.website}
                         onChange={(e) => handleInputChange('website', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                        className="input"
                         placeholder="https://yourcompany.com"
                       />
                     </div>
                     
-                    <div className="md:col-span-2">
-                      <label className="block text-black font-medium text-sm mb-3">LinkedIn Page</label>
+                    <div className="md:col-span-2 input-group">
+                      <label className="label">LinkedIn Page</label>
                       <Input
                         type="url"
                         value={formData.linkedinPage}
                         onChange={(e) => handleInputChange('linkedinPage', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                        className="input"
                         placeholder="https://linkedin.com/company/yourcompany"
                       />
                     </div>
@@ -687,61 +688,61 @@ export default function AddCompanyPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Phone Number (Sales Team)</label>
+                    <div className="input-group">
+                      <label className="label">Phone Number (Sales Team)</label>
                       <Input
                         type="tel"
                         value={formData.phoneNumber}
                         onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                        className="input"
                         placeholder="+1 (555) 123-4567"
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Founded Year</label>
+                    <div className="input-group">
+                      <label className="label">Founded Year</label>
                       <Input
                         value={formData.founded}
                         onChange={(e) => handleInputChange('founded', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                        className="input"
                         placeholder="2023"
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Headquarters</label>
+                    <div className="input-group">
+                      <label className="label">Headquarters</label>
                       <Input
                         value={formData.headquarters}
                         onChange={(e) => handleInputChange('headquarters', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                        className="input"
                         placeholder="San Francisco, CA"
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Category *</label>
+                    <div className="input-group">
+                      <label className="label">Category *</label>
                       <Input
                         required
                         value={formData.category}
                         onChange={(e) => handleInputChange('category', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                        className="input"
                         placeholder="AI Platform, AI Writing, AI Image, etc."
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Employees</label>
+                    <div className="input-group">
+                      <label className="label">Employees</label>
                       <Input
                         value={formData.employees}
                         onChange={(e) => handleInputChange('employees', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                        className="input"
                         placeholder="50-100, 500+, etc."
                       />
                     </div>
                   </div>
                   
-                  <div>
-                    <label className="block text-black font-medium text-sm mb-3">
+                  <div className="input-group">
+                    <label className="label">
                       Company Tagline
                       <span className="block text-xs text-gray-600 mt-1">
                         A short, catchy phrase that describes what your company does
@@ -750,13 +751,13 @@ export default function AddCompanyPage() {
                     <Input
                       value={formData.tagline}
                       onChange={(e) => handleInputChange('tagline', e.target.value)}
-                      className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                      className="input"
                       placeholder="e.g., 'AI for everyone', 'Building the future of work'"
                     />
                   </div>
                   
-                  <div>
-                    <label className="block text-black font-medium text-sm mb-3">
+                  <div className="input-group">
+                    <label className="label">
                       USP / Differentiator Tagline
                       <span className="block text-xs text-gray-600 mt-1">
                         What makes you unique? (e.g., "Fastest API for Voice AI")
@@ -765,7 +766,7 @@ export default function AddCompanyPage() {
                     <Input
                       value={formData.uspTagline}
                       onChange={(e) => handleInputChange('uspTagline', e.target.value)}
-                      className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                      className="input"
                       placeholder="e.g., 'Fastest API for Voice AI', '10x faster than competitors'"
                     />
                   </div>
@@ -790,11 +791,11 @@ export default function AddCompanyPage() {
                     </label>
                     <div className="space-y-2">
                       <div className="flex gap-2">
-                        <div className="relative flex-1">
+                        <div className="relative flex-1 input-group">
                           <Input
                             value={newProduct}
                             onChange={(e) => setNewProduct(e.target.value)}
-                            className="bg-white border-gray-300 text-black placeholder:text-gray-400 pr-20"
+                            className="input pr-20"
                             placeholder="Enter detailed product/service information..."
                             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('products', newProduct))}
                           />
@@ -834,14 +835,14 @@ export default function AddCompanyPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-black font-medium text-sm mb-3">About Your Company *</label>
+                  <div className="input-group">
+                    <label className="label">About Your Company *</label>
                     <div className="relative">
                       <Textarea
                         required
                         value={formData.description}
                         onChange={(e) => handleInputChange('description', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400 pr-12"
+                        className="input textarea pr-12"
                         placeholder="Provide a comprehensive description of your company, mission, vision, and what makes you unique in the AI space..."
                         rows={4}
                       />
@@ -870,8 +871,8 @@ export default function AddCompanyPage() {
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-black font-medium text-sm mb-3">
+                  <div className="input-group">
+                    <label className="label">
                       Key Features *
                       <span className="block text-xs text-gray-600 mt-1">
                         Describe all key features of your products/services in detail
@@ -881,7 +882,7 @@ export default function AddCompanyPage() {
                       <Textarea
                         value={formData.features}
                         onChange={(e) => handleInputChange('features', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400 pr-12"
+                        className="input textarea pr-12"
                         placeholder="Describe your key features and capabilities in detail..."
                         rows={6}
                       />
@@ -898,8 +899,8 @@ export default function AddCompanyPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-black font-medium text-sm mb-3">
+                  <div className="input-group">
+                    <label className="label">
                       Use Cases *
                       <span className="block text-xs text-gray-600 mt-1">
                         Describe specific use cases and applications for your products/services
@@ -909,7 +910,7 @@ export default function AddCompanyPage() {
                       <Textarea
                         value={formData.useCases}
                         onChange={(e) => handleInputChange('useCases', e.target.value)}
-                        className="bg-white border-gray-300 text-black placeholder:text-gray-400 pr-12"
+                        className="input textarea pr-12"
                         placeholder="Describe your use cases and applications in detail..."
                         rows={6}
                       />
@@ -1199,7 +1200,7 @@ export default function AddCompanyPage() {
                         <Input
                           value={newClient}
                           onChange={(e) => setNewClient(e.target.value)}
-                          className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                          className="input"
                           placeholder="Enter client/partner information..."
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('topClients', newClient))}
                         />
@@ -1228,13 +1229,13 @@ export default function AddCompanyPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-black font-medium text-sm mb-3">Testimonial Page (Optional)</label>
+                  <div className="input-group">
+                    <label className="label">Testimonial Page (Optional)</label>
                     <Input
                       type="url"
                       value={formData.testimonialPage}
                       onChange={(e) => handleInputChange('testimonialPage', e.target.value)}
-                      className="bg-white border-gray-300 text-black placeholder:text-gray-400"
+                      className="input"
                       placeholder="https://yourcompany.com/testimonials"
                     />
                   </div>

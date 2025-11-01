@@ -5,9 +5,12 @@ import { MessageCircle, ExternalLink, ArrowLeft, Send, Heart, Building2, GitComp
 import { useFavorites } from "@/contexts/favorites-context";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
-import { GradientCardBase } from "@/components/ui/gradient-card-base";
+import { PartnerPopup } from "@/components/partner-popup";
+import { PartnerSuccessNotification } from "@/components/partner-success-notification";
+
 import { motion } from "framer-motion";
 import { apiRequest } from "@/lib/queryClient";
+import "@/styles/company-card.css";
 
 interface Company {
   name: string;
@@ -81,6 +84,8 @@ export function CompanyCards({
   const [isLoadingComparison, setIsLoadingComparison] = useState(false);
   const [engagementData, setEngagementData] = useState<{[key: string]: {views: number, clicks: number, saves: number}}>({});
   const [swipedCards, setSwipedCards] = useState<Set<number>>(new Set());
+  const [partnerPopup, setPartnerPopup] = useState<{isOpen: boolean, companyName: string}>({isOpen: false, companyName: ""});
+  const [showSuccessNotification, setShowSuccessNotification] = useState<{isVisible: boolean, companyName: string}>({isVisible: false, companyName: ""});
 
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
   const { currentUser } = useFirebaseAuth();
@@ -166,10 +171,27 @@ export function CompanyCards({
 
   const handlePartnerRequest = (companyName: string) => {
     trackEngagement(companyName, 'click');
-    // For now, open email client with partnership inquiry
-    const subject = encodeURIComponent(`Partnership Inquiry - ${companyName}`);
-    const body = encodeURIComponent(`Hi ${companyName} team,\n\nI'm interested in exploring partnership opportunities with your company. I found your profile through Quantize and would love to discuss potential collaboration.\n\nBest regards`);
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+    setPartnerPopup({isOpen: true, companyName});
+  };
+
+  const handlePartnerSubmit = (formData: {name: string, phone: string, email: string}) => {
+    // Close popup
+    setPartnerPopup({isOpen: false, companyName: ""});
+    
+    // Show success notification
+    setShowSuccessNotification({isVisible: true, companyName: partnerPopup.companyName});
+    
+    // Hide notification after 4 seconds
+    setTimeout(() => {
+      setShowSuccessNotification({isVisible: false, companyName: ""});
+    }, 4000);
+    
+    // Here you could also send the data to your backend
+    console.log('Partnership request submitted:', {
+      company: partnerPopup.companyName,
+      searchQuery,
+      ...formData
+    });
   };
 
   const handleSwipe = (direction: 'left' | 'right') => {
@@ -402,8 +424,9 @@ export function CompanyCards({
                       opacity: 1 - stackIndex * 0.2
                     }}
                   >
-                    {/* Use exact same card structure from grid view */}
-                    <GradientCardBase className="min-w-[600px] max-w-[600px] h-[500px] overflow-hidden" width="600px" height={cardHeight}>
+                    {/* Use gradient card design */}
+                    <div className="gradient-company-card tinder-mode">
+                      <div className="gradient-company-card-info">
                       {chatStates[actualIndex] ? (
                         <div className="space-y-3 h-full flex flex-col p-4">
                           <div className="flex items-center justify-between">
@@ -741,7 +764,8 @@ export function CompanyCards({
                           </div>
                         </div>
                       )}
-                    </GradientCardBase>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
@@ -766,14 +790,27 @@ export function CompanyCards({
         </div>
       ) : (
         /* Original Grid View */
-        <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-2" style={{scrollbarWidth: 'thin'}}>
-        {companies.map((company, index) => {
+        <div className="space-y-6">
+        {Array.from({length: Math.ceil(companies.length / 3)}, (_, rowIndex) => (
+          <div key={rowIndex} className="flex gap-6 overflow-x-auto" style={{scrollbarWidth: 'thin'}}>
+            {companies.slice(rowIndex * 3, (rowIndex + 1) * 3).map((company, relativeIndex) => {
+              const index = rowIndex * 3 + relativeIndex;
           const availableSections = getAvailableSections(company);
           const isExpanded = expandedCards[index];
           const cardHeight = isExpanded ? "auto" : "200px";
           
           return (
-          <GradientCardBase key={index} className={`${isExpanded ? 'min-w-[600px] max-w-[600px]' : 'min-w-[300px] max-w-[300px]'} flex-shrink-0`} width={isExpanded ? "600px" : "300px"} height={cardHeight}>
+          <div 
+            key={index} 
+            className={`gradient-company-card ${isExpanded ? 'expanded' : ''}`}
+            onClick={isExpanded ? (e) => {
+              // Only collapse if clicking on blank area (not on interactive elements)
+              if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('blank-area')) {
+                toggleCardExpansion(index);
+              }
+            } : undefined}
+          >
+            <div className="gradient-company-card-info">
             {chatStates[index] ? (
               <div className="space-y-3 h-full flex flex-col p-4">
                 <div className="flex items-center justify-between">
@@ -818,9 +855,9 @@ export function CompanyCards({
             ) : (
               <div className={`space-y-3 h-full flex flex-col p-4 ${isExpanded ? 'overflow-y-auto' : ''}`}>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-4">
                     <motion.div
-                      className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden"
+                      className={`${isExpanded ? 'w-12 h-12' : 'w-14 h-14'} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`}
                       style={{
                         background: company.logoUrl ? "transparent" : "linear-gradient(225deg, #171c2c 0%, #121624 100%)",
                         boxShadow: "0 4px 8px -1px rgba(0, 0, 0, 0.2), inset 1px 1px 3px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.4)"
@@ -830,17 +867,20 @@ export function CompanyCards({
                       {company.logoUrl ? (
                         <img src={company.logoUrl} alt={`${company.name} logo`} className="w-full h-full object-cover" />
                       ) : (
-                        <Building2 className="w-5 h-5 text-white" />
+                        <Building2 className={`${isExpanded ? 'w-6 h-6' : 'w-7 h-7'} text-white`} />
                       )}
                     </motion.div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <h5 className="text-white text-lg font-semibold">{company.name}</h5>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h5 className={`text-white ${isExpanded ? 'text-lg' : 'text-xl'} font-semibold truncate`}>{company.name}</h5>
                           {isExpanded && company.linkedin_url && (
                             <button
-                              onClick={() => window.open(company.linkedin_url, "_blank", "noopener,noreferrer")}
-                              className="text-white/60 hover:text-blue-400 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(company.linkedin_url, "_blank", "noopener,noreferrer");
+                              }}
+                              className="text-white/60 hover:text-blue-400 transition-colors flex-shrink-0"
                               title="View LinkedIn Profile"
                             >
                               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -849,20 +889,24 @@ export function CompanyCards({
                             </button>
                           )}
                         </div>
-                        {isExpanded && (
-                          <button
-                            onClick={() => toggleCardExpansion(index)}
-                            className="text-white/60 hover:text-white transition-colors"
-                          >
-                            <ChevronUp className="w-6 h-6" />
-                          </button>
-                        )}
+
                       </div>
-                      <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{company.category}</span>
+                      <span className={`${isExpanded ? 'text-xs' : 'text-sm'} bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full font-medium`}>{company.category}</span>
                     </div>
                   </div>
                   {currentUser && (
                     <div className="flex space-x-1">
+                      {isExpanded && (
+                        <Button
+                          onClick={() => toggleCardExpansion(index)}
+                          size="sm"
+                          variant="ghost"
+                          className="p-1 h-auto"
+                          title="Collapse card"
+                        >
+                          <X className="w-4 h-4 text-white/60 hover:text-white" />
+                        </Button>
+                      )}
                       <Button
                         onClick={() => handleCompareToggle(index)}
                         size="sm"
@@ -924,25 +968,24 @@ export function CompanyCards({
 
                 {/* Compact View - Basic Info */}
                 {!isExpanded && (
-                  <div 
-                    className="cursor-pointer flex-1 flex flex-col justify-between"
-                    onClick={() => toggleCardExpansion(index)}
-                  >
+                  <div className="flex-1 flex flex-col justify-between">
                     {/* USP Tagline or Company Tagline */}
                     {(hasData(company.uspTagline) || hasData(company.tagline)) && (
-                      <div className="mb-3">
-                        <p className="text-xs text-white/70 leading-relaxed line-clamp-2">
+                      <div className="mb-4">
+                        <p className="text-sm text-white/80 leading-relaxed">
                           {company.uspTagline ? 
-                            (company.uspTagline.length > 80 ? company.uspTagline.substring(0, 80) + '...' : company.uspTagline) :
-                            (company.tagline!.length > 80 ? company.tagline!.substring(0, 80) + '...' : company.tagline)
+                            (company.uspTagline.length > 140 ? company.uspTagline.substring(0, 140) + '...' : company.uspTagline) :
+                            (company.tagline!.length > 140 ? company.tagline!.substring(0, 140) + '...' : company.tagline)
                           }
                         </p>
                       </div>
                     )}
                     
+
+                    
                     {/* Engagement Stats */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3 text-xs text-white/60">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-4 text-xs text-white/60">
                         <div className="flex items-center gap-1">
                           <Eye className="w-3 h-3" />
                           <span>{engagementData[company.name]?.views || 0}</span>
@@ -956,19 +999,25 @@ export function CompanyCards({
                           <span>{engagementData[company.name]?.saves || 0}</span>
                         </div>
                       </div>
-                      <ChevronDown className="w-4 h-4 text-white/60" />
+                      <Button
+                        onClick={() => toggleCardExpansion(index)}
+                        size="sm"
+                        className="bg-white text-black hover:bg-gray-100 text-xs px-3 py-1 h-7"
+                      >
+                        Learn More
+                      </Button>
                     </div>
                     
-                    {/* Icons at bottom */}
-                    <div className="flex items-center justify-between mt-auto">
-                      <div className="flex items-center gap-2">
+                    {/* Bottom section with icons and actions */}
+                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/10">
+                      <div className="flex items-center gap-3">
                         {company.website && company.website !== "#" && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleVisitWebsite(company.website, company.name);
                             }}
-                            className="text-white/60 hover:text-blue-400 transition-colors"
+                            className="text-white/60 hover:text-blue-400 transition-colors p-1"
                             title="Visit Website"
                           >
                             <ExternalLink className="w-4 h-4" />
@@ -980,7 +1029,7 @@ export function CompanyCards({
                               e.stopPropagation();
                               window.open(company.linkedin_url, "_blank", "noopener,noreferrer");
                             }}
-                            className="text-white/60 hover:text-blue-400 transition-colors"
+                            className="text-white/60 hover:text-blue-400 transition-colors p-1"
                             title="View LinkedIn Profile"
                           >
                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -988,16 +1037,22 @@ export function CompanyCards({
                             </svg>
                           </button>
                         )}
+                        {company.trialAvailable && (
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-green-300 text-xs font-medium">Trial</span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-1">
                         {/* Section Icons */}
-                        {availableSections.slice(0, 4).map((section) => (
+                        {availableSections.slice(0, 5).map((section) => (
                           <div key={section} className="text-white/60" title={section}>
                             {getSectionIcon(section)}
                           </div>
                         ))}
-                        {availableSections.length > 4 && (
-                          <span className="text-xs text-white/60">+{availableSections.length - 4}</span>
+                        {availableSections.length > 5 && (
+                          <span className="text-xs text-white/60">+{availableSections.length - 5}</span>
                         )}
                       </div>
                     </div>
@@ -1006,7 +1061,7 @@ export function CompanyCards({
 
                 {/* Expanded View - Full Details */}
                 {isExpanded && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 blank-area" onClick={(e) => e.stopPropagation()}>
                     
                     {/* Company Info Grid */}
                     <div className="grid grid-cols-4 gap-3 text-xs">
@@ -1261,14 +1316,7 @@ export function CompanyCards({
                       </div>
                     )}
                     
-                    {/* Collapse Button */}
-                    <button
-                      onClick={() => toggleCardExpansion(index)}
-                      className="w-full flex items-center justify-center gap-2 py-2 text-white/60 hover:text-white transition-colors border-t border-white/10 mt-4"
-                    >
-                      <span className="text-sm">Show Less</span>
-                      <ChevronUp className="w-4 h-4" />
-                    </button>
+
                   </div>
                 )}
                 
@@ -1318,10 +1366,13 @@ export function CompanyCards({
                 )}
               </div>
             )}
-          </GradientCardBase>
-          );
-        })}
-      </div>
+            </div>
+          </div>
+              );
+            })}
+          </div>
+        ))}
+        </div>
       
       )}
       
@@ -1388,6 +1439,21 @@ export function CompanyCards({
           </div>
         </div>
       )}
+      
+      {/* Partner Popup */}
+      <PartnerPopup
+        isOpen={partnerPopup.isOpen}
+        onClose={() => setPartnerPopup({isOpen: false, companyName: ""})}
+        companyName={partnerPopup.companyName}
+        searchQuery={searchQuery}
+        onSubmit={handlePartnerSubmit}
+      />
+      
+      {/* Success Notification */}
+      <PartnerSuccessNotification
+        isVisible={showSuccessNotification.isVisible}
+        companyName={showSuccessNotification.companyName}
+      />
     </div>
   );
 }

@@ -65,14 +65,21 @@ class TextMatcher:
         # 1. Check for exact phrase matches (highest priority)
         if len(original_query) > 3:  # Only for meaningful queries
             if original_query in searchable_text:
-                score += 20.0
+                score += 30.0
         
-        # 2. Check for multi-word phrase matches
+        # 2. Check for multi-word phrase matches (very important for specific queries)
         if len(query_words) >= 2:
             for i in range(len(query_words) - 1):
                 phrase = f"{query_words[i]} {query_words[i+1]}"
                 if phrase in searchable_text:
-                    score += 15.0
+                    score += 20.0
+            
+            # Check for 3-word phrases (even more specific)
+            if len(query_words) >= 3:
+                for i in range(len(query_words) - 2):
+                    phrase = f"{query_words[i]} {query_words[i+1]} {query_words[i+2]}"
+                    if phrase in searchable_text:
+                        score += 25.0
         
         # 3. Individual word matching with context requirements
         matched_words = 0
@@ -82,18 +89,23 @@ class TextMatcher:
             word_lower = word.lower()
             word_found = False
             
+            # Give higher scores for specific technical terms
+            multiplier = 1.0
+            if word_lower in ['voice', 'calling', 'agent', 'chatbot', 'automation', 'analytics']:
+                multiplier = 2.0
+            
             # Weight different sections differently
             if word_lower in company_info:
-                score += 3.0
+                score += 3.0 * multiplier
                 word_found = True
             if word_lower in features:
-                score += 2.5
+                score += 2.5 * multiplier
                 word_found = True
             if word_lower in use_cases:
-                score += 2.5
+                score += 2.5 * multiplier
                 word_found = True
             if word_lower in pricing:
-                score += 1.5
+                score += 1.5 * multiplier
                 word_found = True
                 
             if word_found:

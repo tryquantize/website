@@ -27,9 +27,68 @@ function Hero() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Button size="lg" className="gap-4 bg-white text-black hover:bg-white/90 w-full sm:w-auto" onClick={navigateToHomePage}>
-              Try for free <MoveRight className="w-4 h-4" />
-            </Button>
+            <style>{`
+              .cssbuttons-io-button {
+                background: white;
+                color: black;
+                font-family: inherit;
+                padding: 0.35em;
+                padding-left: 1.2em;
+                font-size: 17px;
+                font-weight: 500;
+                border-radius: 0.9em;
+                border: none;
+                letter-spacing: 0.05em;
+                display: flex;
+                align-items: center;
+                box-shadow: inset 0 0 1.6em -0.6em rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+                position: relative;
+                height: 2.8em;
+                padding-right: 3.3em;
+                cursor: pointer;
+                width: 100%;
+              }
+              @media (min-width: 640px) {
+                .cssbuttons-io-button {
+                  width: auto;
+                }
+              }
+              .cssbuttons-io-button .icon {
+                background: white;
+                margin-left: 1em;
+                position: absolute;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 2.2em;
+                width: 2.2em;
+                border-radius: 0.7em;
+                box-shadow: 0.1em 0.1em 0.6em 0.2em rgba(0, 0, 0, 0.2);
+                right: 0.3em;
+                transition: all 0.3s;
+              }
+              .cssbuttons-io-button:hover .icon {
+                width: calc(100% - 0.6em);
+              }
+              .cssbuttons-io-button .icon svg {
+                width: 1.1em;
+                transition: transform 0.3s;
+                color: black;
+              }
+              .cssbuttons-io-button:hover .icon svg {
+                transform: translateX(0.1em);
+              }
+              .cssbuttons-io-button:active .icon {
+                transform: scale(0.95);
+              }
+            `}</style>
+            <button className="cssbuttons-io-button" onClick={navigateToHomePage}>
+              Try for free
+              <div className="icon">
+                <MoveRight className="w-4 h-4" />
+              </div>
+            </button>
           </div>
         </div>
       </div>

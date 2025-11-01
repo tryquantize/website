@@ -15,6 +15,8 @@
     "setup-manual": "yarn install && cd apps/ai-service && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
   },
   "dependencies": {
+    "@21st-extension/react": "0.5.14",
+    "@21st-extension/toolbar-react": "0.5.14",
     "@carbon/icons-react": "11.68.0",
     "@headlessui/react": "2.2.7",
     "@hookform/resolvers": "^3.10.0",

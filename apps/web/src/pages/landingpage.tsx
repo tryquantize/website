@@ -12,6 +12,7 @@ import TestimonialsColumns from "@/components/ui/testimonials-demo";
 import Featured_05 from "@/components/ui/globe-feature-section";
 import FeaturesSection from "@/components/ui/features-section";
 import { FeatureCarousel, type ImageSet } from "@/components/ui/animated-feature-carousel";
+import { LogoCarouselBasic } from "@/components/ui/logo-carousel-demo";
 import { motion, useInView } from "framer-motion";
 import { Search, Bot, Megaphone, Zap, Target, Scale, Sparkles, Brain, Trophy } from "lucide-react";
 
@@ -85,52 +86,126 @@ function StoryCardsGrid() {
   };
 
   return (
-    <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-      {storyCards.map((card, index) => {
-        const direction = getRandomDirection(index);
-        return (
-          <motion.div
-            key={index}
-            className="p-6 rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md text-white"
-            initial={{
-              opacity: 0,
-              x: direction.x,
-              y: direction.y,
-              rotate: direction.rotate,
-              scale: 0.8
-            }}
-            animate={isInView ? {
-              opacity: 1,
-              x: 0,
-              y: 0,
-              rotate: 0,
-              scale: 1
-            } : {}}
-            transition={{
-              duration: 0.8,
-              delay: index * 0.1,
-              ease: [0.25, 0.46, 0.45, 0.94],
-              type: "spring",
-              stiffness: 100,
-              damping: 15
-            }}
-            whileHover={{
-              scale: 1.02,
-              y: -5,
-              transition: { duration: 0.2 }
-            }}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                <card.icon className="w-5 h-5 text-black" />
+    <>
+      <style>{`
+        .hover-card {
+          width: 100%;
+          height: 254px;
+          background: #171717;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          overflow: hidden;
+          position: relative;
+          box-shadow: 0px 0px 3px 1px #00000088;
+          cursor: pointer;
+        }
+        .hover-card .content {
+          border-radius: 5px;
+          background: #171717;
+          width: calc(100% - 4px);
+          height: 250px;
+          z-index: 1;
+          padding: 20px;
+          color: white;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          align-items: flex-start;
+        }
+        .content::before {
+          opacity: 0;
+          transition: opacity 300ms;
+          content: " ";
+          display: block;
+          background: white;
+          width: 5px;
+          height: 50px;
+          position: absolute;
+          filter: blur(50px);
+          overflow: hidden;
+        }
+        .hover-card:hover .content::before {
+          opacity: 1;
+        }
+        .hover-card::before {
+          opacity: 0;
+          content: " ";
+          position: absolute;
+          display: block;
+          width: 80px;
+          height: 360px;
+          background: linear-gradient(#ff2288, #387ef0);
+          transition: opacity 300ms;
+          animation: rotation_9018 8000ms infinite linear;
+          animation-play-state: paused;
+        }
+        .hover-card:hover::before {
+          opacity: 1;
+          animation-play-state: running;
+        }
+        .hover-card::after {
+          position: absolute;
+          content: " ";
+          display: block;
+          width: 250px;
+          height: 360px;
+          background: #17171733;
+          backdrop-filter: blur(50px);
+        }
+        @keyframes rotation_9018 {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
+      <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {storyCards.map((card, index) => {
+          const direction = getRandomDirection(index);
+          return (
+            <motion.div
+              key={index}
+              className="hover-card"
+              initial={{
+                opacity: 0,
+                x: direction.x,
+                y: direction.y,
+                rotate: direction.rotate,
+                scale: 0.8
+              }}
+              animate={isInView ? {
+                opacity: 1,
+                x: 0,
+                y: 0,
+                rotate: 0,
+                scale: 1
+              } : {}}
+              transition={{
+                duration: 0.8,
+                delay: index * 0.1,
+                ease: [0.25, 0.46, 0.45, 0.94],
+                type: "spring",
+                stiffness: 100,
+                damping: 15
+              }}
+            >
+              <div className="content">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                    <card.icon className="w-5 h-5 text-black" />
+                  </div>
+                  <h4 className="font-bold text-lg text-blue-400">{card.title}</h4>
+                </div>
+                <p className="text-sm leading-relaxed text-white/90">{card.content}</p>
               </div>
-              <h4 className="font-semibold text-lg text-blue-400">{card.title}</h4>
-            </div>
-            <p className="text-sm leading-relaxed text-white/90">{card.content}</p>
-          </motion.div>
-        );
-      })}
-    </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
@@ -239,15 +314,32 @@ export default function LandingPage() {
       {/* Content Sections */}
       <div className="relative z-10 bg-black/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pb-0">
-          {/* Hero Text Section */}
-          <section className="text-center py-16 sm:py-24 md:py-32">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-4 sm:mb-6 md:mb-8 leading-tight px-2">
-              The Future of Search is Here with <span className="text-blue-400">Quantize</span>
-            </h2>
-            
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/80 max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10 lg:mb-12 leading-relaxed px-4">
-              An AI Search Engine that Quantizes infinite information
-            </p>
+
+
+          {/* Video Section */}
+          <section className="my-20 relative">
+            <div className="container mx-auto px-4">
+              <div className="max-w-15xl mx-auto">
+                <motion.div 
+                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 shadow-2xl"
+                  initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  viewport={{ once: true, amount: 0.3 }}
+                >
+                  <video 
+                    className="w-full h-auto rounded-xl"
+                    autoPlay 
+                    loop 
+                    muted
+                    playsInline
+                  >
+                    <source src="/video.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </motion.div>
+              </div>
+            </div>
           </section>
 
           {/* Quantize Story Section */}

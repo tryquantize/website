@@ -758,7 +758,7 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-32 relative">
+    <div className="min-h-screen pb-32 relative overflow-y-auto">
       {/* Raycast Animation Background */}
       <div className="fixed inset-0 w-full h-full z-0">
         {tinderMode ? <RaycastBlueBackground /> : <RaycastBackground />}
