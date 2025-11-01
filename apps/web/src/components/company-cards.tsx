@@ -12,6 +12,75 @@ import { motion } from "framer-motion";
 import { apiRequest } from "@/lib/queryClient";
 import "@/styles/company-card.css";
 
+// Utility function to format company name in camel case without underscores
+const formatCompanyName = (name: string): string => {
+  return name
+    .replace(/_/g, ' ') // Replace underscores with spaces
+    .replace(/\b\w/g, (char) => char.toUpperCase()) // Capitalize first letter of each word
+    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .trim(); // Remove leading/trailing spaces
+};
+
+// Utility function to filter companies by industry and location
+const filterCompanies = (companies: Company[], searchQuery?: string, selectedLocations?: string[]): Company[] => {
+  let filtered = companies;
+  
+  // Step 1: Filter by industry if mentioned in search query
+  if (searchQuery) {
+    const industryKeywords = {
+      healthcare: ['healthcare', 'health', 'medical', 'hospital', 'clinic', 'patient', 'doctor', 'nurse', 'medicine', 'pharmaceutical', 'biotech'],
+      finance: ['finance', 'financial', 'banking', 'investment', 'trading', 'insurance', 'fintech', 'payment', 'lending', 'credit'],
+      education: ['education', 'learning', 'school', 'university', 'training', 'course', 'student', 'teacher', 'academic', 'edtech'],
+      ecommerce: ['ecommerce', 'e-commerce', 'retail', 'shopping', 'marketplace', 'store', 'commerce', 'sales', 'merchant'],
+      marketing: ['marketing', 'advertising', 'campaign', 'brand', 'promotion', 'social media', 'content', 'seo', 'digital marketing'],
+      hr: ['hr', 'human resources', 'recruitment', 'hiring', 'employee', 'workforce', 'talent', 'recruiting', 'staffing'],
+      legal: ['legal', 'law', 'attorney', 'lawyer', 'compliance', 'contract', 'litigation', 'court', 'judicial'],
+      realestate: ['real estate', 'property', 'housing', 'rental', 'mortgage', 'construction', 'building', 'architecture'],
+      manufacturing: ['manufacturing', 'production', 'factory', 'industrial', 'supply chain', 'logistics', 'warehouse', 'inventory'],
+      travel: ['travel', 'tourism', 'hotel', 'hospitality', 'booking', 'vacation', 'flight', 'transportation'],
+      gaming: ['gaming', 'game', 'entertainment', 'esports', 'mobile game', 'video game', 'interactive'],
+      automotive: ['automotive', 'car', 'vehicle', 'transportation', 'mobility', 'fleet', 'driving'],
+      agriculture: ['agriculture', 'farming', 'crop', 'livestock', 'food', 'agtech', 'agricultural'],
+      energy: ['energy', 'renewable', 'solar', 'wind', 'oil', 'gas', 'power', 'electricity', 'utility'],
+      cybersecurity: ['cybersecurity', 'security', 'cyber', 'protection', 'threat', 'vulnerability', 'encryption']
+    };
+    
+    const queryLower = searchQuery.toLowerCase();
+    const mentionedIndustries = Object.entries(industryKeywords).filter(([industry, keywords]) => 
+      keywords.some(keyword => queryLower.includes(keyword))
+    ).map(([industry]) => industry);
+    
+    if (mentionedIndustries.length > 0) {
+      const industryFiltered = companies.filter(company => {
+        if (!company.industriesServed || company.industriesServed.length === 0) return false;
+        return company.industriesServed.some(industry => {
+          const industryLower = industry.toLowerCase();
+          return mentionedIndustries.some(mentionedIndustry => {
+            const keywords = industryKeywords[mentionedIndustry as keyof typeof industryKeywords];
+            return keywords.some(keyword => industryLower.includes(keyword));
+          });
+        });
+      });
+      if (industryFiltered.length > 0) filtered = industryFiltered;
+    }
+  }
+  
+  // Step 2: Filter by location if selected
+  if (selectedLocations && selectedLocations.length > 0) {
+    const locationFiltered = filtered.filter(company => {
+      if (!company.location) return false;
+      return selectedLocations.some(selectedLocation => {
+        const locationLower = company.location!.toLowerCase();
+        const selectedLower = selectedLocation.toLowerCase();
+        return locationLower.includes(selectedLower) || selectedLower.includes(locationLower);
+      });
+    });
+    if (locationFiltered.length > 0) filtered = locationFiltered;
+  }
+  
+  return filtered;
+};
+
 interface Company {
   name: string;
   description: string;
@@ -52,6 +121,7 @@ interface CompanyCardsProps {
   companies: Company[];
   webSearchEnabled?: boolean;
   searchQuery?: string;
+  selectedLocations?: string[];
   tinderMode?: boolean;
   onTinderModeChange?: (mode: boolean) => void;
   currentCardIndex?: number;
@@ -63,7 +133,8 @@ interface CompanyCardsProps {
 export function CompanyCards({ 
   companies, 
   webSearchEnabled, 
-  searchQuery, 
+  searchQuery,
+  selectedLocations,
   tinderMode = false,
   onTinderModeChange,
   currentCardIndex = 0,
@@ -71,6 +142,8 @@ export function CompanyCards({
   onSwipe,
   onReset
 }: CompanyCardsProps) {
+  // Filter companies based on search query and selected locations
+  const filteredCompanies = filterCompanies(companies, searchQuery, selectedLocations);
   const [chatStates, setChatStates] = useState<{[key: number]: boolean}>({});
   const [messages, setMessages] = useState<{[key: number]: Array<{text: string, isUser: boolean}>}>({});
   const [inputValues, setInputValues] = useState<{[key: number]: string}>({});
@@ -132,15 +205,15 @@ export function CompanyCards({
 
   // Track views when companies are displayed
   React.useEffect(() => {
-    companies.forEach(company => {
+    filteredCompanies.forEach(company => {
       trackEngagement(company.name, 'view');
     });
-  }, [companies]);
+  }, [filteredCompanies]);
 
   const handleChatClick = (index: number) => {
     setChatStates(prev => ({...prev, [index]: true}));
     if (!messages[index]) {
-      setMessages(prev => ({...prev, [index]: [{text: `Hi! I'm here to help you learn more about ${companies[index].name}. What would you like to know?`, isUser: false}]}));
+      setMessages(prev => ({...prev, [index]: [{text: `Hi! I'm here to help you learn more about ${filteredCompanies[index].name}. What would you like to know?`, isUser: false}]}));
     }
   };
 
@@ -156,7 +229,7 @@ export function CompanyCards({
       ...prev,
       [index]: [...(prev[index] || []), 
         {text: message, isUser: true},
-        {text: `Thanks for your message about ${companies[index].name}. Our team will get back to you soon!`, isUser: false}
+        {text: `Thanks for your message about ${filteredCompanies[index].name}. Our team will get back to you soon!`, isUser: false}
       ]
     }));
     setInputValues(prev => ({...prev, [index]: ""}));
@@ -195,7 +268,7 @@ export function CompanyCards({
   };
 
   const handleSwipe = (direction: 'left' | 'right') => {
-    const company = companies[currentCardIndex];
+    const company = filteredCompanies[currentCardIndex];
     
     if (direction === 'right') {
       // Add to favorites
@@ -263,7 +336,7 @@ export function CompanyCards({
     setShowComparisonPopup(true);
     
     try {
-      const selectedCompanies = Array.from(selectedForComparison).map(index => companies[index]);
+      const selectedCompanies = Array.from(selectedForComparison).map(index => filteredCompanies[index]);
       
       const response = await apiRequest("POST", "/api/ai-service/compare", {
         companies: selectedCompanies
@@ -384,7 +457,7 @@ export function CompanyCards({
     }
   };
 
-  if (companies.length === 0) {
+  if (filteredCompanies.length === 0) {
     return null;
   }
 
@@ -394,7 +467,7 @@ export function CompanyCards({
       {tinderMode ? (
         /* Tinder Mode View - Using existing cards */
         <div className="relative h-[700px] flex items-center justify-center px-4">
-          {currentCardIndex >= companies.length ? (
+          {currentCardIndex >= filteredCompanies.length ? (
             <div className="text-center text-white">
               <Heart className="w-16 h-16 mx-auto mb-4 text-pink-500" />
               <h3 className="text-2xl font-bold mb-2">All Done!</h3>
@@ -406,7 +479,7 @@ export function CompanyCards({
           ) : (
             <div className="relative w-full max-w-2xl h-[500px]">
               {/* Stack of existing cards in tinder style */}
-              {companies.slice(currentCardIndex, currentCardIndex + 3).map((company, stackIndex) => {
+              {filteredCompanies.slice(currentCardIndex, currentCardIndex + 3).map((company, stackIndex) => {
                 const actualIndex = currentCardIndex + stackIndex;
                 const isTop = stackIndex === 0;
                 const availableSections = getAvailableSections(company);
@@ -430,7 +503,7 @@ export function CompanyCards({
                       {chatStates[actualIndex] ? (
                         <div className="space-y-3 h-full flex flex-col p-4">
                           <div className="flex items-center justify-between">
-                            <h5 className="text-white text-base font-medium">{company.name}</h5>
+                            <h5 className="text-white text-base font-medium">{formatCompanyName(company.name)}</h5>
                             <Button
                               onClick={() => handleBackClick(actualIndex)}
                               size="sm"
@@ -489,7 +562,7 @@ export function CompanyCards({
                               <div className="flex-1">
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-2">
-                                    <h5 className="text-white text-lg font-semibold">{company.name}</h5>
+                                    <h5 className="text-white text-lg font-semibold">{formatCompanyName(company.name)}</h5>
                                   </div>
                                 </div>
                                 <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">{company.category}</span>
@@ -791,9 +864,9 @@ export function CompanyCards({
       ) : (
         /* Original Grid View */
         <div className="space-y-6">
-        {Array.from({length: Math.ceil(companies.length / 3)}, (_, rowIndex) => (
+        {Array.from({length: Math.ceil(filteredCompanies.length / 3)}, (_, rowIndex) => (
           <div key={rowIndex} className="flex gap-6 overflow-x-auto" style={{scrollbarWidth: 'thin'}}>
-            {companies.slice(rowIndex * 3, (rowIndex + 1) * 3).map((company, relativeIndex) => {
+            {filteredCompanies.slice(rowIndex * 3, (rowIndex + 1) * 3).map((company, relativeIndex) => {
               const index = rowIndex * 3 + relativeIndex;
           const availableSections = getAvailableSections(company);
           const isExpanded = expandedCards[index];
@@ -814,7 +887,7 @@ export function CompanyCards({
             {chatStates[index] ? (
               <div className="space-y-3 h-full flex flex-col p-4">
                 <div className="flex items-center justify-between">
-                  <h5 className="text-white text-base font-medium">{company.name}</h5>
+                  <h5 className="text-white text-base font-medium">{formatCompanyName(company.name)}</h5>
                   <Button
                     onClick={() => handleBackClick(index)}
                     size="sm"
@@ -873,7 +946,7 @@ export function CompanyCards({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          <h5 className={`text-white ${isExpanded ? 'text-lg' : 'text-xl'} font-semibold truncate`}>{company.name}</h5>
+                          <h5 className={`text-white ${isExpanded ? 'text-lg' : 'text-xl'} font-semibold truncate`}>{formatCompanyName(company.name)}</h5>
                           {isExpanded && company.linkedin_url && (
                             <button
                               onClick={(e) => {
@@ -1416,7 +1489,7 @@ export function CompanyCards({
               <div className="flex flex-wrap gap-2">
                 {Array.from(selectedForComparison).map(index => (
                   <span key={index} className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm">
-                    {companies[index].name}
+                    {filteredCompanies[index].name}
                   </span>
                 ))}
               </div>

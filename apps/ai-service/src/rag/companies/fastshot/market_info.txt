@@ -1,0 +1,6 @@
+Customer Segments: B2B
+Deployment Options: Cloud, API
+Ideal Customer Types: Startups, Enterprises, SMBs
+Free Trial/Demo Available: Yes
+Unique Selling Proposition: Making mobile app creation fun, easy, and accessible to everyone.
+Company Tagline: Build Awesome Mobile Apps, No code required

@@ -5,6 +5,8 @@ from .data_loader import DataLoader
 from .text_matcher import TextMatcher
 from .llm_enricher import LLMEnricher
 import logging
+from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +28,23 @@ class RAGSearchService:
     
     def search(self, query: str, selected_types: List[str] = None, selected_locations: List[str] = None) -> Dict[str, Any]:
         """
-        Main RAG search function - returns only data from RAG, no LLM generation
+        Main RAG search function with hierarchical filtering logic
         """
         try:
             logger.info(f"RAG search started for query: '{query}' with {len(self.companies_data)} companies loaded")
             
-            # Find matching companies from RAG data
+            # Detect industry from query
+            industry_detected = self._detect_industry_in_query(query)
+            logger.info(f"Industry detected in query: {industry_detected}")
+            
+            # Apply hierarchical filtering logic:
+            # 1. General query (no industry, no location) -> All companies globally
+            # 2. Industry-specific query (industry detected, no location) -> Companies in that industry globally  
+            # 3. Location + Industry query (industry detected + location selected) -> Companies in that industry in specific location
+            
+            # Find matching companies from RAG data with industry context
             matching_companies = self.text_matcher.find_matching_companies(
-                query, self.companies_data, selected_types
+                query, self.companies_data, selected_types, industry_detected
             )
             
             logger.info(f"Found {len(matching_companies)} matching companies with relevance threshold")
@@ -43,10 +54,10 @@ class RAGSearchService:
                 logger.info("No highly relevant matches found, trying with relaxed criteria")
                 # Temporarily lower the threshold for broader search
                 original_threshold = self.text_matcher.min_score_threshold
-                self.text_matcher.min_score_threshold = 2.0
+                self.text_matcher.min_score_threshold = 1.0
                 
                 matching_companies = self.text_matcher.find_matching_companies(
-                    query, self.companies_data, selected_types
+                    query, self.companies_data, selected_types, industry_detected
                 )
                 
                 # Restore original threshold
@@ -56,9 +67,10 @@ class RAGSearchService:
                 if not matching_companies:
                     logger.warning("No matching companies found even with relaxed criteria")
                     location_msg = f" in {', '.join(selected_locations)}" if selected_locations else ""
+                    industry_msg = f" for {industry_detected}" if industry_detected else ""
                     return {
                         "query": query,
-                        "aiResponse": f"I couldn't find any companies in our database that match '{query}'{location_msg}. Try broader search terms or enable web search for more comprehensive results.",
+                        "aiResponse": f"I couldn't find any companies in our database that match '{query}'{industry_msg}{location_msg}. Try broader search terms or enable web search for more comprehensive results.",
                         "suggestions": self._generate_fallback_suggestions(query),
                         "companies": [],
                         "citations": [],
@@ -68,22 +80,33 @@ class RAGSearchService:
                         "success": True
                     }
             
-            # Extract structured company data with location filtering
-            companies_list = self._format_companies_for_response(matching_companies, query, selected_locations)
-            logger.info(f"Formatted {len(companies_list)} companies for response")
+            # Parallel processing: AI response + company formatting + suggestions
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                # Start suggestions generation early
+                suggestions_future = executor.submit(self._generate_rag_suggestions, query, matching_companies)
+                # Start AI response generation
+                ai_future = executor.submit(self.llm_enricher.enrich_rag_data, query, matching_companies)
+                
+                # Start company formatting in parallel
+                companies_future = executor.submit(self._format_companies_for_response, 
+                                                  matching_companies, query, selected_locations)
+                
+                # Wait for both to complete
+                companies_list = companies_future.result()
+                logger.info(f"Formatted {len(companies_list)} companies for response")
+                
+                if companies_list:  # Only use AI response if we have companies
+                    ai_response = ai_future.result()
+                    logger.info("LLM enrichment completed")
+                else:
+                    # Cancel AI response future if no companies
+                    ai_future.cancel()
+                    location_msg = f" in {', '.join(selected_locations)}" if selected_locations else ""
+                    ai_response = f"I couldn't find any companies in our database that match '{query}'{location_msg}. Try using broader location terms or disable location filtering for more results."
+                    logger.info("No companies after filtering - using fallback message")
             
-            # Use LLM only to enrich/format the existing RAG data
-            if companies_list:  # Only enrich if we have companies to show
-                ai_response = self.llm_enricher.enrich_rag_data(query, matching_companies)
-                logger.info("LLM enrichment completed")
-            else:
-                # No companies after location filtering
-                location_msg = f" in {', '.join(selected_locations)}" if selected_locations else ""
-                ai_response = f"I couldn't find any companies in our database that match '{query}'{location_msg}. Try using broader location terms or disable location filtering for more results."
-                logger.info("No companies after filtering - using fallback message")
-            
-            # Generate suggestions based on available RAG data
-            suggestions = self._generate_rag_suggestions(query, matching_companies)
+            # Get suggestions from parallel execution
+            suggestions = suggestions_future.result()
             
             return {
                 "query": query,
@@ -113,117 +136,144 @@ class RAGSearchService:
             }
     
     def _format_companies_for_response(self, matching_companies: List[Dict[str, Any]], query: str = "", selected_locations: List[str] = None) -> List[Dict[str, Any]]:
-        """Format company data for API response with proper enrichment and location filtering"""
-        companies_list = []
+        """Format company data for API response with parallel processing and location filtering"""
         logger.info(f"Formatting {len(matching_companies)} companies, selected_locations: {selected_locations}")
         
-        for company_match in matching_companies[:15]:  # Limit to 15 companies
-            # Get the actual company data from the match structure
-            company_data = company_match.get('data', {})
-            company_name = company_match.get('company_name', 'Unknown')
-            logger.info(f"Processing company: {company_name}, data keys: {list(company_data.keys())}")
-            
-            # Extract location first for filtering
-            location = self._extract_location(company_data)
-            logger.info(f"Company {company_name} location: '{location}'")
-            
-            # Strict location filtering when locations are selected
-            if selected_locations and len(selected_locations) > 0 and selected_locations != ['']:
-                location_match = False
-                company_location_lower = location.lower()
-                
-                for selected_location in selected_locations:
-                    if not selected_location or not selected_location.strip():
-                        continue
-                    
-                    selected_lower = selected_location.strip().lower()
-                    
-                    # Strict location matching
-                    if (selected_lower in company_location_lower or 
-                        company_location_lower in selected_lower or
-                        # Bay Area matching
-                        (any(bay_city in selected_lower for bay_city in ['san francisco', 'sf']) and 
-                         any(bay_city in company_location_lower for bay_city in ['san francisco', 'san mateo', 'mountain view', 'palo alto', 'california', 'ca'])) or
-                        # USA matching
-                        (selected_lower in ['usa', 'united states'] and 
-                         any(us_indicator in company_location_lower for us_indicator in ['usa', 'united states', 'california', 'ca', 'ny', 'texas', 'tx']))):
-                        location_match = True
-                        break
-                
-                # Skip ALL companies that don't match the selected location
-                if not location_match:
-                    logger.info(f"Skipping {company_name} - location '{location}' doesn't match selected locations {selected_locations}")
-                    continue
-            
-            # Extract key information from RAG data
-            description = self._extract_description(company_data)
-            features = self._extract_features(company_data)
-            pricing = self._extract_pricing(company_data)
-            website = self._extract_website(company_data)
-            category = self._extract_category(company_data)
-            
-            # Add all enhanced form fields
-            founded = self._extract_founded(company_data)
-            about = self._extract_about_us(company_data)
-            key_specs = self._extract_key_specifications(company_data, query)
-            
-            # New enhanced fields
-            company_stage = self._extract_company_stage(company_data)
-            industries_served = self._extract_industries_served(company_data)
-            pricing_ranges = self._extract_pricing_ranges(company_data)
-            pricing_model = self._extract_pricing_model(company_data)
-            employees = self._extract_employees(company_data)
-            products_services = self._extract_products_services(company_data)
-            top_clients = self._extract_top_clients(company_data)
-            logo_url = self._extract_logo_url(company_data)
-            enhanced_about = self._generate_enhanced_about(company_data, company_name)
-            enhanced_use_cases = self._generate_enhanced_use_cases(company_data, company_name, query, industries_served)
-            phone_number = self._extract_phone_number(company_data)
-            linkedin_url = self._extract_linkedin_url(company_data)
-            
-            # Extract new market fields
-            trial_available = self._extract_trial_available(company_data)
-            customer_segments = self._extract_customer_segments(company_data)
-            usp_tagline = self._extract_usp_tagline(company_data)
-            deployment_type = self._extract_deployment_type(company_data)
-            ideal_scenarios = self._extract_ideal_scenarios(company_data)
-            tagline = self._extract_tagline(company_data)
-            
-            company_obj = {
-                "name": company_name,
-                "description": description,
-                "features": features,
-                "pricing": pricing,
-                "website": website,
-                "category": category,
-                "location": location,
-                "founded": founded,
-                "about": about,
-                "specifications": key_specs,
-                "companyStage": company_stage,
-                "industriesServed": industries_served,
-                "pricingRanges": pricing_ranges,
-                "pricingModel": pricing_model,
-                "employees": employees,
-                "productsServices": products_services,
-                "topClients": top_clients,
-                "logoUrl": logo_url,
-                "enhancedAbout": enhanced_about,
-                "enhancedUseCases": enhanced_use_cases,
-                "phoneNumber": phone_number,
-                "linkedin_url": linkedin_url,
-                "trialAvailable": trial_available,
-                "customerSegments": customer_segments,
-                "uspTagline": usp_tagline,
-                "deploymentType": deployment_type,
-                "idealScenarios": ideal_scenarios,
-                "tagline": tagline
+        # Parallel processing of companies
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_company = {
+                executor.submit(self._process_single_company, company_match, query, selected_locations): company_match
+                for company_match in matching_companies[:15]
             }
-            companies_list.append(company_obj)
-            logger.info(f"Added company {company_name} to results")
+            
+            companies_list = []
+            for future in concurrent.futures.as_completed(future_to_company):
+                try:
+                    company_obj = future.result()
+                    if company_obj:  # Only add if location filtering passed
+                        companies_list.append(company_obj)
+                except Exception as e:
+                    company_match = future_to_company[future]
+                    logger.error(f"Error processing company {company_match.get('company_name', 'Unknown')}: {e}")
         
         logger.info(f"Returning {len(companies_list)} companies")
         return companies_list
+    
+    def _process_single_company(self, company_match: Dict[str, Any], query: str, selected_locations: List[str] = None) -> Dict[str, Any]:
+        """Process a single company with parallel LLM calls"""
+        # Get the actual company data from the match structure
+        company_data = company_match.get('data', {})
+        company_name = company_match.get('company_name', 'Unknown')
+        logger.info(f"Processing company: {company_name}")
+        
+        # Extract location first for filtering
+        location = self._extract_location(company_data)
+        
+        # Strict location filtering when locations are selected
+        if selected_locations and len(selected_locations) > 0 and selected_locations != ['']:
+            location_match = False
+            company_location_lower = location.lower()
+            
+            for selected_location in selected_locations:
+                if not selected_location or not selected_location.strip():
+                    continue
+                
+                selected_lower = selected_location.strip().lower()
+                
+                # Strict location matching
+                if (selected_lower in company_location_lower or 
+                    company_location_lower in selected_lower or
+                    # Bay Area matching
+                    (any(bay_city in selected_lower for bay_city in ['san francisco', 'sf']) and 
+                     any(bay_city in company_location_lower for bay_city in ['san francisco', 'san mateo', 'mountain view', 'palo alto', 'california', 'ca'])) or
+                    # USA matching
+                    (selected_lower in ['usa', 'united states'] and 
+                     any(us_indicator in company_location_lower for us_indicator in ['usa', 'united states', 'california', 'ca', 'ny', 'texas', 'tx']))):
+                    location_match = True
+                    break
+            
+            # Skip companies that don't match the selected location
+            if not location_match:
+                logger.info(f"Skipping {company_name} - location '{location}' doesn't match selected locations {selected_locations}")
+                return None
+        
+        # Extract basic information
+        description = self._extract_description(company_data)
+        features = self._extract_features(company_data)
+        pricing = self._extract_pricing(company_data)
+        website = self._extract_website(company_data)
+        category = self._extract_category(company_data)
+        founded = self._extract_founded(company_data)
+        about = self._extract_about_us(company_data)
+        
+        # Parallel LLM enrichment calls for this company
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            # Submit all LLM-dependent tasks in parallel
+            specs_future = executor.submit(self._extract_key_specifications, company_data, query)
+            enhanced_about_future = executor.submit(self._generate_enhanced_about, company_data, company_name)
+            enhanced_use_cases_future = executor.submit(self._generate_enhanced_use_cases, 
+                                                       company_data, company_name, query, 
+                                                       self._extract_industries_served(company_data))
+            
+            # Wait for all LLM calls to complete
+            key_specs = specs_future.result()
+            enhanced_about = enhanced_about_future.result()
+            enhanced_use_cases = enhanced_use_cases_future.result()
+        
+        # Extract remaining fields (non-LLM dependent)
+        company_stage = self._extract_company_stage(company_data)
+        industries_served = self._extract_industries_served(company_data)
+        pricing_ranges = self._extract_pricing_ranges(company_data)
+        pricing_model = self._extract_pricing_model(company_data)
+        employees = self._extract_employees(company_data)
+        products_services = self._extract_products_services(company_data)
+        top_clients = self._extract_top_clients(company_data)
+        logo_url = self._extract_logo_url(company_data)
+        phone_number = self._extract_phone_number(company_data)
+        linkedin_url = self._extract_linkedin_url(company_data)
+        
+        # Extract new market fields
+        trial_available = self._extract_trial_available(company_data)
+        customer_segments = self._extract_customer_segments(company_data)
+        usp_tagline = self._extract_usp_tagline(company_data)
+        deployment_type = self._extract_deployment_type(company_data)
+        ideal_scenarios = self._extract_ideal_scenarios(company_data)
+        tagline = self._extract_tagline(company_data)
+        
+        company_obj = {
+            "name": company_name,
+            "description": description,
+            "features": features,
+            "pricing": pricing,
+            "website": website,
+            "category": category,
+            "location": location,
+            "founded": founded,
+            "about": about,
+            "specifications": key_specs,
+            "companyStage": company_stage,
+            "industriesServed": industries_served,
+            "pricingRanges": pricing_ranges,
+            "pricingModel": pricing_model,
+            "employees": employees,
+            "productsServices": products_services,
+            "topClients": top_clients,
+            "logoUrl": logo_url,
+            "enhancedAbout": enhanced_about,
+            "enhancedUseCases": enhanced_use_cases,
+            "phoneNumber": phone_number,
+            "linkedin_url": linkedin_url,
+            "trialAvailable": trial_available,
+            "customerSegments": customer_segments,
+            "uspTagline": usp_tagline,
+            "deploymentType": deployment_type,
+            "idealScenarios": ideal_scenarios,
+            "tagline": tagline
+        }
+        
+        logger.info(f"Successfully processed company {company_name}")
+        return company_obj
+        # This code has been moved to _process_single_company method for parallel processing
     
     def _extract_company_name(self, company_data: Dict[str, str]) -> str:
         """Extract company name from RAG data"""
@@ -246,6 +296,34 @@ class RAGSearchService:
         features_text = company_data.get('features', '')
         features = []
         
+        # Check for corrupted character-per-line format
+        if features_text and len(features_text.split('\n')) > 20:
+            lines = features_text.split('\n')
+            if all(len(line.strip().replace('-', '').strip()) <= 1 for line in lines[:10]):  # Check if first 10 lines are single chars
+                # This is corrupted character-per-line format - reconstruct
+                cleaned_chars = [line.replace('-', '').strip() for line in lines if line.strip()]
+                features_text = ''.join(cleaned_chars)
+                logger.info(f"Cleaned corrupted features text: {features_text[:100]}...")
+                # Split the reconstructed text into meaningful features
+                if '.' in features_text:
+                    features = [s.strip() for s in features_text.split('.') if s.strip() and len(s.strip()) > 10]
+                elif ',' in features_text:
+                    features = [s.strip() for s in features_text.split(',') if s.strip() and len(s.strip()) > 10]
+                else:
+                    # Single long feature, break it into chunks
+                    words = features_text.split()
+                    if len(words) > 10:
+                        chunk_size = len(words) // 3
+                        features = [
+                            ' '.join(words[:chunk_size]),
+                            ' '.join(words[chunk_size:chunk_size*2]),
+                            ' '.join(words[chunk_size*2:])
+                        ]
+                    else:
+                        features = [features_text]
+                return features[:3] if features else ["AI-powered solutions", "Easy integration", "Professional support"]
+        
+        # Normal processing for non-corrupted data
         # Split by lines and look for bullet points or numbered items
         for line in features_text.split('\n'):
             line = line.strip()
@@ -468,6 +546,9 @@ class RAGSearchService:
             
             if combined_context.strip():
                 # Use LLM to generate enhanced description
+                import sys
+                import os
+                sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
                 from config.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, AI_MODEL
                 import requests
                 
@@ -529,9 +610,16 @@ Write a detailed description that is EXACTLY 150 words describing what {company_
             
             # Clean corrupted use cases text (fix character-per-line issue)
             if use_cases_text and len(use_cases_text.split('\n')) > 20:
-                # Likely corrupted - reconstruct
-                cleaned_text = ''.join([line.replace('-', '').strip() for line in use_cases_text.split('\n')])
-                use_cases_text = cleaned_text
+                # Likely corrupted - reconstruct by joining characters
+                lines = use_cases_text.split('\n')
+                if all(len(line.strip().replace('-', '').strip()) <= 1 for line in lines[:10]):  # Check if first 10 lines are single chars
+                    # This is corrupted character-per-line format
+                    cleaned_chars = [line.replace('-', '').strip() for line in lines if line.strip()]
+                    use_cases_text = ''.join(cleaned_chars)
+                    logger.info(f"Cleaned corrupted use cases text: {use_cases_text[:100]}...")
+                else:
+                    # Normal format, keep as is
+                    pass
             
             # Combine context for LLM with query and industry context
             context = f"Company: {company_name}\nInfo: {info_text}\nFeatures: {features_text}\nUse Cases: {use_cases_text}"
@@ -539,6 +627,9 @@ Write a detailed description that is EXACTLY 150 words describing what {company_
                 context += f"\nIndustries Served: {', '.join(industries_served)}"
             
             # Use LLM to generate proper use cases
+            import sys
+            import os
+            sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
             from config.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, AI_MODEL
             import requests
             
@@ -761,6 +852,48 @@ Return only the 3 use cases, one per line, no bullets or numbers."""
         ])
         
         return suggestions[:5]  # Return top 5 suggestions
+    
+    def _detect_industry_in_query(self, query: str) -> str:
+        """
+        Detect industry-specific terms in the search query (same logic as AI agent)
+        """
+        query_lower = query.lower()
+        
+        # Industry keyword mapping
+        industry_keywords = {
+            'healthcare': ['healthcare', 'medical', 'health', 'hospital', 'clinic', 'patient', 'doctor', 'nurse', 'pharmaceutical', 'medicine'],
+            'finance': ['finance', 'financial', 'banking', 'fintech', 'investment', 'trading', 'payment', 'insurance', 'accounting', 'tax'],
+            'education': ['education', 'learning', 'school', 'university', 'student', 'teacher', 'training', 'course', 'academic'],
+            'ecommerce': ['ecommerce', 'e-commerce', 'retail', 'shopping', 'store', 'marketplace', 'sales', 'customer'],
+            'marketing': ['marketing', 'advertising', 'social media', 'content', 'seo', 'campaign', 'brand', 'promotion'],
+            'real estate': ['real estate', 'property', 'housing', 'rental', 'mortgage', 'construction', 'architecture'],
+            'logistics': ['logistics', 'supply chain', 'shipping', 'delivery', 'transportation', 'warehouse', 'inventory'],
+            'legal': ['legal', 'law', 'lawyer', 'attorney', 'compliance', 'contract', 'litigation'],
+            'hr': ['hr', 'human resources', 'recruitment', 'hiring', 'employee', 'workforce', 'talent'],
+            'manufacturing': ['manufacturing', 'production', 'factory', 'industrial', 'automation', 'quality control'],
+            'travel': ['travel', 'tourism', 'hotel', 'booking', 'flight', 'vacation', 'hospitality'],
+            'gaming': ['gaming', 'game', 'entertainment', 'mobile game', 'video game', 'esports'],
+            'agriculture': ['agriculture', 'farming', 'crop', 'livestock', 'food production', 'agtech'],
+            'aerospace': ['aerospace', 'space', 'satellite', 'aviation', 'aircraft', 'rocket', 'orbital', 'flight', 'infrastructure']
+        }
+        
+        # Check for industry keywords in query (prioritize exact matches)
+        for industry, keywords in industry_keywords.items():
+            for keyword in keywords:
+                if keyword in query_lower:
+                    logger.info(f"Industry detected: {industry} (keyword: {keyword})")
+                    return industry
+        
+        # Check for "for [industry]" pattern
+        for industry, keywords in industry_keywords.items():
+            for keyword in keywords:
+                if f"for {keyword}" in query_lower:
+                    logger.info(f"Industry detected: {industry} (pattern: for {keyword})")
+                    return industry
+        
+
+        
+        return None
     
     def _generate_fallback_suggestions(self, query: str) -> List[str]:
         """Generate helpful suggestions when no matches are found"""

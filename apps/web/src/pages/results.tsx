@@ -941,7 +941,9 @@ export default function ResultsPage() {
           // Show appropriate cards based on selected types
           const params = new URLSearchParams(window.location.search);
           const urlTypes = params.get('types');
+          const urlLocations = params.get('locations');
           const currentTypes = urlTypes ? new Set(urlTypes.split(',').filter(t => t.trim())) : selectedTypes;
+          const currentLocations = urlLocations ? urlLocations.split(',').filter(l => l.trim()) : [];
           
           if (currentTypes.has('product') && currentTypes.size === 1) {
             return <ProductCards products={allCompanies} />;
@@ -951,6 +953,7 @@ export default function ResultsPage() {
                 companies={allCompanies} 
                 webSearchEnabled={webSearchEnabled} 
                 searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+                selectedLocations={currentLocations}
                 tinderMode={tinderMode}
                 currentCardIndex={currentCardIndex}
                 onCardIndexChange={setCurrentCardIndex}
@@ -973,6 +976,7 @@ export default function ResultsPage() {
                   companies={companies} 
                   webSearchEnabled={webSearchEnabled} 
                   searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+                  selectedLocations={currentLocations}
                   tinderMode={tinderMode}
                   currentCardIndex={currentCardIndex}
                   onCardIndexChange={setCurrentCardIndex}

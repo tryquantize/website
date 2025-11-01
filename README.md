@@ -116,7 +116,7 @@ Create `.env.local` with:
 ```bash
 # AI Service
 OPENROUTER_API_KEY=your_openrouter_key
-EXA_API_KEY=your_exa_key
+FIRECRAWL_API_KEY=your_firecrawl_key
 AI_SERVICE_URL=http://localhost:5002
 
 # Development
@@ -127,7 +127,7 @@ PORT=3001
 ### API Keys Setup
 
 1. **OpenRouter API**: Get from [openrouter.ai](https://openrouter.ai)
-2. **Exa API**: Get from [exa.ai](https://exa.ai)
+2. **Firecrawl API**: Get from [firecrawl.dev](https://firecrawl.dev)
 
 ## 🏛️ Architecture
 
@@ -147,7 +147,7 @@ PORT=3001
 ### AI Service (Python + Flask)
 - **Framework**: Flask
 - **AI Models**: OpenRouter integration
-- **Web Search**: Exa API
+- **Web Scraping**: Firecrawl API
 - **Features**: Company enrichment, search suggestions
 
 ## 🔌 API Endpoints

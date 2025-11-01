@@ -1,0 +1,23 @@
+Company:  Fastshot
+Founded: 2025
+Headquarters: 
+Description: Fastshot is a platform that democratizes mobile app creation, enabling anyone with an idea to turn it into a real app without any coding required.
+Website:  https://www.fastshot.ai/
+LinkedIn: https://www.linkedin.com/company/fastshot/
+Phone: 
+Category: Software Development
+Employees: 2-10
+Company Stage: Pre-seed
+Industries Served: SaaS
+Pricing Ranges: $100-$500
+Pricing Models: Usage-based
+Top Clients: 
+Tagline: Build Awesome Mobile Apps, No code required
+USP/Differentiator: Making mobile app creation fun, easy, and accessible to everyone.
+Customer Segments: B2B
+Deployment Types: Cloud, API
+Ideal For: Startups, Enterprises, SMBs
+Trial Available: Yes
+
+Products/Services:
+- Mobile App Builder: A platform that allows users to build mobile apps just by chatting with AI, requiring no coding skills.

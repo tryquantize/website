@@ -2,6 +2,8 @@ import os
 import json
 from typing import Dict, List, Any
 import logging
+from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +13,7 @@ class DataLoader:
         self.companies_path = os.path.join(self.rag_path, 'companies')
     
     def load_all_companies(self) -> Dict[str, Dict[str, Any]]:
-        """Load all company data from companies/ folder"""
+        """Load all company data from companies/ folder using parallel processing"""
         companies_data = {}
         
         if not os.path.exists(self.companies_path):
@@ -19,14 +21,25 @@ class DataLoader:
             return companies_data
         
         try:
-            for company_folder in os.listdir(self.companies_path):
-                company_path = os.path.join(self.companies_path, company_folder)
+            company_folders = [folder for folder in os.listdir(self.companies_path) 
+                             if os.path.isdir(os.path.join(self.companies_path, folder))]
+            
+            # Parallel loading of company data
+            with ThreadPoolExecutor(max_workers=15) as executor:
+                future_to_folder = {
+                    executor.submit(self.load_company_data, folder): folder 
+                    for folder in company_folders
+                }
                 
-                if os.path.isdir(company_path):
-                    company_data = self.load_company_data(company_folder)
-                    if company_data:
-                        companies_data[company_folder] = {'data': company_data}  # Wrap in data structure
-                        logger.debug(f"Loaded company: {company_folder}")
+                for future in concurrent.futures.as_completed(future_to_folder):
+                    folder = future_to_folder[future]
+                    try:
+                        company_data = future.result()
+                        if company_data:
+                            companies_data[folder] = {'data': company_data}
+                            logger.debug(f"Loaded company: {folder}")
+                    except Exception as e:
+                        logger.error(f"Failed to load company {folder}: {e}")
             
             logger.info(f"Successfully loaded {len(companies_data)} companies")
             return companies_data

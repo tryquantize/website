@@ -1,5 +1,0 @@
-ChatGPT Plus: $20/month
-GPT-4 API: $0.03/1K input tokens, $0.06/1K output tokens
-GPT-3.5 Turbo: $0.001/1K input tokens, $0.002/1K output tokens
-DALL-E 3: $0.040 per image
-Free Tier: Available with limitations

@@ -102,7 +102,11 @@ class CompanyEnrichmentAgent:
         return enriched_company
     
     async def _get_key_specifications_async(self, session: aiohttp.ClientSession, company_name: str, query: str, locations: List[str] = None, web_search_enabled: bool = True) -> List[str]:
-        """Agent 1: Generate key specifications from web search or RAG database"""
+        """Agent 1: Generate key specifications from web search or RAG database
+        
+        Enhanced to consider the search query when generating specifications,
+        ensuring they are specifically relevant to what the user is searching for.
+        """
         try:
             if web_search_enabled:
                 # Use web search for specifications with query context
@@ -131,10 +135,12 @@ User's Search Query: {query}
 
 Generate 5 specific technical specifications or capabilities that are:
 1. Unique to {company_name}
-2. Directly relevant to the user's search for "{query}"
+2. Directly address the user's need for "{query}"
 3. Based on actual information found in the search results
+4. Show how {company_name} solves problems related to "{query}"
+5. Highlight features that make {company_name} suitable for "{query}" use cases
 
-Each specification must be EXACTLY 10 words long and focus on how {company_name} addresses "{query}". Return only the specifications, one per line, no bullets or numbers."""
+Each specification must be EXACTLY 8-12 words long and focus on how {company_name} specifically helps with "{query}". Prioritize specifications that directly relate to the search intent. Return only the specifications, one per line, no bullets or numbers."""
                     
                     response = await self._make_agent_request_async(session, prompt)
                     if not response:
@@ -171,7 +177,14 @@ Company Data:
 
 User's Search Query: {query}
 
-Generate 5 specific features, capabilities, or specifications that directly relate to "{query}". Each specification must be EXACTLY 10 words long and focus on how {company_name} addresses "{query}". Return only the specifications, one per line, no bullets or numbers."""
+Generate 5 specific features, capabilities, or specifications that:
+1. Directly relate to the user's search for "{query}"
+2. Show how {company_name} solves problems related to "{query}"
+3. Highlight capabilities that make {company_name} suitable for "{query}" use cases
+4. Focus on features that address the specific needs implied by "{query}"
+5. Demonstrate {company_name}'s expertise in areas relevant to "{query}"
+
+Each specification must be EXACTLY 8-12 words long and focus on how {company_name} specifically helps with "{query}". Return only the specifications, one per line, no bullets or numbers."""
                     
                     response = self._make_sync_request(prompt)
                     if response:
@@ -228,7 +241,11 @@ Generate 5 specific features, capabilities, or specifications that directly rela
             return "https://example.com"
     
     async def _get_company_description_async(self, session: aiohttp.ClientSession, company_name: str, query: str, locations: List[str] = None, web_search_enabled: bool = True) -> str:
-        """Agent 4: Get company description from web search or RAG database"""
+        """Agent 4: Get company description from web search or RAG database
+        
+        Enhanced to tailor the description specifically to the user's search query,
+        focusing on how the company addresses the user's specific needs.
+        """
         try:
             if web_search_enabled:
                 # Use web search for description with query context
@@ -247,14 +264,21 @@ Generate 5 specific features, capabilities, or specifications that directly rela
                         web_context += f"Content: {result.get('text', '')[:400]}...\n"
                 
                 if web_context:
-                    prompt = f"""Based on the following information about {company_name}, write a comprehensive company description that is SPECIFICALLY RELATED to "{query}".
+                    prompt = f"""Based on the following information about {company_name}, write a comprehensive company description that is SPECIFICALLY TAILORED to someone searching for "{query}".
 
 Web Search Results:
 {web_context}
 
 User's Search Query: {query}
 
-Write a detailed description that is EXACTLY 150 words describing what {company_name} does, their services/products, and how they specifically address "{query}". Focus on their unique value proposition and capabilities related to the user's search. Base the description ONLY on actual information found in the search results. Return only the description text, no formatting."""
+Write a detailed description that is EXACTLY 150 words that:
+1. Explains what {company_name} does in the context of "{query}"
+2. Highlights how their services/products solve problems related to "{query}"
+3. Emphasizes their unique value proposition for "{query}" use cases
+4. Shows why {company_name} is a good fit for someone searching for "{query}"
+5. Mentions specific capabilities that address the needs implied by "{query}"
+
+Base the description ONLY on actual information found in the search results. Write from the perspective of helping someone who specifically needs "{query}" solutions. Return only the description text, no formatting."""
                     
                     response = await self._make_agent_request_async(session, prompt)
                     if not response:
@@ -282,14 +306,21 @@ Write a detailed description that is EXACTLY 150 words describing what {company_
                 rag_context = f"Company Info: {info_text}\nUse Cases: {use_cases_text}\nFeatures: {features_text}"
                 
                 if rag_context.strip():
-                    prompt = f"""Based on the following company information about {company_name}, write a comprehensive company description that is SPECIFICALLY RELATED to "{query}".
+                    prompt = f"""Based on the following company information about {company_name}, write a comprehensive company description that is SPECIFICALLY TAILORED to someone searching for "{query}".
 
 Company Data:
 {rag_context}
 
 User's Search Query: {query}
 
-Write a detailed description that is EXACTLY 150 words describing what {company_name} does, their services/products, and how they specifically address "{query}". Focus on their unique value proposition and capabilities related to the user's search. Return only the description text, no formatting."""
+Write a detailed description that is EXACTLY 150 words that:
+1. Explains what {company_name} does in the context of "{query}"
+2. Highlights how their services/products solve problems related to "{query}"
+3. Emphasizes their unique value proposition for "{query}" use cases
+4. Shows why {company_name} is a good fit for someone searching for "{query}"
+5. Mentions specific capabilities that address the needs implied by "{query}"
+
+Write from the perspective of helping someone who specifically needs "{query}" solutions. Return only the description text, no formatting."""
                     
                     response = self._make_sync_request(prompt)
                     if response and len(response.strip()) > 50:
@@ -366,19 +397,25 @@ Return only the URL, no other text."""
             return f"https://linkedin.com/company/{company_slug}"
     
     async def _get_use_cases_async(self, session: aiohttp.ClientSession, company_name: str, query: str, locations: List[str] = None, web_search_enabled: bool = True) -> List[str]:
-        """Agent 6: Generate use cases using LLM with search query only"""
+        """Agent 6: Generate use cases using LLM with search query context
+        
+        Enhanced to generate use cases that are specifically relevant to the user's
+        search query, showing practical applications for their specific needs.
+        """
         try:
             if web_search_enabled:
                 # Use LLM only with company name and search query - no web search
-                prompt = f"""Generate exactly 3 use cases that show how {company_name} can be used for "{query}".
+                prompt = f"""Generate exactly 3 use cases that show how {company_name} can be used specifically for "{query}".
 
 Company: {company_name}
 User's Search Query: {query}
 
-Generate 3 specific, industry-focused use cases that demonstrate how {company_name} addresses "{query}". Each use case must be:
-1. Directly relevant to the search query "{query}"
-2. Industry-specific and practical for {company_name}
-3. EXACTLY 10-12 words long
+Generate 3 specific, practical use cases that demonstrate how {company_name} directly addresses the needs implied by "{query}". Each use case must be:
+1. Directly relevant to someone searching for "{query}"
+2. Show a specific problem that {company_name} solves related to "{query}"
+3. Industry-specific and practical for {company_name}
+4. EXACTLY 10-12 words long
+5. Focus on real-world applications of {company_name} for "{query}" scenarios
 
 Return only the use cases, one per line, no bullets or numbers."""
                 
@@ -424,7 +461,14 @@ Company Data:
 
 User's Search Query: {query}
 
-Generate 3 specific, industry-focused use cases that show how {company_name} addresses "{query}". Each use case must be EXACTLY 10-12 words long and focus on practical business applications. Return only the use cases, one per line, no bullets or numbers."""
+Generate 3 specific, practical use cases that show how {company_name} directly addresses the needs implied by "{query}". Each use case must:
+1. Be directly relevant to someone searching for "{query}"
+2. Show a specific problem that {company_name} solves related to "{query}"
+3. Be industry-specific and practical for {company_name}
+4. Be EXACTLY 10-12 words long
+5. Focus on real-world applications of {company_name} for "{query}" scenarios
+
+Return only the use cases, one per line, no bullets or numbers."""
                     
                     response = self._make_sync_request(prompt)
                     if response:

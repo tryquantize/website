@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, Any, List, Optional
-from .exa_search import ExaSearchService
+from .firecrawl_scraper import FirecrawlWebScraper
 from .ai_agent import AISearchAgent
 import json
 import re
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class CompanyAutoFillService:
     def __init__(self):
-        self.exa_service = ExaSearchService()
+        self.scraper = FirecrawlWebScraper()
         self.ai_agent = AISearchAgent()
     
     def auto_fill_company(self, company_name: str, website_url: str, linkedin_url: str) -> Dict[str, Any]:
@@ -29,7 +29,7 @@ class CompanyAutoFillService:
             # Try to scrape website with individual error handling
             try:
                 if website_url:
-                    website_content = self._scrape_url(website_url)
+                    website_content = self.scraper.scrape_company_website(website_url)
                     if website_content and len(website_content.strip()) > 50:
                         sources_used.append("website")
                         logger.info(f"Successfully scraped website content ({len(website_content)} chars)")
@@ -41,7 +41,7 @@ class CompanyAutoFillService:
             # Try to scrape LinkedIn with individual error handling
             try:
                 if linkedin_url:
-                    linkedin_content = self._scrape_url(linkedin_url)
+                    linkedin_content = self.scraper.scrape_linkedin_company(linkedin_url)
                     if linkedin_content and len(linkedin_content.strip()) > 50:
                         sources_used.append("LinkedIn")
                         logger.info(f"Successfully scraped LinkedIn content ({len(linkedin_content)} chars)")
@@ -103,127 +103,7 @@ class CompanyAutoFillService:
                     "message": "Failed to auto-fill company details"
                 }
     
-    def _scrape_url(self, url: str) -> str:
-        """Scrape content from a URL using Exa with multiple search strategies and fallbacks"""
-        try:
-            # Extract domain and company name from URL
-            if '//' in url:
-                domain = url.split('/')[2]
-            else:
-                domain = url.split('/')[0]
-            
-            company_name = domain.replace('www.', '').replace('.com', '').replace('.ai', '').replace('.org', '').replace('.io', '').replace('.net', '')
-            
-            # Use multiple search strategies with fallbacks
-            search_strategies = []
-            
-            if 'linkedin.com' in url:
-                # For LinkedIn, search for company information
-                linkedin_company = url.split('/')[-1] if not url.endswith('/') else url.split('/')[-2]
-                search_strategies = [
-                    # Primary LinkedIn searches
-                    {
-                        "queries": [
-                            f"{linkedin_company} company LinkedIn about employees headquarters founded",
-                            f"{linkedin_company} LinkedIn company profile information"
-                        ],
-                        "priority": "high"
-                    },
-                    # Fallback general searches
-                    {
-                        "queries": [
-                            f"{company_name} company information funding employees",
-                            f"{company_name} startup company about"
-                        ],
-                        "priority": "medium"
-                    }
-                ]
-            else:
-                # For regular websites, use multiple search strategies
-                search_strategies = [
-                    # Primary website searches
-                    {
-                        "queries": [
-                            f"{domain} company about products services mission",
-                            f"site:{domain} about company products"
-                        ],
-                        "priority": "high"
-                    },
-                    # Secondary company searches
-                    {
-                        "queries": [
-                            f"{company_name} company information products features",
-                            f"{company_name} startup technology company"
-                        ],
-                        "priority": "medium"
-                    },
-                    # Fallback broad searches
-                    {
-                        "queries": [
-                            f"{company_name} company",
-                            f"{company_name} business"
-                        ],
-                        "priority": "low"
-                    }
-                ]
-            
-            combined_text = ""
-            successful_queries = 0
-            
-            # Try search strategies in order of priority
-            for strategy in search_strategies:
-                if successful_queries >= 2:  # Stop if we have enough content
-                    break
-                    
-                for query in strategy["queries"]:
-                    try:
-                        logger.info(f"Trying search query: {query}")
-                        search_result = self.exa_service.search_web(
-                            query=query,
-                            num_results=2 if strategy["priority"] == "high" else 1
-                        )
-                        
-                        if search_result.get('success') and search_result.get('results'):
-                            query_text = ""
-                            for result in search_result['results']:
-                                text = result.get('text', '')
-                                if text and len(text) > 50:  # Lower threshold for acceptance
-                                    query_text += f"Source: {result.get('title', 'Unknown')}\n{text}\n\n"
-                            
-                            if query_text:
-                                combined_text += query_text
-                                successful_queries += 1
-                                logger.info(f"Successfully got content from query: {query[:50]}...")
-                                break  # Move to next strategy
-                                
-                    except Exception as e:
-                        logger.warning(f"Search query failed: {query} - {str(e)}")
-                        continue
-            
-            # If we still don't have content, try one more broad search
-            if not combined_text and company_name:
-                try:
-                    logger.info(f"Trying final broad search for: {company_name}")
-                    search_result = self.exa_service.search_web(
-                        query=company_name,
-                        num_results=3
-                    )
-                    
-                    if search_result.get('success') and search_result.get('results'):
-                        for result in search_result['results']:
-                            text = result.get('text', '')
-                            if text and len(text) > 30:  # Very low threshold for final attempt
-                                combined_text += f"Source: {result.get('title', 'Unknown')}\n{text}\n\n"
-                except Exception as e:
-                    logger.warning(f"Final broad search failed: {str(e)}")
-            
-            final_content = combined_text[:6000]  # Increased limit for better context
-            logger.info(f"Scraping completed. Content length: {len(final_content)} chars, Successful queries: {successful_queries}")
-            return final_content
-            
-        except Exception as e:
-            logger.error(f"Error scraping {url}: {str(e)}")
-            return ""
+
     
     def _extract_company_info(self, company_name: str, website_content: str, 
                             linkedin_content: str, website_url: str, linkedin_url: str) -> Dict[str, Any]:

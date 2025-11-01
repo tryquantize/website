@@ -10,17 +10,25 @@ class ExaSearchService:
         self.api_key = EXA_API_KEY
         self.base_url = EXA_BASE_URL
     
-    def search_web(self, query: str, num_results: int = 5, include_domains: List[str] = None, locations: List[str] = None) -> Dict[str, Any]:
+    def search_web(self, query: str, num_results: int = 5, include_domains: List[str] = None, locations: List[str] = None, industry: str = None) -> Dict[str, Any]:
         """
-        Search the web using Exa API for current information
+        Search the web using Exa API for current information with industry and location filtering
         """
         try:
-            # Enhance query based on location filters
+            # Build enhanced query with hierarchical logic
+            enhanced_query = query
+            
+            # Add industry context if detected
+            if industry:
+                enhanced_query += f" {industry}"
+            
+            # Add location context if selected
             if locations and len(locations) > 0:
                 location_terms = ' OR '.join([f'"{loc}"' for loc in locations])
-                enhanced_query = f"{query} companies startups technology business ({location_terms})"
-            else:
-                enhanced_query = f"{query} companies startups technology business global"
+                enhanced_query += f" ({location_terms})"
+            
+            # Add general business context
+            enhanced_query += " companies startups technology business"
             
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
@@ -83,43 +91,76 @@ class ExaSearchService:
             logger.error(f"Exa search failed: {str(e)}")
             return self._get_fallback_search_results(query)
     
-    def search_for_companies(self, query: str, locations: List[str] = None) -> Dict[str, Any]:
+    def search_for_companies(self, query: str, locations: List[str] = None, industry: str = None) -> Dict[str, Any]:
         """
-        Search specifically for companies and startups with location filtering
+        Search specifically for companies and startups with location and industry filtering
         """
+        company_query = query
+        
+        # Add industry context
+        if industry:
+            company_query += f" {industry}"
+        
+        # Add location context
         if locations and len(locations) > 0:
             location_terms = ' OR '.join([f'"{loc}"' for loc in locations])
-            company_query = f"{query} companies startups technology business funding ({location_terms})"
-        else:
-            company_query = f"{query} companies startups technology business funding global"
+            company_query += f" ({location_terms})"
+        
+        # Add company-specific terms
+        company_query += " companies startups technology business funding"
         
         return self.search_web(
             company_query, 
             num_results=12,
             include_domains=["techcrunch.com", "yourstory.com", "inc42.com", "entrackr.com", "crunchbase.com"],
-            locations=locations
+            locations=locations,
+            industry=industry
         )
     
-    def search_for_products(self, query: str) -> Dict[str, Any]:
+    def search_for_products(self, query: str, industry: str = None) -> Dict[str, Any]:
         """
-        Search specifically for AI products and tools globally
+        Search specifically for AI products and tools with industry context
         """
-        product_query = f"{query} AI tools products software applications global"
+        product_query = query
+        
+        # Add industry context
+        if industry:
+            product_query += f" {industry}"
+        
+        # Add product-specific terms
+        product_query += " AI tools products software applications"
+        
         return self.search_web(
             product_query,
             num_results=10,
-            include_domains=["producthunt.com", "github.com", "techcrunch.com", "yourstory.com"]
+            include_domains=["producthunt.com", "github.com", "techcrunch.com", "yourstory.com"],
+            industry=industry
         )
     
-    def search_for_freelancers(self, query: str) -> Dict[str, Any]:
+    def search_for_freelancers(self, query: str, locations: List[str] = None, industry: str = None) -> Dict[str, Any]:
         """
-        Search for freelancer information and market trends globally
+        Search for freelancer information with location and industry context
         """
-        freelancer_query = f"{query} freelancers remote work skills market trends global"
+        freelancer_query = query
+        
+        # Add industry context
+        if industry:
+            freelancer_query += f" {industry}"
+        
+        # Add location context
+        if locations and len(locations) > 0:
+            location_terms = ' OR '.join([f'"{loc}"' for loc in locations])
+            freelancer_query += f" ({location_terms})"
+        
+        # Add freelancer-specific terms
+        freelancer_query += " freelancers remote work skills market trends"
+        
         return self.search_web(
             freelancer_query,
             num_results=5,
-            include_domains=["upwork.com", "freelancer.com", "yourstory.com"]
+            include_domains=["upwork.com", "freelancer.com", "yourstory.com"],
+            locations=locations,
+            industry=industry
         )
     
     def format_search_context(self, search_results: Dict[str, Any]) -> str:

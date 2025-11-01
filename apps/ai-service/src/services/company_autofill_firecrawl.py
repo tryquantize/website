@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, Any, List, Optional
-from .scrapy_scraper import ScrapyWebScraper
+from .firecrawl_scraper import FirecrawlWebScraper
 from .ai_agent import AISearchAgent
 import json
 import re
@@ -8,23 +8,23 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-class CompanyAutoFillScrapyService:
+class CompanyAutoFillFirecrawlService:
     def __init__(self):
-        self.scraper = ScrapyWebScraper()
+        self.scraper = FirecrawlWebScraper()
         self.ai_agent = AISearchAgent()
     
     def auto_fill_company(self, company_name: str, website_url: str, linkedin_url: str) -> Dict[str, Any]:
         """
-        Auto-fill company details using Scrapy for direct website scraping
+        Auto-fill company details using Firecrawl for web scraping
         """
         try:
-            logger.info(f"Auto-filling company: {company_name} using Scrapy")
+            logger.info(f"Auto-filling company: {company_name} using Firecrawl")
             
             sources_used = []
             website_content = ""
             linkedin_content = ""
             
-            # Scrape website using Scrapy
+            # Scrape website using Firecrawl
             try:
                 if website_url:
                     website_content = self.scraper.scrape_company_website(website_url)
@@ -36,7 +36,7 @@ class CompanyAutoFillScrapyService:
             except Exception as e:
                 logger.warning(f"Website scraping failed: {str(e)}")
             
-            # Scrape LinkedIn using Scrapy (limited effectiveness due to anti-bot measures)
+            # Scrape LinkedIn using Firecrawl
             try:
                 if linkedin_url:
                     linkedin_content = self.scraper.scrape_linkedin_company(linkedin_url)

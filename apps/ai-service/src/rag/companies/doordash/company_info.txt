@@ -1,0 +1,23 @@
+Company: Doordash
+Founded: 
+Headquarters: San Francisco, California
+Description: DoorDash is a technology and logistics company that started with door-to-door delivery, aiming to empower local economies and support merchants, Dashers, and communities.
+Website:  http://doordash.com
+LinkedIn: https://www.linkedin.com/company/doordash/
+Phone: 
+Category: Logistics and Delivery
+Employees: 10,001+
+Company Stage: Public
+Industries Served: Food & Beverage
+Pricing Ranges: $100-$500, <$100
+Pricing Models: One-time Purchase
+Top Clients: 
+Tagline: Innovative solutions by Doordash
+USP/Differentiator: 
+Customer Segments: B2C
+Deployment Types: 
+Ideal For: SMBs, Fortune 500
+Trial Available: Yes
+
+Products/Services:
+- Food delivery
