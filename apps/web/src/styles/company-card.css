@@ -2,7 +2,7 @@
 .gradient-company-card {
   --background: linear-gradient(to left, #f7ba2b 0%, #ea5358 100%);
   width: 380px;
-  height: 280px;
+  height: 308px;
   padding: 5px;
   border-radius: 1rem;
   overflow: visible;
@@ -109,7 +109,7 @@
 @media (max-width: 768px) {
   .gradient-company-card {
     width: 340px;
-    height: 260px;
+    height: 286px;
   }
   
   .gradient-company-card.expanded {
