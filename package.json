@@ -12,7 +12,13 @@
     "clean": "node tools/scripts/cleanup.js",
     "launch": "./tools/scripts/dev.sh",
     "setup": "./setup-local.sh",
-    "setup-manual": "yarn install && cd apps/ai-service && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+    "setup-manual": "yarn install && cd apps/ai-service && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
+    "docker:dev": "./tools/scripts/docker-dev.sh",
+    "docker:prod": "./tools/scripts/docker-prod.sh",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
   },
   "dependencies": {
     "@21st-extension/react": "0.5.14",

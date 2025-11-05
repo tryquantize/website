@@ -1,0 +1,6 @@
+Customer Segments: B2C
+Deployment Options: SaaS
+Ideal Customer Types: Enterprises, Educational, SMBs, Mid-market, Startups
+Free Trial/Demo Available: Yes
+Unique Selling Proposition: Say it once. Done.
+Company Tagline: The only voice assistant that can control every app on your phone.

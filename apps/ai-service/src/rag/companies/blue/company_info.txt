@@ -1,0 +1,24 @@
+Company: Blue
+Founded: 2024
+Headquarters: Santa Clara, CA
+Description: Blue is a voice assistant designed to control your phone's apps hands-free, enabling users to perform tasks using only their voice.
+Website: https://heyblue.com/
+LinkedIn: https://www.linkedin.com/company/heyblue/
+Phone: 
+Category: Technology, Information and Internet
+Employees: 2-10
+Company Stage: Seed
+Industries Served: SaaS
+Pricing Ranges: $299/year subscription, $199 for early access
+Pricing Models: subscription
+Top Clients: 
+Tagline: The only voice assistant that can control every app on your phone.
+USP/Differentiator: Say it once. Done.
+Customer Segments: B2C
+Deployment Types: SaaS
+Ideal For: Enterprises, Educational, SMBs, Mid-market, Startups
+Trial Available: Yes
+
+Products/Services:
+- Blue: An AI voice assistant that can control any app on your iPhone, allowing hands-free operation.
+- USB-C plug-in (Bud): A tiny USB-C plug-in that gives Blue the ability to tap and type on your behalf.

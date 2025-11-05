@@ -60,12 +60,21 @@ quantize-website/
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+ and Yarn
-- Python 3.8+
-- Git
+### Option 1: Docker (Recommended)
 
-### Installation
+**Prerequisites:** Docker Desktop
+
+```bash
+git clone <repository-url>
+cd quantize-website
+cp .env.example .env.local
+# Edit .env.local with your API keys
+yarn docker:dev
+```
+
+### Option 2: Local Development
+
+**Prerequisites:** Node.js 18+, Python 3.8+, Yarn
 
 1. **Clone and install dependencies:**
    ```bash
@@ -94,18 +103,27 @@ quantize-website/
    yarn launch
    ```
 
-The application will be available at:
+### Access Points
 - **Main Website**: http://localhost:3001
 - **AI Service**: http://localhost:5002
 
 ## 📜 Available Scripts
 
+### Local Development
 - `yarn dev` - Start development server
 - `yarn build` - Build for production
 - `yarn start` - Start production server
 - `yarn launch` - Launch all services (recommended)
 - `yarn clean` - Clean build artifacts
 - `yarn check` - Type check TypeScript
+
+### Docker Commands
+- `yarn docker:dev` - Start with Docker (development)
+- `yarn docker:prod` - Start with Docker (production)
+- `yarn docker:build` - Build Docker containers
+- `yarn docker:up` - Start containers
+- `yarn docker:down` - Stop containers
+- `yarn docker:logs` - View container logs
 
 ## 🔧 Configuration
 
@@ -213,6 +231,7 @@ MIT License - see LICENSE file for details.
 
 Comprehensive documentation is available in the `docs/` directory:
 
+- **[Docker Guide](docs/DOCKER_GUIDE.md)** - Complete Docker setup and deployment guide
 - **[Architecture Guide](docs/ARCHITECTURE.md)** - System architecture and component overview
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with examples
 - **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Developer onboarding and best practices
