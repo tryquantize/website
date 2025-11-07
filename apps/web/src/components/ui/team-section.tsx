@@ -40,22 +40,22 @@ export default function TeamSection() {
     {
       name: "Yashaswi Singhania",
       designation: "Co-Founder & CTO", 
-      description: "IIT BHU graduate with deep expertise in machine learning, neural networks, and distributed systems architecture.",
-      secondLine: "Spearheading AI research initiatives, model optimization, and building scalable infrastructure for next-gen search.",
-      thirdLine: "Expert in transformer architectures, retrieval systems, and has published research in AI conferences.",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
+      description: "IIT BHU graduate leading technical architecture and engineering excellence at Quantize.",
+      secondLine: "Architecting scalable systems, overseeing product development, and driving technical innovation across the platform.",
+      thirdLine: "Expert in full-stack development, system design, and building high-performance applications that scale.",
+      image: "/yashaswi.png",
       twitter: "#",
-      linkedin: "#"
+      linkedin: "https://www.linkedin.com/in/yashashwis/"
     },
     {
       name: "Subhash Kumar",
       designation: "Co-Founder & CMO",
-      description: "IIT BHU graduate specializing in full-stack development, system architecture, and performance optimization.",
-      secondLine: "Building robust, scalable systems that power millions of searches while maintaining sub-second response times.",
-      thirdLine: "Expert in React, Node.js, Python, and cloud infrastructure with experience in high-traffic applications.",
-      image: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?w=400&h=400&fit=crop&crop=face",
+      description: "IIT BHU graduate driving marketing strategy, brand positioning, and growth initiatives at Quantize.",
+      secondLine: "Leading go-to-market strategies, user acquisition, and building strategic partnerships to expand market reach.",
+      thirdLine: "Expert in digital marketing, brand development, and growth hacking with deep understanding of AI market dynamics.",
+      image: "/subhash.png",
       twitter: "#",
-      linkedin: "#"
+      linkedin: "https://www.linkedin.com/in/subhash-kumar-4641a9229/"
     }
   ];
 

@@ -1,0 +1,18 @@
+{
+  "apiKeys": {
+    "openrouter": "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",
+    "exa": "6f5297ca-2851-4af0-b458-4bd461b4dbd1"
+  },
+  "firebase": {
+    "apiKey": "",
+    "authDomain": "",
+    "projectId": "",
+    "storageBucket": "",
+    "messagingSenderId": "",
+    "appId": "",
+    "measurementId": ""
+  },
+  "services": {
+    "aiServiceUrl": "http://localhost:5002"
+  }
+}
