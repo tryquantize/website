@@ -60,7 +60,7 @@ quantize-website/
 
 ## 🚀 Quick Start
 
-### Option 1: Docker (Recommended)
+### Docker Setup (Required)
 
 **Prerequisites:** Docker Desktop
 
@@ -69,39 +69,8 @@ git clone <repository-url>
 cd quantize-website
 cp .env.example .env.local
 # Edit .env.local with your API keys
-yarn docker:dev
+yarn launch
 ```
-
-### Option 2: Local Development
-
-**Prerequisites:** Node.js 18+, Python 3.8+, Yarn
-
-1. **Clone and install dependencies:**
-   ```bash
-   git clone <repository-url>
-   cd quantize-website
-   yarn install
-   ```
-
-2. **Set up AI service:**
-   ```bash
-   cd apps/ai-service
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   cd ../..
-   ```
-
-3. **Configure environment:**
-   ```bash
-   cp .env.example .env.local
-   # Edit .env.local with your API keys
-   ```
-
-4. **Launch the application:**
-   ```bash
-   yarn launch
-   ```
 
 ### Access Points
 - **Main Website**: http://localhost:3001
@@ -109,18 +78,16 @@ yarn docker:dev
 
 ## 📜 Available Scripts
 
-### Local Development
-- `yarn dev` - Start development server
-- `yarn build` - Build for production
-- `yarn start` - Start production server
+### Main Commands (Docker-based)
 - `yarn launch` - Launch all services (recommended)
-- `yarn clean` - Clean build artifacts
+- `yarn dev` - Start development server
+- `yarn start` - Start containers
+- `yarn build` - Build Docker containers
+- `yarn clean` - Stop and clean containers
 - `yarn check` - Type check TypeScript
 
-### Docker Commands
-- `yarn docker:dev` - Start with Docker (development)
+### Additional Docker Commands
 - `yarn docker:prod` - Start with Docker (production)
-- `yarn docker:build` - Build Docker containers
 - `yarn docker:up` - Start containers
 - `yarn docker:down` - Stop containers
 - `yarn docker:logs` - View container logs
@@ -190,10 +157,9 @@ PORT=3001
 yarn launch
 ```
 
-### Production Build
+### Production
 ```bash
-yarn build
-yarn start
+yarn docker:prod
 ```
 
 ### Local Development Only
@@ -253,10 +219,10 @@ curl -X POST http://localhost:3001/api/search \
 
 ### Common Issues
 
-1. **Port already in use**: The startup script automatically kills existing processes
-2. **Dependencies missing**: Run `yarn install` and set up Python environment
+1. **Port already in use**: Run `yarn clean` to stop all containers
+2. **Docker not running**: Start Docker Desktop
 3. **API keys not working**: Check `.env.local` configuration
-4. **Build failures**: Run `yarn clean` and try again
+4. **Build failures**: Run `yarn clean` then `yarn launch`
 
 ### Getting Help
 

@@ -1,51 +1,24 @@
 services:
-  # AI Service (Python Flask)
   ai-service:
-    build:
-      context: .
-      dockerfile: apps/ai-service/Dockerfile
+    build: ./apps/ai-service
     ports:
       - "5002:5002"
     env_file:
       - .env.local
-    environment:
-      - FLASK_ENV=development
-    volumes:
-      - ./apps/ai-service:/app
-      - /app/venv
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - quantize-network
+      retries: 3
 
-  # Main Application (Express API + React Frontend)
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: dev
+    build: .
     ports:
       - "3001:3001"
     env_file:
       - .env.local
     environment:
-      - NODE_ENV=production
       - AI_SERVICE_URL=http://ai-service:5002
-    volumes:
-      - .:/app
-      - /app/node_modules
     depends_on:
       ai-service:
         condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - quantize-network
-
-networks:
-  quantize-network:
-    driver: bridge

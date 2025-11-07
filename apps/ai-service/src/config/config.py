@@ -7,7 +7,7 @@ load_dotenv('../../.env.local')
 load_dotenv('.env')
 
 # API Configuration
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY") or "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"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 EXA_API_KEY = os.getenv("EXA_API_KEY") or "6f5297ca-2851-4af0-b458-4bd461b4dbd1"
 EXA_BASE_URL = "https://api.exa.ai"
