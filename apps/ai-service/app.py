@@ -248,6 +248,33 @@ def compare_companies():
             "success": False
         }), 500
 
+@app.route('/firebase-test', methods=['GET'])
+def firebase_test():
+    """Test Firebase connection"""
+    try:
+        from services.firebase_service import FirebaseService
+        firebase_service = FirebaseService()
+        
+        result = {
+            "firebase_initialized": firebase_service.db is not None,
+            "use_firebase": os.getenv('USE_FIREBASE', 'not_set'),
+            "firebase_service_account_set": bool(os.getenv('FIREBASE_SERVICE_ACCOUNT')),
+            "companies_count": 0
+        }
+        
+        if firebase_service.db:
+            companies = firebase_service.get_all_companies()
+            result["companies_count"] = len(companies)
+            result["sample_companies"] = list(companies.keys())[:3]
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "firebase_initialized": False
+        }), 500
+
 @app.route('/add-company', methods=['POST'])
 def add_company():
     """Add a new company to RAG database"""
@@ -279,6 +306,8 @@ def add_company():
         logger.error(f"Error adding company: {str(e)}")
         return jsonify({
             "error": str(e),
+            "success": False
+        }), 500  "error": str(e),
             "success": False
         }), 500
 
