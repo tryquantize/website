@@ -36,7 +36,7 @@ class FirebaseDataLoader:
         """Fallback to local data if Firebase is not available"""
         try:
             # Import the original data loader
-            from .data_loader import DataLoader
+            from data_loader import DataLoader
             local_loader = DataLoader()
             return local_loader.load_all_companies()
         except Exception as e:
