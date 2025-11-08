@@ -96,14 +96,20 @@ Employees: {employees}"""
             
             # Extract features
             features_list = firestore_data.get('features', [])
-            features_text = '\n'.join([f"- {feature}" for feature in features_list])
+            if isinstance(features_list, list):
+                features_text = '\n'.join([f"- {feature}" for feature in features_list])
+            else:
+                features_text = str(features_list)
             
             # Extract pricing
             pricing = firestore_data.get('pricing', 'Contact for pricing')
             
             # Extract use cases
             use_cases_list = firestore_data.get('useCases', [])
-            use_cases_text = '\n'.join([f"- {use_case}" for use_case in use_cases_list])
+            if isinstance(use_cases_list, list):
+                use_cases_text = '\n'.join([f"- {use_case}" for use_case in use_cases_list])
+            else:
+                use_cases_text = str(use_cases_list)
             
             # Additional fields
             industries_served = firestore_data.get('industriesServed', [])
