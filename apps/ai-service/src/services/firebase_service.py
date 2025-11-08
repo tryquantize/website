@@ -120,7 +120,8 @@ Employees: {employees}"""
                 'features': features_text,
                 'pricing': pricing,
                 'use_cases': use_cases_text,
-                'folder_name': company_name
+                'folder_name': company_name,
+                'original_company_name': company_name  # Add backup field
             }
             
         except Exception as e:
