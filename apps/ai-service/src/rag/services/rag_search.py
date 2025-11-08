@@ -427,10 +427,17 @@ class RAGSearchService:
     
     def _extract_website(self, company_data: Dict[str, str]) -> str:
         """Extract website from RAG data"""
+        # Try raw Firebase data first
+        raw_data = company_data.get('raw_firebase_data', {})
+        if raw_data and raw_data.get('website'):
+            return raw_data['website']
+        
+        # Fallback to parsing company_info
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('Website:'):
-                return line.replace('Website:', '').strip()
+                website = line.replace('Website:', '').strip()
+                return website if website else "#"
         return "#"
     
     def _extract_category(self, company_data: Dict[str, str]) -> str:
@@ -451,10 +458,18 @@ class RAGSearchService:
     
     def _extract_founded(self, company_data: Dict[str, str]) -> str:
         """Extract founded year from RAG data"""
+        # Try raw Firebase data first
+        raw_data = company_data.get('raw_firebase_data', {})
+        if raw_data and raw_data.get('founded'):
+            founded = str(raw_data['founded'])
+            return founded if founded != 'N/A' else "N/A"
+        
+        # Fallback to parsing company_info
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('Founded:'):
-                return line.replace('Founded:', '').strip()
+                founded = line.replace('Founded:', '').strip()
+                return founded if founded and founded != 'N/A' else "N/A"
         return "N/A"
     
     def _extract_about_us(self, company_data: Dict[str, str]) -> List[str]:
@@ -513,19 +528,36 @@ class RAGSearchService:
     
     def _extract_company_stage(self, company_data: Dict[str, str]) -> str:
         """Extract company stage from RAG data"""
+        # Try raw Firebase data first
+        raw_data = company_data.get('raw_firebase_data', {})
+        if raw_data and raw_data.get('companyStage'):
+            stage = raw_data['companyStage']
+            return stage if stage != 'N/A' else "N/A"
+        
+        # Fallback to parsing company_info
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('Company Stage:'):
-                return line.replace('Company Stage:', '').strip()
+                stage = line.replace('Company Stage:', '').strip()
+                return stage if stage and stage != 'N/A' else "N/A"
         return "N/A"
     
     def _extract_industries_served(self, company_data: Dict[str, str]) -> List[str]:
         """Extract industries served from RAG data"""
+        # Try raw Firebase data first
+        raw_data = company_data.get('raw_firebase_data', {})
+        if raw_data and raw_data.get('industriesServed'):
+            industries = raw_data['industriesServed']
+            if isinstance(industries, list):
+                return industries
+        
+        # Fallback to parsing company_info
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('Industries Served:'):
                 industries_str = line.replace('Industries Served:', '').strip()
-                return [industry.strip() for industry in industries_str.split(',') if industry.strip()]
+                if industries_str:
+                    return [industry.strip() for industry in industries_str.split(',') if industry.strip()]
         return []
     
     def _extract_pricing_ranges(self, company_data: Dict[str, str]) -> List[str]:
@@ -540,19 +572,37 @@ class RAGSearchService:
     
     def _extract_pricing_model(self, company_data: Dict[str, str]) -> List[str]:
         """Extract pricing model from RAG data"""
+        # Check company_info for pricing model
+        info_text = company_data.get('company_info', '')
+        for line in info_text.split('\n'):
+            if line.startswith('Pricing Model:'):
+                models_str = line.replace('Pricing Model:', '').strip()
+                if models_str:
+                    return [model.strip() for model in models_str.split(',') if model.strip()]
+        
+        # Fallback to pricing text
         pricing_text = company_data.get('pricing', '')
         for line in pricing_text.split('\n'):
             if line.startswith('Pricing Models:'):
                 models_str = line.replace('Pricing Models:', '').strip()
-                return [model.strip() for model in models_str.split(',') if model.strip()]
+                if models_str:
+                    return [model.strip() for model in models_str.split(',') if model.strip()]
         return []
     
     def _extract_employees(self, company_data: Dict[str, str]) -> str:
         """Extract employee count from RAG data"""
+        # Try raw Firebase data first
+        raw_data = company_data.get('raw_firebase_data', {})
+        if raw_data and raw_data.get('employees'):
+            employees = str(raw_data['employees'])
+            return employees if employees != 'N/A' else "N/A"
+        
+        # Fallback to parsing company_info
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('Employees:'):
-                return line.replace('Employees:', '').strip()
+                employees = line.replace('Employees:', '').strip()
+                return employees if employees and employees != 'N/A' else "N/A"
         return "N/A"
     
     def _extract_products_services(self, company_data: Dict[str, str]) -> List[str]:
@@ -560,7 +610,14 @@ class RAGSearchService:
         products = []
         info_text = company_data.get('company_info', '')
         
-        # Look for Products/Services section
+        # Look for Products/Services section in company_info
+        for line in info_text.split('\n'):
+            if line.startswith('Products/Services:'):
+                products_str = line.replace('Products/Services:', '').strip()
+                if products_str:
+                    return [product.strip() for product in products_str.split(',') if product.strip()]
+        
+        # Look for bullet point format
         lines = info_text.split('\n')
         in_products_section = False
         
@@ -580,26 +637,34 @@ class RAGSearchService:
     
     def _extract_top_clients(self, company_data: Dict[str, str]) -> List[str]:
         """Extract top clients from RAG data"""
+        # Try raw Firebase data first
+        raw_data = company_data.get('raw_firebase_data', {})
+        if raw_data and raw_data.get('topClients'):
+            clients = raw_data['topClients']
+            if isinstance(clients, list):
+                return clients
+        
         clients = []
         
-        # Check if clients.txt file exists in the data
-        clients_text = company_data.get('clients', '')
-        if clients_text:
-            for line in clients_text.split('\n'):
-                line = line.strip()
-                if line.startswith('-') or line.startswith('•'):
-                    client = line.lstrip('-•').strip()
-                    if client and client != 'No clients listed':
-                        clients.append(client)
-        
-        # Also check company_info for Top Clients field
+        # Check company_info for Top Clients field
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('Top Clients:'):
                 clients_str = line.replace('Top Clients:', '').strip()
-                if clients_str and clients_str != 'N/A':
+                if clients_str and clients_str != 'N/A' and clients_str:
                     clients.extend([client.strip() for client in clients_str.split(',') if client.strip()])
                 break
+        
+        # Check if clients.txt file exists in the data
+        if not clients:
+            clients_text = company_data.get('clients', '')
+            if clients_text:
+                for line in clients_text.split('\n'):
+                    line = line.strip()
+                    if line.startswith('-') or line.startswith('•'):
+                        client = line.lstrip('-•').strip()
+                        if client and client != 'No clients listed':
+                            clients.append(client)
         
         return clients
     
@@ -833,7 +898,8 @@ Return only the 3 use cases, one per line, no bullets or numbers."""
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('Phone:'):
-                return line.replace('Phone:', '').strip()
+                phone = line.replace('Phone:', '').strip()
+                return phone if phone else ""
         return ""
     
     def _extract_linkedin_url(self, company_data: Dict[str, str]) -> str:
@@ -841,7 +907,8 @@ Return only the 3 use cases, one per line, no bullets or numbers."""
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('LinkedIn:'):
-                return line.replace('LinkedIn:', '').strip()
+                linkedin = line.replace('LinkedIn:', '').strip()
+                return linkedin if linkedin else ""
         return ""
     
     def _extract_trial_available(self, company_data: Dict[str, str]) -> bool:

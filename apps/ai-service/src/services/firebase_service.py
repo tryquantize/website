@@ -85,7 +85,7 @@ class FirebaseService:
             founded = firestore_data.get('founded', 'N/A')
             employees = firestore_data.get('employees', 'N/A')
             
-            # Build company_info text
+            # Build comprehensive company_info text with all available fields
             company_info = f"""Company: {company_name}
 Description: {description}
 Website: {website}
@@ -93,6 +93,31 @@ Category: {category}
 Headquarters: {location}
 Founded: {founded}
 Employees: {employees}"""
+            
+            # Extract and add all additional fields
+            industries_served = firestore_data.get('industriesServed', [])
+            pricing_model = firestore_data.get('pricingModel', [])
+            products_services = firestore_data.get('productsServices', [])
+            top_clients = firestore_data.get('topClients', [])
+            company_stage = firestore_data.get('companyStage', '')
+            phone_number = firestore_data.get('phoneNumber', '')
+            linkedin_url = firestore_data.get('linkedinUrl', '') or firestore_data.get('linkedin', '')
+            
+            # Add all available fields to company_info
+            if company_stage:
+                company_info += f"\nCompany Stage: {company_stage}"
+            if phone_number:
+                company_info += f"\nPhone: {phone_number}"
+            if linkedin_url:
+                company_info += f"\nLinkedIn: {linkedin_url}"
+            if industries_served:
+                company_info += f"\nIndustries Served: {', '.join(industries_served)}"
+            if pricing_model:
+                company_info += f"\nPricing Model: {', '.join(pricing_model)}"
+            if products_services:
+                company_info += f"\nProducts/Services: {', '.join(products_services)}"
+            if top_clients:
+                company_info += f"\nTop Clients: {', '.join(top_clients)}"
             
             # Extract features
             features_list = firestore_data.get('features', [])
@@ -111,22 +136,6 @@ Employees: {employees}"""
             else:
                 use_cases_text = str(use_cases_list)
             
-            # Additional fields
-            industries_served = firestore_data.get('industriesServed', [])
-            pricing_model = firestore_data.get('pricingModel', [])
-            products_services = firestore_data.get('productsServices', [])
-            top_clients = firestore_data.get('topClients', [])
-            
-            # Build additional info
-            if industries_served:
-                company_info += f"\nIndustries Served: {', '.join(industries_served)}"
-            if pricing_model:
-                company_info += f"\nPricing Model: {', '.join(pricing_model)}"
-            if products_services:
-                company_info += f"\nProducts/Services: {', '.join(products_services)}"
-            if top_clients:
-                company_info += f"\nTop Clients: {', '.join(top_clients)}"
-            
             return {
                 'company_info': company_info,
                 'features': features_text,
@@ -134,7 +143,9 @@ Employees: {employees}"""
                 'use_cases': use_cases_text,
                 'folder_name': company_name,
                 'original_company_name': company_name,
-                'doc_id': doc_id  # Store document ID as backup
+                'doc_id': doc_id,
+                # Store raw Firebase data for direct access
+                'raw_firebase_data': firestore_data
             }
             
         except Exception as e:
