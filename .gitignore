@@ -91,3 +91,7 @@ server/public/
 
 # Vite specific
 vite.config.ts.*
+
+# Sensitive files
+GITHUB_SECRETS_VALUES.txt
+*.secrets.txt
