@@ -4,7 +4,10 @@ Firebase-based data loader for RAG service
 import os
 import logging
 from typing import Dict, List, Any
-from ...services.firebase_service import FirebaseService
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from services.firebase_service import FirebaseService
 
 logger = logging.getLogger(__name__)
 
