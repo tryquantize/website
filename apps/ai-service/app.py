@@ -307,8 +307,6 @@ def add_company():
         return jsonify({
             "error": str(e),
             "success": False
-        }), 500  "error": str(e),
-            "success": False
         }), 500
 
 @app.route('/enhance-text', methods=['POST'])
