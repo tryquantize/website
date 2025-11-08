@@ -68,9 +68,9 @@ class FirebaseService:
             return {}
     
     def _convert_firestore_to_rag_format(self, firestore_data: Dict[str, Any], doc_id: str = '') -> Dict[str, str]:
-        """Convert Firestore company data to RAG format"""
+        """Convert Firestore company data to RAG format - pass through all existing fields"""
         try:
-            # Extract basic info - try multiple sources for company name
+            # Pass through all the existing Firebase fields directly
             company_name = (
                 firestore_data.get('companyName', '') or 
                 firestore_data.get('name', '') or 
@@ -78,86 +78,27 @@ class FirebaseService:
                 'Unknown'
             )
             
-            description = firestore_data.get('description', '')
-            website = firestore_data.get('website', '')
-            category = firestore_data.get('category', 'AI Tools')
-            location = firestore_data.get('location', 'Global')
-            founded = firestore_data.get('founded', 'N/A')
-            employees = firestore_data.get('employees', 'N/A')
-            
-            # Build comprehensive company_info text with all available fields
-            company_info = f"""Company: {company_name}
-Description: {description}
-Website: {website}
-Category: {category}
-Headquarters: {location}
-Founded: {founded}
-Employees: {employees}"""
-            
-            # Extract and add all additional fields
-            industries_served = firestore_data.get('industriesServed', [])
-            pricing_model = firestore_data.get('pricingModel', [])
-            products_services = firestore_data.get('productsServices', [])
-            top_clients = firestore_data.get('topClients', [])
-            company_stage = firestore_data.get('companyStage', '')
-            phone_number = firestore_data.get('phoneNumber', '')
-            linkedin_url = firestore_data.get('linkedinUrl', '') or firestore_data.get('linkedin', '')
-            
-            # Add all available fields to company_info
-            if company_stage:
-                company_info += f"\nCompany Stage: {company_stage}"
-            if phone_number:
-                company_info += f"\nPhone: {phone_number}"
-            if linkedin_url:
-                company_info += f"\nLinkedIn: {linkedin_url}"
-            if industries_served:
-                company_info += f"\nIndustries Served: {', '.join(industries_served)}"
-            if pricing_model:
-                company_info += f"\nPricing Model: {', '.join(pricing_model)}"
-            if products_services:
-                company_info += f"\nProducts/Services: {', '.join(products_services)}"
-            if top_clients:
-                company_info += f"\nTop Clients: {', '.join(top_clients)}"
-            
-            # Extract features
-            features_list = firestore_data.get('features', [])
-            if isinstance(features_list, list):
-                features_text = '\n'.join([f"- {feature}" for feature in features_list])
-            else:
-                features_text = str(features_list)
-            
-            # Extract pricing
-            pricing = firestore_data.get('pricing', 'Contact for pricing')
-            
-            # Extract use cases
-            use_cases_list = firestore_data.get('useCases', [])
-            if isinstance(use_cases_list, list):
-                use_cases_text = '\n'.join([f"- {use_case}" for use_case in use_cases_list])
-            else:
-                use_cases_text = str(use_cases_list)
-            
-            return {
-                'company_info': company_info,
-                'features': features_text,
-                'pricing': pricing,
-                'use_cases': use_cases_text,
+            # Return all Firebase fields as-is for direct access
+            result = {
                 'folder_name': company_name,
                 'original_company_name': company_name,
-                'doc_id': doc_id,
-                # Store raw Firebase data for direct access
-                'raw_firebase_data': firestore_data
+                'doc_id': doc_id
             }
+            
+            # Add all Firebase fields directly
+            for key, value in firestore_data.items():
+                if value is not None:  # Only include non-null values
+                    result[key] = value
+            
+            return result
             
         except Exception as e:
             logger.error(f"Failed to convert Firestore data: {e}")
             fallback_name = doc_id.replace('_', ' ').title() if doc_id else 'Unknown'
             return {
-                'company_info': f"Company: {fallback_name}",
-                'features': '',
-                'pricing': 'Contact for pricing',
-                'use_cases': '',
                 'folder_name': fallback_name,
-                'original_company_name': fallback_name
+                'original_company_name': fallback_name,
+                'name': fallback_name
             }
     
     def search_companies(self, query: str, limit: int = 50) -> List[Dict[str, Any]]:

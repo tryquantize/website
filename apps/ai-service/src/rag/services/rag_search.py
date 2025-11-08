@@ -174,8 +174,8 @@ class RAGSearchService:
         company_name = company_match.get('company_name', 'Unknown')
         logger.info(f"Processing company: {company_name}")
         
-        # Extract location first for filtering
-        location = self._extract_location(company_data)
+        # Get location directly from Firebase data
+        location = company_data.get('location', 'Global')
         
         # Strict location filtering when locations are selected
         if selected_locations and len(selected_locations) > 0 and selected_locations != ['']:
@@ -205,14 +205,14 @@ class RAGSearchService:
                 logger.info(f"Skipping {company_name} - location '{location}' doesn't match selected locations {selected_locations}")
                 return None
         
-        # Extract basic information
-        description = self._extract_description(company_data)
-        features = self._extract_features(company_data)
-        pricing = self._extract_pricing(company_data)
-        website = self._extract_website(company_data)
-        category = self._extract_category(company_data)
-        founded = self._extract_founded(company_data)
-        about = self._extract_about_us(company_data)
+        # Use Firebase fields directly, with fallbacks for missing data
+        description = company_data.get('description', '')
+        features = company_data.get('features', [])
+        pricing = company_data.get('pricing', 'Contact for pricing')
+        website = company_data.get('website', '#')
+        category = company_data.get('category', 'AI Tools')
+        founded = company_data.get('founded', 'N/A')
+        about = company_data.get('about', [])
         
         # Re-enable LLM enrichment with proper error handling
         try:
@@ -240,40 +240,29 @@ class RAGSearchService:
                 "Improve decision making with real-time data insights and analytics"
             ]
         
-        # Extract remaining fields (non-LLM dependent)
-        company_stage = self._extract_company_stage(company_data)
-        industries_served = self._extract_industries_served(company_data)
-        pricing_ranges = self._extract_pricing_ranges(company_data)
-        pricing_model = self._extract_pricing_model(company_data)
-        employees = self._extract_employees(company_data)
-        products_services = self._extract_products_services(company_data)
-        top_clients = self._extract_top_clients(company_data)
-        logo_url = self._extract_logo_url(company_data)
-        phone_number = self._extract_phone_number(company_data)
-        linkedin_url = self._extract_linkedin_url(company_data)
+        # Use Firebase fields directly
+        company_stage = company_data.get('companyStage', 'N/A')
+        industries_served = company_data.get('industriesServed', [])
+        pricing_ranges = company_data.get('pricingRanges', [])
+        pricing_model = company_data.get('pricingModel', [])
+        employees = company_data.get('employees', 'N/A')
+        products_services = company_data.get('productsServices', [])
+        top_clients = company_data.get('topClients', [])
+        logo_url = company_data.get('logoUrl', '')
+        phone_number = company_data.get('phoneNumber', '')
+        linkedin_url = company_data.get('linkedin_url', '')
         
-        # Extract new market fields
-        trial_available = self._extract_trial_available(company_data)
-        customer_segments = self._extract_customer_segments(company_data)
-        usp_tagline = self._extract_usp_tagline(company_data)
-        deployment_type = self._extract_deployment_type(company_data)
-        ideal_scenarios = self._extract_ideal_scenarios(company_data)
-        tagline = self._extract_tagline(company_data)
+        # Market fields from Firebase
+        trial_available = company_data.get('trialAvailable', False)
+        customer_segments = company_data.get('customerSegments', [])
+        usp_tagline = company_data.get('uspTagline', '')
+        deployment_type = company_data.get('deploymentType', [])
+        ideal_scenarios = company_data.get('idealScenarios', [])
+        tagline = company_data.get('tagline', '')
+        location = company_data.get('location', 'Global')
         
-        # Use the company name from the match data directly, with fallback
-        display_name = company_match.get('company_name', '')
-        if not display_name or display_name == 'Unknown':
-            display_name = self._extract_company_name(company_data)
-        
-        # Final check - if still Unknown, try to extract from company_info
-        if display_name == 'Unknown Company' or display_name == 'Unknown':
-            info_text = company_data.get('company_info', '')
-            for line in info_text.split('\n'):
-                if line.startswith('Company:'):
-                    extracted_name = line.replace('Company:', '').strip()
-                    if extracted_name and extracted_name != 'Unknown':
-                        display_name = extracted_name
-                        break
+        # Use company name from Firebase data directly
+        display_name = company_match.get('company_name', '') or company_data.get('name', '') or company_data.get('companyName', 'Unknown')
         
         company_obj = {
             "name": display_name,
@@ -427,10 +416,14 @@ class RAGSearchService:
     
     def _extract_website(self, company_data: Dict[str, str]) -> str:
         """Extract website from RAG data"""
-        # Try raw Firebase data first
-        raw_data = company_data.get('raw_firebase_data', {})
-        if raw_data and raw_data.get('website'):
-            return raw_data['website']
+        # Check links field first
+        links_text = company_data.get('links', '')
+        if links_text:
+            for line in links_text.split('\n'):
+                if 'website:' in line.lower() or 'company website:' in line.lower():
+                    website = line.split(':', 1)[1].strip() if ':' in line else ''
+                    if website and website != '#':
+                        return website
         
         # Fallback to parsing company_info
         info_text = company_data.get('company_info', '')
@@ -895,6 +888,16 @@ Return only the 3 use cases, one per line, no bullets or numbers."""
     
     def _extract_phone_number(self, company_data: Dict[str, str]) -> str:
         """Extract phone number from RAG data"""
+        # Check links field first
+        links_text = company_data.get('links', '')
+        if links_text:
+            for line in links_text.split('\n'):
+                if 'phone:' in line.lower() or 'contact:' in line.lower():
+                    phone = line.split(':', 1)[1].strip() if ':' in line else ''
+                    if phone:
+                        return phone
+        
+        # Fallback to company_info
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('Phone:'):
@@ -904,6 +907,16 @@ Return only the 3 use cases, one per line, no bullets or numbers."""
     
     def _extract_linkedin_url(self, company_data: Dict[str, str]) -> str:
         """Extract LinkedIn URL from RAG data"""
+        # Check links field first
+        links_text = company_data.get('links', '')
+        if links_text:
+            for line in links_text.split('\n'):
+                if 'linkedin:' in line.lower():
+                    linkedin = line.split(':', 1)[1].strip() if ':' in line else ''
+                    if linkedin:
+                        return linkedin
+        
+        # Fallback to company_info
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('LinkedIn:'):
@@ -912,20 +925,23 @@ Return only the 3 use cases, one per line, no bullets or numbers."""
         return ""
     
     def _extract_trial_available(self, company_data: Dict[str, str]) -> bool:
-        """Extract trial availability from market_info.txt"""
+        """Extract trial availability from market_info"""
         market_info = company_data.get('market_info', '')
-        for line in market_info.split('\n'):
-            if 'Free Trial/Demo Available:' in line:
-                return 'Yes' in line
+        if market_info:
+            for line in market_info.split('\n'):
+                if 'Free Trial' in line or 'Demo Available' in line:
+                    return 'Yes' in line or 'Available' in line
         return False
     
     def _extract_customer_segments(self, company_data: Dict[str, str]) -> List[str]:
-        """Extract customer segments from market_info.txt"""
+        """Extract customer segments from market_info"""
         market_info = company_data.get('market_info', '')
-        for line in market_info.split('\n'):
-            if line.startswith('Customer Segments:'):
-                segments_str = line.replace('Customer Segments:', '').strip()
-                return [segment.strip() for segment in segments_str.split(',') if segment.strip()]
+        if market_info:
+            for line in market_info.split('\n'):
+                if 'Customer Segments:' in line:
+                    segments_str = line.replace('Customer Segments:', '').strip()
+                    if segments_str:
+                        return [segment.strip() for segment in segments_str.split(',') if segment.strip()]
         return []
     
     def _extract_usp_tagline(self, company_data: Dict[str, str]) -> str:
