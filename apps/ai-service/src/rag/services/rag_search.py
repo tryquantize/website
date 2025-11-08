@@ -248,8 +248,11 @@ class RAGSearchService:
         ideal_scenarios = self._extract_ideal_scenarios(company_data)
         tagline = self._extract_tagline(company_data)
         
+        # Use the actual company name from folder_name or extracted name
+        actual_company_name = self._extract_company_name(company_data)
+        
         company_obj = {
-            "name": company_name,
+            "name": actual_company_name,
             "description": description,
             "features": features,
             "pricing": pricing,
@@ -285,11 +288,20 @@ class RAGSearchService:
     
     def _extract_company_name(self, company_data: Dict[str, str]) -> str:
         """Extract company name from RAG data"""
+        # First try folder_name (which contains the actual company name)
+        folder_name = company_data.get('folder_name', '')
+        if folder_name and folder_name != 'Unknown':
+            return folder_name
+            
+        # Then try parsing from company_info
         info_text = company_data.get('company_info', '')
         for line in info_text.split('\n'):
             if line.startswith('Company:'):
-                return line.replace('Company:', '').strip()
-        return company_data.get('folder_name', 'Unknown Company')
+                name = line.replace('Company:', '').strip()
+                if name and name != 'Unknown':
+                    return name
+        
+        return 'Unknown Company'
     
     def _extract_description(self, company_data: Dict[str, str]) -> str:
         """Extract company description from RAG data"""
