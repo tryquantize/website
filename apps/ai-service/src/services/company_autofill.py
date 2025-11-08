@@ -121,40 +121,44 @@ class CompanyAutoFillService:
             if website_content:
                 content += f"Website Content:\n{website_content[:2000]}"
             
-            # Enhanced AI prompt for better LinkedIn extraction
+            # Enhanced AI prompt for comprehensive company data extraction
             prompt = f"""
-You are an expert at extracting company information from website and LinkedIn content. Analyze the provided content and extract detailed company information.
+You are an expert at extracting company information from website and LinkedIn content. Extract ALL available company details.
 
-Pay special attention to:
-- LinkedIn pages often have company size (employees), headquarters location, and founding year
-- Look for "employees", "company size", "headquarters", "founded", "established" keywords
-- Extract specific numbers and locations, not generic terms
-- For employee count, look for ranges like "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10000+"
-- For location, look for city and country/state information
+Look for these specific elements:
+- TAGLINE: Company slogan, motto, or one-liner (often in hero sections, headers, or "About" sections)
+- CATEGORY: Business type, industry, or what the company does (e.g., "AI Marketing Tools", "SaaS Platform", "Fintech")
+- USP: Unique selling proposition, differentiator, or competitive advantage
+- FOUNDED: Year established, started, or incorporated
+- EMPLOYEES: Company size, team size, headcount (ranges like "11-50", "51-200", etc.)
+- LOCATION: Headquarters, main office, or primary location
+- DESCRIPTION: What the company does, their mission, or business overview
 
 Return a JSON object with these exact fields:
 
 {{
   "companyName": "{company_name}",
-  "description": "Detailed company description from the content (2-3 sentences)",
-  "category": "Specific business category/industry from content",
-  "location": "Exact headquarters location (City, State/Country)",
-  "founded": "Exact founding year if found, otherwise 'N/A'",
-  "employees": "Exact employee count or range if found, otherwise 'N/A'",
-  "website": "Company website URL from content",
-  "features": ["Specific feature 1", "Specific feature 2", "Specific feature 3"],
-  "useCases": ["Specific use case 1", "Specific use case 2", "Specific use case 3"],
-  "pricing": "Specific pricing information if available, otherwise 'Contact for pricing'",
+  "description": "Clear description of what the company does (2-3 sentences)",
+  "category": "Specific business category/industry (e.g., 'AI Marketing Tools', 'SaaS Platform')",
+  "tagline": "Company tagline, slogan, or one-liner if found",
+  "uspTagline": "Unique selling proposition or differentiator if found",
+  "location": "Headquarters location (City, State/Country)",
+  "founded": "Founding year (just the year, e.g., '2020')",
+  "employees": "Employee count or range (e.g., '11-50', '100+', '500')",
+  "website": "Company website URL",
+  "features": ["Key feature 1", "Key feature 2", "Key feature 3"],
+  "useCases": ["Use case 1", "Use case 2", "Use case 3"],
+  "pricing": "Pricing information if available",
   "industriesServed": ["Industry 1", "Industry 2"],
   "pricingModel": ["Subscription", "Usage-based", "Custom"],
-  "productsServices": ["Product/Service 1", "Product/Service 2"],
+  "productsServices": ["Product 1", "Product 2"],
   "topClients": ["Client 1", "Client 2"]
 }}
 
 Content to analyze:
 {content}
 
-Extract ONLY factual information found in the content. Do not make assumptions or add generic information.
+Extract ONLY information explicitly found in the content. If a field is not found, use empty string or empty array.
 """
             
             headers = {
@@ -209,17 +213,19 @@ Extract ONLY factual information found in the content. Do not make assumptions o
         """Create basic company info structure"""
         return {
             "companyName": company_name,
-            "description": f"{company_name} is an AI-powered company providing innovative solutions.",
-            "category": "AI Tools",
-            "location": "Global",
-            "founded": "N/A",
-            "employees": "N/A",
+            "description": f"{company_name} is a company providing innovative solutions.",
+            "category": "",
+            "tagline": "",
+            "uspTagline": "",
+            "location": "",
+            "founded": "",
+            "employees": "",
             "website": "",
-            "features": ["AI-powered solutions", "Innovative technology", "User-friendly interface"],
-            "useCases": ["Business automation", "Data analysis", "Process optimization"],
+            "features": [],
+            "useCases": [],
             "pricing": "Contact for pricing",
-            "industriesServed": ["Technology", "Business"],
-            "pricingModel": ["Subscription"],
-            "productsServices": ["AI Solutions"],
+            "industriesServed": [],
+            "pricingModel": [],
+            "productsServices": [],
             "topClients": []
         }
