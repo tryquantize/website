@@ -1,7 +1,16 @@
 {
   "buildCommand": "yarn build",
   "outputDirectory": "dist/public",
+  "functions": {
+    "apps/api/index.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/apps/api/index.ts"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
