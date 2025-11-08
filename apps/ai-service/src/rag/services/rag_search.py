@@ -1,7 +1,7 @@
 import os
 import json
 from typing import Dict, List, Any
-from .data_loader import DataLoader
+from .firebase_data_loader import FirebaseDataLoader as DataLoader
 from .text_matcher import TextMatcher
 from .llm_enricher import LLMEnricher
 import logging

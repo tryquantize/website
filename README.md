@@ -74,7 +74,7 @@ yarn launch
 
 ### Access Points
 - **Main Website**: http://localhost:3001
-- **AI Service**: http://localhost:5002
+- **AI Service**: https://quantize-ai-service.onrender.com (Production) / http://localhost:5002 (Local)
 
 ## 📜 Available Scripts
 
@@ -131,6 +131,7 @@ PORT=3001
 
 ### AI Service (Python + Flask)
 - **Framework**: Flask
+- **Deployment**: Render (Production) / Local (Development)
 - **AI Models**: OpenRouter integration
 - **Web Scraping**: Firecrawl API
 - **Features**: Company enrichment, search suggestions
@@ -162,8 +163,17 @@ yarn launch
 yarn docker:prod
 ```
 
-### Local Development Only
-This application is configured to run entirely on your local machine. See `docs/deployment/` for setup guides.
+### AI Service Deployment
+The AI service is deployed to Render for production use:
+```bash
+# Deploy AI service to Render
+./scripts/deploy-render.sh
+```
+
+See `apps/ai-service/README.md` for detailed deployment instructions.
+
+### Local Development
+For local development, the AI service runs on your machine. See `docs/deployment/` for setup guides.
 
 ## 🧪 Testing
 

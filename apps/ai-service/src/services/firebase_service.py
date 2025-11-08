@@ -1,12 +1,12 @@
+"""
+Firebase service for AI service to access company data from Firestore
+"""
 import os
 import json
 import logging
 from typing import Dict, List, Any, Optional
 import firebase_admin
 from firebase_admin import credentials, firestore
-from concurrent.futures import ThreadPoolExecutor
-import concurrent.futures
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -18,89 +18,187 @@ class FirebaseService:
     def _initialize_firebase(self):
         """Initialize Firebase Admin SDK"""
         try:
+            # Check if Firebase is already initialized
             if not firebase_admin._apps:
-                service_account_path = os.getenv('FIREBASE_SERVICE_ACCOUNT_PATH')
-                project_id = os.getenv('FIREBASE_PROJECT_ID')
+                # Get service account from environment variable
+                service_account_json = os.getenv('FIREBASE_SERVICE_ACCOUNT')
                 
-                if service_account_path and os.path.exists(service_account_path):
-                    cred = credentials.Certificate(service_account_path)
-                    firebase_admin.initialize_app(cred, {'projectId': project_id})
+                if service_account_json:
+                    # Parse JSON string
+                    service_account = json.loads(service_account_json)
+                    cred = credentials.Certificate(service_account)
+                    firebase_admin.initialize_app(cred)
                 else:
-                    cred = credentials.ApplicationDefault()
-                    firebase_admin.initialize_app(cred, {'projectId': project_id})
-                
-                logger.info("Firebase Admin SDK initialized successfully")
+                    logger.error("FIREBASE_SERVICE_ACCOUNT environment variable not found")
+                    return
             
+            # Get Firestore client
             self.db = firestore.client()
+            logger.info("Firebase initialized successfully")
             
         except Exception as e:
             logger.error(f"Failed to initialize Firebase: {e}")
-            raise
+            self.db = None
     
-    def save_company_data(self, company_name: str, company_data: Dict[str, Any]) -> bool:
-        """Save company data to Firestore"""
+    def get_all_companies(self) -> Dict[str, Any]:
+        """Get all companies from Firestore"""
         try:
-            firestore_data = {
-                'company_name': company_name,
-                'folder_name': company_data.get('folder_name', company_name),
-                'company_info': company_data.get('company_info', ''),
-                'features': company_data.get('features', ''),
-                'pricing': company_data.get('pricing', ''),
-                'use_cases': company_data.get('use_cases', ''),
-                'clients': company_data.get('clients', ''),
-                'market_info': company_data.get('market_info', ''),
-                'links': company_data.get('links', {}),
-                'created_at': firestore.SERVER_TIMESTAMP,
-                'updated_at': firestore.SERVER_TIMESTAMP,
-                'status': 'active'
-            }
+            if not self.db:
+                logger.error("Firebase not initialized")
+                return {}
             
-            doc_ref = self.db.collection('companies').document(company_name.lower().replace(' ', '_'))
-            doc_ref.set(firestore_data)
-            
-            logger.info(f"Successfully saved company data for {company_name}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Failed to save company data for {company_name}: {e}")
-            return False
-    
-    def get_all_companies(self) -> Dict[str, Dict[str, Any]]:
-        """Get all company data from Firestore"""
-        try:
             companies_data = {}
+            
+            # Get all companies from the 'companies' collection
             companies_ref = self.db.collection('companies')
-            query = companies_ref.where('status', '==', 'active')
-            docs = query.stream()
+            companies = companies_ref.stream()
             
-            for doc in docs:
-                data = doc.to_dict()
-                company_name = data.get('folder_name', doc.id)
-                companies_data[company_name] = {'data': data}
+            for company_doc in companies:
+                company_id = company_doc.id
+                company_data = company_doc.to_dict()
+                
+                # Convert Firestore data to RAG format
+                companies_data[company_id] = self._convert_firestore_to_rag_format(company_data)
             
-            logger.info(f"Retrieved {len(companies_data)} companies from Firestore")
+            logger.info(f"Retrieved {len(companies_data)} companies from Firebase")
             return companies_data
             
         except Exception as e:
-            logger.error(f"Failed to get companies from Firestore: {e}")
+            logger.error(f"Failed to get companies from Firebase: {e}")
             return {}
     
-    def get_company_data(self, company_name: str) -> Optional[Dict[str, Any]]:
-        """Get specific company data from Firestore"""
+    def _convert_firestore_to_rag_format(self, firestore_data: Dict[str, Any]) -> Dict[str, str]:
+        """Convert Firestore company data to RAG format"""
         try:
-            doc_id = company_name.lower().replace(' ', '_')
-            doc_ref = self.db.collection('companies').document(doc_id)
-            doc = doc_ref.get()
+            # Extract basic info
+            company_name = firestore_data.get('companyName', 'Unknown')
+            description = firestore_data.get('description', '')
+            website = firestore_data.get('website', '')
+            category = firestore_data.get('category', 'AI Tools')
+            location = firestore_data.get('location', 'Global')
+            founded = firestore_data.get('founded', 'N/A')
+            employees = firestore_data.get('employees', 'N/A')
             
-            if doc.exists:
-                return doc.to_dict()
-            else:
-                logger.warning(f"Company {company_name} not found in Firestore")
-                return None
-                
+            # Build company_info text
+            company_info = f"""Company: {company_name}
+Description: {description}
+Website: {website}
+Category: {category}
+Headquarters: {location}
+Founded: {founded}
+Employees: {employees}"""
+            
+            # Extract features
+            features_list = firestore_data.get('features', [])
+            features_text = '\n'.join([f"- {feature}" for feature in features_list])
+            
+            # Extract pricing
+            pricing = firestore_data.get('pricing', 'Contact for pricing')
+            
+            # Extract use cases
+            use_cases_list = firestore_data.get('useCases', [])
+            use_cases_text = '\n'.join([f"- {use_case}" for use_case in use_cases_list])
+            
+            # Additional fields
+            industries_served = firestore_data.get('industriesServed', [])
+            pricing_model = firestore_data.get('pricingModel', [])
+            products_services = firestore_data.get('productsServices', [])
+            top_clients = firestore_data.get('topClients', [])
+            
+            # Build additional info
+            if industries_served:
+                company_info += f"\nIndustries Served: {', '.join(industries_served)}"
+            if pricing_model:
+                company_info += f"\nPricing Model: {', '.join(pricing_model)}"
+            if products_services:
+                company_info += f"\nProducts/Services: {', '.join(products_services)}"
+            if top_clients:
+                company_info += f"\nTop Clients: {', '.join(top_clients)}"
+            
+            return {
+                'company_info': company_info,
+                'features': features_text,
+                'pricing': pricing,
+                'use_cases': use_cases_text,
+                'folder_name': company_name
+            }
+            
         except Exception as e:
-            logger.error(f"Failed to get company data for {company_name}: {e}")
-            return None
-
-# Global instance
-firebase_service = FirebaseService()
+            logger.error(f"Failed to convert Firestore data: {e}")
+            return {
+                'company_info': f"Company: {firestore_data.get('companyName', 'Unknown')}",
+                'features': '',
+                'pricing': 'Contact for pricing',
+                'use_cases': '',
+                'folder_name': firestore_data.get('companyName', 'Unknown')
+            }
+    
+    def search_companies(self, query: str, limit: int = 50) -> List[Dict[str, Any]]:
+        """Search companies in Firestore"""
+        try:
+            if not self.db:
+                logger.error("Firebase not initialized")
+                return []
+            
+            companies_ref = self.db.collection('companies')
+            
+            # Simple text search - in production, you might want to use more advanced search
+            companies = companies_ref.limit(limit).stream()
+            
+            results = []
+            query_lower = query.lower()
+            
+            for company_doc in companies:
+                company_data = company_doc.to_dict()
+                
+                # Simple relevance check
+                company_name = company_data.get('companyName', '').lower()
+                description = company_data.get('description', '').lower()
+                category = company_data.get('category', '').lower()
+                
+                if (query_lower in company_name or 
+                    query_lower in description or 
+                    query_lower in category):
+                    
+                    results.append({
+                        'id': company_doc.id,
+                        'data': self._convert_firestore_to_rag_format(company_data),
+                        'company_name': company_data.get('companyName', 'Unknown')
+                    })
+            
+            logger.info(f"Found {len(results)} companies matching query: {query}")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Failed to search companies: {e}")
+            return []
+    
+    def add_company(self, company_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Add a new company to Firestore"""
+        try:
+            if not self.db:
+                return {"success": False, "error": "Firebase not initialized"}
+            
+            companies_ref = self.db.collection('companies')
+            
+            # Add timestamp
+            company_data['createdAt'] = firestore.SERVER_TIMESTAMP
+            company_data['updatedAt'] = firestore.SERVER_TIMESTAMP
+            
+            # Add the company
+            doc_ref = companies_ref.add(company_data)
+            
+            logger.info(f"Added company {company_data.get('companyName')} to Firebase")
+            
+            return {
+                "success": True,
+                "id": doc_ref[1].id,
+                "message": "Company added successfully"
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to add company to Firebase: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }

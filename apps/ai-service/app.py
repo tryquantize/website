@@ -44,10 +44,12 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-# Enable CORS for local development only
+# Enable CORS for development and production
 CORS(app, origins=[
     "http://localhost:3001",
-    "http://127.0.0.1:3001"
+    "http://127.0.0.1:3001",
+    "https://quantize-website.vercel.app",
+    "https://*.vercel.app"
 ])
 
 # Initialize AI agent
@@ -259,10 +261,10 @@ def add_company():
         logger.info(f"Adding company: {data.get('companyName', 'Unknown')}")
         
         # Import and use company submission service
-        from services.company_submission import CompanySubmissionService
-        submission_service = CompanySubmissionService()
+        from services.firebase_service import FirebaseService
+        firebase_service = FirebaseService()
         
-        result = submission_service.submit_company(data)
+        result = firebase_service.add_company(data)
         
         if result['success']:
             # Reload RAG data to include new company

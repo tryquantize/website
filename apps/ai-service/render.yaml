@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: quantize-ai-service
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: FIRECRAWL_API_KEY
+        sync: false
+      - key: FLASK_HOST
+        value: "0.0.0.0"
+      - key: FLASK_PORT
+        value: "10000"
+      - key: FLASK_DEBUG
+        value: "False"
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
+      - key: USE_FIREBASE
+        value: "true"
