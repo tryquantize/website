@@ -523,28 +523,28 @@ export default function AddCompanyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required fields
-    if (!formData.companyName || !formData.website || !formData.description || !formData.category) {
-      toast({
-        title: 'Missing Required Fields',
-        description: 'Please fill in company name, website, description, and category.',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    if (formData.products.length === 0) {
-      toast({
-        title: 'Products Required',
-        description: 'Please add at least one product or service.',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-
     try {
+      // Validate required fields
+      if (!formData.companyName || !formData.website || !formData.description || !formData.category) {
+        toast({
+          title: 'Missing Required Fields',
+          description: 'Please fill in company name, website, description, and category.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      if (formData.products.length === 0) {
+        toast({
+          title: 'Products Required',
+          description: 'Please add at least one product or service.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      setIsSubmitting(true);
+
       // Remove logo from submission data (can't serialize File objects)
       const { logo, ...submissionData } = formData;
       
@@ -566,13 +566,18 @@ export default function AddCompanyPage() {
           title: 'Success!',
           description: 'Your company has been submitted for review.',
         });
-        setLocation('/');
+        
+        // Add small delay before navigation to ensure toast is shown
+        setTimeout(() => {
+          setLocation('/');
+        }, 1000);
       } else {
         const errorText = await response.text();
         console.error('Submission error:', errorText);
         throw new Error(`Submission failed: ${response.status}`);
       }
     } catch (error) {
+      console.error('Form submission error:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to submit company. Please try again.',
@@ -1322,9 +1327,16 @@ export default function AddCompanyPage() {
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="bg-black text-white font-bold py-3 px-8 hover:bg-gray-800 transition-all duration-300"
+                      className="bg-black text-white font-bold py-3 px-8 hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                      {isSubmitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Submitting...
+                        </>
+                      ) : (
+                        'Submit Application'
+                      )}
                     </Button>
                   )}
                 </div>
