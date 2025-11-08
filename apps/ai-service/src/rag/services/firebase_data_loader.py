@@ -44,12 +44,31 @@ class FirebaseDataLoader:
             return {}
     
     def search_companies(self, query: str) -> List[Dict[str, Any]]:
-        """Search companies using Firebase"""
+        """Search companies using Firebase with simple matching"""
         try:
             use_firebase = os.getenv('USE_FIREBASE', 'true').lower() == 'true'
             
             if use_firebase and self.firebase_service.db:
-                return self.firebase_service.search_companies(query)
+                # Get all companies and do simple text matching
+                all_companies = self.firebase_service.get_all_companies()
+                results = []
+                query_lower = query.lower()
+                
+                for company_id, company_data in all_companies.items():
+                    company_name = company_data.get('folder_name', '')
+                    company_info = company_data.get('company_info', '')
+                    
+                    # Simple text matching
+                    if (query_lower in company_name.lower() or 
+                        query_lower in company_info.lower() or
+                        any(word in company_info.lower() for word in query_lower.split())):
+                        results.append({
+                            'id': company_id,
+                            'data': company_data,
+                            'company_name': company_name
+                        })
+                
+                return results
             else:
                 # Fallback to loading all and filtering locally
                 all_companies = self.load_all_companies()

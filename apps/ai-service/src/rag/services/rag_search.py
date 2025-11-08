@@ -42,10 +42,18 @@ class RAGSearchService:
             # 2. Industry-specific query (industry detected, no location) -> Companies in that industry globally  
             # 3. Location + Industry query (industry detected + location selected) -> Companies in that industry in specific location
             
-            # Find matching companies from RAG data with industry context
-            matching_companies = self.text_matcher.find_matching_companies(
-                query, self.companies_data, selected_types, industry_detected
-            )
+            # Use simple Firebase search instead of complex text matcher
+            matching_companies = self.data_loader.search_companies(query)
+            
+            # Convert to expected format
+            if not matching_companies:
+                # Try broader search with individual words
+                for word in query.split():
+                    if len(word) > 2:  # Skip short words
+                        word_matches = self.data_loader.search_companies(word)
+                        matching_companies.extend(word_matches)
+                        if len(matching_companies) >= 5:
+                            break
             
             logger.info(f"Found {len(matching_companies)} matching companies with relevance threshold")
             
