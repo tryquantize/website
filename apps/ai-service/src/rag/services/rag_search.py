@@ -214,14 +214,31 @@ class RAGSearchService:
         founded = self._extract_founded(company_data)
         about = self._extract_about_us(company_data)
         
-        # Skip LLM enrichment for now to fix basic functionality
-        key_specs = ["AI-powered solutions", "Easy integration", "Professional support", "Scalable architecture", "24/7 support"]
-        enhanced_about = f"{company_name} is an innovative AI company providing cutting-edge solutions for modern businesses."
-        enhanced_use_cases = [
-            "Streamline business operations with intelligent automation tools",
-            "Enhance customer experience through personalized AI-driven solutions", 
-            "Improve decision making with real-time data insights and analytics"
-        ]
+        # Re-enable LLM enrichment with proper error handling
+        try:
+            # Parallel LLM enrichment calls for this company
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                # Submit all LLM-dependent tasks in parallel
+                specs_future = executor.submit(self._extract_key_specifications, company_data, query)
+                enhanced_about_future = executor.submit(self._generate_enhanced_about, company_data, company_name)
+                enhanced_use_cases_future = executor.submit(self._generate_enhanced_use_cases, 
+                                                           company_data, company_name, query, 
+                                                           self._extract_industries_served(company_data))
+                
+                # Wait for all LLM calls to complete with timeout
+                key_specs = specs_future.result(timeout=15)
+                enhanced_about = enhanced_about_future.result(timeout=15)
+                enhanced_use_cases = enhanced_use_cases_future.result(timeout=15)
+        except Exception as e:
+            logger.error(f"LLM enrichment failed for {company_name}: {e}")
+            # Fallback to basic content
+            key_specs = ["AI-powered solutions", "Easy integration", "Professional support", "Scalable architecture", "24/7 support"]
+            enhanced_about = f"{company_name} is an innovative AI company providing cutting-edge solutions for modern businesses."
+            enhanced_use_cases = [
+                "Streamline business operations with intelligent automation tools",
+                "Enhance customer experience through personalized AI-driven solutions", 
+                "Improve decision making with real-time data insights and analytics"
+            ]
         
         # Extract remaining fields (non-LLM dependent)
         company_stage = self._extract_company_stage(company_data)

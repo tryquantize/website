@@ -64,34 +64,48 @@ class FirebaseDataLoader:
                     # Combine all searchable text
                     searchable_text = f"{company_name} {company_info} {features} {use_cases}".lower()
                     
-                    # Check for matches
+                    # Check for matches with stricter relevance
                     match_score = 0
                     
-                    # Exact query match (highest score)
+                    # Company name exact match (highest priority)
+                    if query_lower in company_name.lower():
+                        match_score += 20
+                    
+                    # Exact query match in content
                     if query_lower in searchable_text:
-                        match_score += 10
+                        match_score += 15
                     
-                    # Individual word matches
+                    # Individual word matches with context weighting
                     for word in query_words:
-                        if word in searchable_text:
-                            match_score += 3
+                        if word in company_name.lower():
+                            match_score += 10  # Higher score for name matches
+                        elif word in company_info.lower():
+                            match_score += 5   # Medium score for description matches
+                        elif word in features.lower():
+                            match_score += 4   # Good score for feature matches
+                        elif word in use_cases.lower():
+                            match_score += 3   # Lower score for use case matches
                     
-                    # Semantic matches for common terms
-                    semantic_matches = {
-                        'chatbot': ['chat', 'conversation', 'voice', 'assistant', 'bot', 'messaging'],
-                        'voice': ['voice', 'speech', 'audio', 'conversation', 'talk', 'speak'],
-                        'ai': ['artificial intelligence', 'machine learning', 'ai', 'intelligent'],
-                        'automation': ['automate', 'workflow', 'process', 'streamline']
-                    }
+                    # Semantic matches for specific queries
+                    if 'voice' in query_lower:
+                        voice_terms = ['voice', 'speech', 'audio', 'conversation', 'talk', 'speak', 'vocal', 'sound']
+                        for term in voice_terms:
+                            if term in searchable_text:
+                                match_score += 8  # High relevance for voice-related terms
                     
-                    for query_term, related_terms in semantic_matches.items():
-                        if query_term in query_lower:
-                            for term in related_terms:
-                                if term in searchable_text:
-                                    match_score += 2
+                    if 'chatbot' in query_lower or 'chat' in query_lower:
+                        chat_terms = ['chat', 'conversation', 'messaging', 'bot', 'assistant', 'dialogue']
+                        for term in chat_terms:
+                            if term in searchable_text:
+                                match_score += 8
                     
-                    # Add to results if there's a match
-                    if match_score > 0:
+                    # Penalty for generic test companies unless specifically relevant
+                    if any(test_word in company_name.lower() for test_word in ['test', 'firebase', 'final']):
+                        if not any(relevant_word in searchable_text for relevant_word in query_words):
+                            match_score = max(0, match_score - 10)
+                    
+                    # Only add companies with meaningful relevance
+                    if match_score >= 8:  # Increased threshold for better relevance
                         results.append({
                             'id': company_id,
                             'data': company_data,
@@ -99,9 +113,13 @@ class FirebaseDataLoader:
                             'match_score': match_score
                         })
                 
-                # Sort by match score (highest first)
+                # Sort by match score (highest first) and filter for quality
                 results.sort(key=lambda x: x.get('match_score', 0), reverse=True)
-                return results[:20]  # Return top 20 matches
+                
+                # Log search results for debugging
+                logger.info(f"Search '{query}' found {len(results)} companies with scores: {[(r['company_name'], r['match_score']) for r in results[:5]]}")
+                
+                return results[:15]  # Return top 15 most relevant matches
             else:
                 # Fallback to loading all and filtering locally
                 all_companies = self.load_all_companies()
