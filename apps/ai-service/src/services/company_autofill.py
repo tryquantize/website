@@ -56,24 +56,40 @@ class CompanyAutoFillService:
                 'Content-Type': 'application/json'
             }
             
+            # Special handling for LinkedIn URLs
+            is_linkedin = 'linkedin.com' in url.lower()
+            
             data = {
                 'url': url,
                 'formats': ['markdown'],
                 'onlyMainContent': True
             }
             
+            # For LinkedIn, try to get more content
+            if is_linkedin:
+                data['onlyMainContent'] = False
+                data['includeTags'] = ['div', 'section', 'span', 'p', 'h1', 'h2', 'h3']
+            
             response = requests.post(
                 'https://api.firecrawl.dev/v1/scrape',
                 headers=headers,
                 json=data,
-                timeout=30
+                timeout=45  # Longer timeout for LinkedIn
             )
             
             if response.status_code == 200:
                 result = response.json()
-                return result.get('data', {}).get('markdown', '')
+                scraped_content = result.get('data', {}).get('markdown', '')
+                logger.info(f"Successfully scraped {url}, content length: {len(scraped_content)}")
+                
+                # If LinkedIn scraping returned very little content, log it
+                if is_linkedin and len(scraped_content) < 100:
+                    logger.warning(f"LinkedIn scraping returned minimal content: {scraped_content[:100]}")
+                
+                return scraped_content
             else:
-                logger.error(f"Firecrawl API error: {response.status_code}")
+                error_text = response.text if hasattr(response, 'text') else 'Unknown error'
+                logger.error(f"Firecrawl API error for {url}: {response.status_code} - {error_text}")
                 return ""
                 
         except Exception as e:
@@ -87,34 +103,58 @@ class CompanyAutoFillService:
                 logger.warning("OpenRouter API key not available")
                 return self._create_basic_company_info(company_name)
             
-            # Prepare content for AI analysis
-            content = f"Company: {company_name}\n\nWebsite Content:\n{website_content[:3000]}"
-            if linkedin_content:
-                content += f"\n\nLinkedIn Content:\n{linkedin_content[:1000]}"
+            # Log scraped content for debugging
+            logger.info(f"Website content length: {len(website_content)}")
+            logger.info(f"LinkedIn content length: {len(linkedin_content)}")
             
-            # AI prompt for extraction
+            if website_content:
+                logger.info(f"Website content preview: {website_content[:200]}...")
+            if linkedin_content:
+                logger.info(f"LinkedIn content preview: {linkedin_content[:200]}...")
+            
+            # Prepare content for AI analysis - prioritize LinkedIn for company details
+            content = f"Company: {company_name}\n\n"
+            
+            if linkedin_content:
+                content += f"LinkedIn Company Page Content:\n{linkedin_content[:2000]}\n\n"
+            
+            if website_content:
+                content += f"Website Content:\n{website_content[:2000]}"
+            
+            # Enhanced AI prompt for better LinkedIn extraction
             prompt = f"""
-Extract structured information about this company from the provided content. Return a JSON object with these fields:
+You are an expert at extracting company information from website and LinkedIn content. Analyze the provided content and extract detailed company information.
+
+Pay special attention to:
+- LinkedIn pages often have company size (employees), headquarters location, and founding year
+- Look for "employees", "company size", "headquarters", "founded", "established" keywords
+- Extract specific numbers and locations, not generic terms
+- For employee count, look for ranges like "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10000+"
+- For location, look for city and country/state information
+
+Return a JSON object with these exact fields:
 
 {{
   "companyName": "{company_name}",
-  "description": "Brief company description (1-2 sentences)",
-  "category": "Main business category/industry",
-  "location": "Company headquarters location",
-  "founded": "Year founded (if available)",
-  "employees": "Employee count or range (if available)",
-  "website": "Company website URL",
-  "features": ["Key feature 1", "Key feature 2", "Key feature 3"],
-  "useCases": ["Use case 1", "Use case 2", "Use case 3"],
-  "pricing": "Pricing information or 'Contact for pricing'",
+  "description": "Detailed company description from the content (2-3 sentences)",
+  "category": "Specific business category/industry from content",
+  "location": "Exact headquarters location (City, State/Country)",
+  "founded": "Exact founding year if found, otherwise 'N/A'",
+  "employees": "Exact employee count or range if found, otherwise 'N/A'",
+  "website": "Company website URL from content",
+  "features": ["Specific feature 1", "Specific feature 2", "Specific feature 3"],
+  "useCases": ["Specific use case 1", "Specific use case 2", "Specific use case 3"],
+  "pricing": "Specific pricing information if available, otherwise 'Contact for pricing'",
   "industriesServed": ["Industry 1", "Industry 2"],
-  "pricingModel": ["Subscription", "One-time", "Custom"],
+  "pricingModel": ["Subscription", "Usage-based", "Custom"],
   "productsServices": ["Product/Service 1", "Product/Service 2"],
-  "topClients": ["Client 1", "Client 2"] (if mentioned)
+  "topClients": ["Client 1", "Client 2"]
 }}
 
 Content to analyze:
 {content}
+
+Extract ONLY factual information found in the content. Do not make assumptions or add generic information.
 """
             
             headers = {
