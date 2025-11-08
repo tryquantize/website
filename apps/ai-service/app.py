@@ -48,6 +48,8 @@ app = Flask(__name__)
 CORS(app, origins=[
     "http://localhost:3001",
     "http://127.0.0.1:3001",
+    "https://quantize.site",
+    "https://www.quantize.site",
     "https://quantize-website.vercel.app",
     "https://*.vercel.app"
 ])
