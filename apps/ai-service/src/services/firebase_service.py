@@ -70,10 +70,13 @@ class FirebaseService:
     def _convert_firestore_to_rag_format(self, firestore_data: Dict[str, Any], doc_id: str = '') -> Dict[str, str]:
         """Convert Firestore company data to RAG format - pass through all existing fields"""
         try:
-            # Pass through all the existing Firebase fields directly
+            # Get the actual company name from Firebase data
+            # Handle both new format (companyName field) and legacy format (folder_name)
             company_name = (
                 firestore_data.get('companyName', '') or 
-                firestore_data.get('name', '') or 
+                firestore_data.get('folder_name', '') or
+                firestore_data.get('original_company_name', '') or
+                (firestore_data.get('name', '').replace('_', ' ').title() if firestore_data.get('name') else '') or
                 doc_id.replace('_', ' ').title() or 
                 'Unknown'
             )
@@ -82,13 +85,45 @@ class FirebaseService:
             result = {
                 'folder_name': company_name,
                 'original_company_name': company_name,
-                'doc_id': doc_id
+                'doc_id': doc_id,
+                'name': company_name  # Ensure name field is set correctly
             }
             
             # Add all Firebase fields directly
             for key, value in firestore_data.items():
                 if value is not None:  # Only include non-null values
                     result[key] = value
+            
+            # Override name field to ensure it's the company name, not doc ID
+            result['name'] = company_name
+            
+            # Ensure LinkedIn URL is properly mapped from various possible field names
+            linkedin_fields = ['linkedinPage', 'linkedin_url', 'linkedIn', 'linkedin']
+            for field in linkedin_fields:
+                if field in firestore_data and firestore_data[field]:
+                    result['linkedin_url'] = firestore_data[field]
+                    break
+            
+            # Ensure products are properly mapped from various possible field names
+            products_fields = ['products', 'productsServices', 'services']
+            for field in products_fields:
+                if field in firestore_data and firestore_data[field]:
+                    if isinstance(firestore_data[field], list) and firestore_data[field]:
+                        result['productsServices'] = firestore_data[field]
+                        break
+                    elif isinstance(firestore_data[field], str) and firestore_data[field].strip():
+                        result['productsServices'] = [firestore_data[field]]
+                        break
+            
+            # If still no products/services, try to extract from features
+            if 'productsServices' not in result or not result['productsServices']:
+                if 'features' in result and result['features']:
+                    if isinstance(result['features'], list):
+                        result['productsServices'] = result['features'][:3]  # Use first 3 features as products
+                    elif isinstance(result['features'], str):
+                        # Split features string into list
+                        features_list = [f.strip() for f in result['features'].split(',') if f.strip()]
+                        result['productsServices'] = features_list[:3]
             
             return result
             
