@@ -6,7 +6,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const aiServiceUrl = process.env.VITE_AI_SERVICE_URL || 'https://website-ocrz.onrender.com';
+    const aiServiceUrl = process.env.AI_SERVICE_URL || process.env.VITE_AI_SERVICE_URL || 'https://website-ocrz.onrender.com';
     
     const response = await fetch(`${aiServiceUrl}/auto-fill-company`, {
       method: 'POST',
