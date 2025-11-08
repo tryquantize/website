@@ -174,8 +174,13 @@ class RAGSearchService:
         company_name = company_match.get('company_name', 'Unknown')
         logger.info(f"Processing company: {company_name}")
         
-        # Get location directly from Firebase data
-        location = company_data.get('location', 'Global')
+        # Get location directly from Firebase data with multiple fallbacks
+        location = (
+            company_data.get('location') or 
+            company_data.get('headquarters') or 
+            company_data.get('address') or 
+            'Global'
+        )
         
         # Strict location filtering when locations are selected
         if selected_locations and len(selected_locations) > 0 and selected_locations != ['']:
@@ -259,7 +264,12 @@ class RAGSearchService:
         deployment_type = company_data.get('deploymentType', [])
         ideal_scenarios = company_data.get('idealScenarios', [])
         tagline = company_data.get('tagline', '')
-        location = company_data.get('location', 'Global')
+        location = (
+            company_data.get('location') or 
+            company_data.get('headquarters') or 
+            company_data.get('address') or 
+            'Global'
+        )
         
         # Use company name from Firebase data directly
         display_name = company_match.get('company_name', '') or company_data.get('name', '') or company_data.get('companyName', 'Unknown')

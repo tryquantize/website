@@ -61,51 +61,66 @@ class FirebaseDataLoader:
                     features = company_data.get('features', '')
                     use_cases = company_data.get('use_cases', '')
                     
-                    # Combine all searchable text
-                    searchable_text = f"{company_name} {company_info} {features} {use_cases}".lower()
+                    # Get comprehensive company information for better matching
+                    products_services = company_data.get('productsServices', [])
+                    industries_served = company_data.get('industriesServed', [])
+                    category = company_data.get('category', '')
+                    description = company_data.get('description', '')
                     
-                    # Check for matches with stricter relevance
+                    # Combine all searchable text including products/services
+                    searchable_text = f"{company_name} {company_info} {features} {use_cases} {' '.join(products_services)} {' '.join(industries_served)} {category} {description}".lower()
+                    
+                    # Check for matches with comprehensive relevance scoring
                     match_score = 0
                     
                     # Company name exact match (highest priority)
                     if query_lower in company_name.lower():
-                        match_score += 20
+                        match_score += 25
                     
-                    # Exact query match in content
-                    if query_lower in searchable_text:
+                    # Products/Services match (very high priority for relevance)
+                    for product in products_services:
+                        if any(word in product.lower() for word in query_words):
+                            match_score += 20
+                    
+                    # Category match (high priority)
+                    if any(word in category.lower() for word in query_words):
                         match_score += 15
+                    
+                    # Description match (high priority)
+                    if any(word in description.lower() for word in query_words):
+                        match_score += 12
                     
                     # Individual word matches with context weighting
                     for word in query_words:
                         if word in company_name.lower():
-                            match_score += 10  # Higher score for name matches
-                        elif word in company_info.lower():
-                            match_score += 5   # Medium score for description matches
+                            match_score += 10
                         elif word in features.lower():
-                            match_score += 4   # Good score for feature matches
+                            match_score += 8
                         elif word in use_cases.lower():
-                            match_score += 3   # Lower score for use case matches
+                            match_score += 6
+                        elif word in company_info.lower():
+                            match_score += 4
                     
-                    # Semantic matches for specific queries
-                    if 'voice' in query_lower:
-                        voice_terms = ['voice', 'speech', 'audio', 'conversation', 'talk', 'speak', 'vocal', 'sound']
-                        for term in voice_terms:
+                    # Semantic matches for specific queries with higher precision
+                    if 'voice' in query_lower and 'ai' in query_lower:
+                        voice_ai_terms = ['voice ai', 'voice agent', 'speech ai', 'conversational ai', 'voice assistant', 'voice bot']
+                        for term in voice_ai_terms:
                             if term in searchable_text:
-                                match_score += 8  # High relevance for voice-related terms
+                                match_score += 25  # Very high relevance for exact matches
+                        
+                        # Secondary voice terms
+                        voice_terms = ['voice', 'speech', 'audio', 'conversation', 'talk', 'speak', 'vocal']
+                        voice_matches = sum(1 for term in voice_terms if term in searchable_text)
+                        if voice_matches >= 2:  # Multiple voice-related terms
+                            match_score += 15
                     
-                    if 'chatbot' in query_lower or 'chat' in query_lower:
-                        chat_terms = ['chat', 'conversation', 'messaging', 'bot', 'assistant', 'dialogue']
-                        for term in chat_terms:
-                            if term in searchable_text:
-                                match_score += 8
-                    
-                    # Penalty for generic test companies unless specifically relevant
-                    if any(test_word in company_name.lower() for test_word in ['test', 'firebase', 'final']):
+                    # Penalty for irrelevant companies
+                    if any(test_word in company_name.lower() for test_word in ['test', 'firebase', 'final', 'complete']):
                         if not any(relevant_word in searchable_text for relevant_word in query_words):
-                            match_score = max(0, match_score - 10)
+                            match_score = max(0, match_score - 15)
                     
-                    # Only add companies with meaningful relevance
-                    if match_score >= 8:  # Increased threshold for better relevance
+                    # Only add companies with high relevance
+                    if match_score >= 15:  # Higher threshold for better precision
                         results.append({
                             'id': company_id,
                             'data': company_data,
@@ -119,7 +134,7 @@ class FirebaseDataLoader:
                 # Log search results for debugging
                 logger.info(f"Search '{query}' found {len(results)} companies with scores: {[(r['company_name'], r['match_score']) for r in results[:5]]}")
                 
-                return results[:15]  # Return top 15 most relevant matches
+                return results[:10]  # Return top 10 most relevant matches
             else:
                 # Fallback to loading all and filtering locally
                 all_companies = self.load_all_companies()
