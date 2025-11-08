@@ -1,12 +1,21 @@
 // AI Service Configuration
-// This file manages the AI service URL for local development
+// This file manages the AI service URL for local development and production
 
 const AI_SERVICE_CONFIG = {
   // Local development URL
   LOCAL_URL: 'http://localhost:5002',
   
-  // Always use local URL
+  // Production URL
+  PRODUCTION_URL: 'https://website-ocrz.onrender.com',
+  
+  // Get service URL based on environment with fallback
   getServiceUrl: () => {
+    // Always try production URL first for reliability
+    return AI_SERVICE_CONFIG.PRODUCTION_URL;
+  },
+  
+  // Get local service URL for development
+  getLocalServiceUrl: () => {
     return AI_SERVICE_CONFIG.LOCAL_URL;
   },
   

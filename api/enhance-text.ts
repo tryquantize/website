@@ -7,10 +7,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const aiServiceUrl = process.env.AI_SERVICE_URL || process.env.VITE_AI_SERVICE_URL || 'https://website-ocrz.onrender.com';
-    console.log('Using AI service URL:', aiServiceUrl);
-    console.log('Request body:', req.body);
     
-    const response = await fetch(`${aiServiceUrl}/add-company`, {
+    const response = await fetch(`${aiServiceUrl}/enhance-text`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -18,22 +16,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify(req.body)
     });
 
-    console.log('AI service response status:', response.status);
-    
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI service error response:', errorText);
-      throw new Error(`AI service responded with status: ${response.status} - ${errorText}`);
+      throw new Error(`AI service responded with status: ${response.status}`);
     }
 
     const result = await response.json();
-    console.log('AI service result:', result);
     res.json(result);
   } catch (error) {
-    console.error('Add company API error:', error);
+    console.error('Enhance text API error:', error);
     res.status(500).json({ 
-      message: 'Failed to add company',
-      error: error.message,
+      message: 'Failed to enhance text',
       success: false 
     });
   }

@@ -280,7 +280,8 @@ export default function AddCompanyPage() {
     setIsEnhancing(prev => ({ ...prev, [type]: true }));
     
     try {
-      const response = await fetch(AI_SERVICE_CONFIG.getEnhanceTextUrl(), {
+      // Use production service directly for reliability
+      const response = await fetch('https://website-ocrz.onrender.com/enhance-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -341,7 +342,8 @@ export default function AddCompanyPage() {
     setIsEnhancingDescription(true);
     
     try {
-      const response = await fetch(AI_SERVICE_CONFIG.getEnhanceTextUrl(), {
+      // Use production service directly for reliability
+      const response = await fetch('https://website-ocrz.onrender.com/enhance-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -399,7 +401,10 @@ export default function AddCompanyPage() {
     setIsAutoFilling(true);
     
     try {
-      const response = await fetch(AI_SERVICE_CONFIG.getAutoFillUrl(), {
+      console.log('Starting auto-fill for:', formData.companyName, formData.website);
+      
+      // Use production service directly for reliability
+      const response = await fetch('https://website-ocrz.onrender.com/auto-fill-company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -409,7 +414,11 @@ export default function AddCompanyPage() {
         })
       });
       
+      console.log('Auto-fill response status:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Auto-fill error:', errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
@@ -417,6 +426,7 @@ export default function AddCompanyPage() {
       console.log('Auto-fill response:', result);
       
       if (result.success && result.data) {
+        console.log('Processing auto-fill data:', result.data);
         setFormData(prev => {
           // Handle products array - convert from objects to strings if needed
           let productsArray = prev.products;
@@ -426,6 +436,28 @@ export default function AddCompanyPage() {
               (product.name && product.description ? `${product.name}: ${product.description}` : 
                product.name || product.description || product)
             );
+          } else if (result.data.productsServices && Array.isArray(result.data.productsServices)) {
+            productsArray = result.data.productsServices;
+          }
+          
+          // Handle features - convert array to string if needed
+          let featuresText = prev.features;
+          if (result.data.features) {
+            if (Array.isArray(result.data.features)) {
+              featuresText = result.data.features.join(', ');
+            } else if (typeof result.data.features === 'string') {
+              featuresText = result.data.features;
+            }
+          }
+          
+          // Handle use cases - convert array to string if needed
+          let useCasesText = prev.useCases;
+          if (result.data.useCases) {
+            if (Array.isArray(result.data.useCases)) {
+              useCasesText = result.data.useCases.join(', ');
+            } else if (typeof result.data.useCases === 'string') {
+              useCasesText = result.data.useCases;
+            }
           }
           
           return {
@@ -433,10 +465,10 @@ export default function AddCompanyPage() {
             description: result.data.description || prev.description,
             category: result.data.category || prev.category,
             founded: result.data.founded || prev.founded,
-            headquarters: result.data.headquarters || prev.headquarters,
+            headquarters: result.data.headquarters || result.data.location || prev.headquarters,
             employees: result.data.employees || prev.employees,
-            features: result.data.features || prev.features,
-            useCases: result.data.useCases || prev.useCases,
+            features: featuresText,
+            useCases: useCasesText,
             tagline: result.data.tagline || prev.tagline,
             uspTagline: result.data.uspTagline || prev.uspTagline,
             products: productsArray,
@@ -516,21 +548,29 @@ export default function AddCompanyPage() {
       // Remove logo from submission data (can't serialize File objects)
       const { logo, ...submissionData } = formData;
       
-      const response = await fetch(AI_SERVICE_CONFIG.getAddCompanyUrl(), {
+      console.log('Submitting company data:', submissionData);
+      
+      // Use production service directly for reliability
+      const response = await fetch('https://website-ocrz.onrender.com/add-company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData)
       });
       
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
+        const result = await response.json();
+        console.log('Submission result:', result);
         toast({
           title: 'Success!',
           description: 'Your company has been submitted for review.',
         });
         setLocation('/');
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Submission failed' }));
-        throw new Error(errorData.error || 'Submission failed');
+        const errorText = await response.text();
+        console.error('Submission error:', errorText);
+        throw new Error(`Submission failed: ${response.status}`);
       }
     } catch (error) {
       toast({
