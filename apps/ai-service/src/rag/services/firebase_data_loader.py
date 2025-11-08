@@ -55,7 +55,7 @@ class FirebaseDataLoader:
                 query_lower = query.lower()
                 
                 for company_id, company_data in all_companies.items():
-                    company_name = company_data.get('folder_name', '')
+                    company_name = company_data.get('folder_name', company_id.replace('_', ' ').title())
                     company_info = company_data.get('company_info', '')
                     
                     # Simple text matching
@@ -76,7 +76,7 @@ class FirebaseDataLoader:
                 query_lower = query.lower()
                 
                 for company_id, company_data in all_companies.items():
-                    company_name = company_data.get('folder_name', '')
+                    company_name = company_data.get('folder_name', company_id.replace('_', ' ').title())
                     company_info = company_data.get('company_info', '')
                     
                     if (query_lower in company_name.lower() or 

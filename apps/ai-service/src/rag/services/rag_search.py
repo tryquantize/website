@@ -248,10 +248,20 @@ class RAGSearchService:
         ideal_scenarios = self._extract_ideal_scenarios(company_data)
         tagline = self._extract_tagline(company_data)
         
-        # Use the company name from the match data directly
-        display_name = company_match.get('company_name', 'Unknown')
+        # Use the company name from the match data directly, with fallback
+        display_name = company_match.get('company_name', '')
         if not display_name or display_name == 'Unknown':
             display_name = self._extract_company_name(company_data)
+        
+        # Final check - if still Unknown, try to extract from company_info
+        if display_name == 'Unknown Company' or display_name == 'Unknown':
+            info_text = company_data.get('company_info', '')
+            for line in info_text.split('\n'):
+                if line.startswith('Company:'):
+                    extracted_name = line.replace('Company:', '').strip()
+                    if extracted_name and extracted_name != 'Unknown':
+                        display_name = extracted_name
+                        break
         
         company_obj = {
             "name": display_name,
@@ -290,10 +300,10 @@ class RAGSearchService:
     
     def _extract_company_name(self, company_data: Dict[str, str]) -> str:
         """Extract company name from RAG data"""
-        # Try multiple sources for company name
+        # Try multiple sources for company name in order of preference
         sources = [
-            company_data.get('original_company_name', ''),
             company_data.get('folder_name', ''),
+            company_data.get('original_company_name', ''),
         ]
         
         for source in sources:

@@ -57,8 +57,8 @@ class FirebaseService:
                 company_id = company_doc.id
                 company_data = company_doc.to_dict()
                 
-                # Convert Firestore data to RAG format
-                companies_data[company_id] = self._convert_firestore_to_rag_format(company_data)
+                # Convert Firestore data to RAG format, passing doc_id for fallback
+                companies_data[company_id] = self._convert_firestore_to_rag_format(company_data, company_id)
             
             logger.info(f"Retrieved {len(companies_data)} companies from Firebase")
             return companies_data
@@ -67,11 +67,17 @@ class FirebaseService:
             logger.error(f"Failed to get companies from Firebase: {e}")
             return {}
     
-    def _convert_firestore_to_rag_format(self, firestore_data: Dict[str, Any]) -> Dict[str, str]:
+    def _convert_firestore_to_rag_format(self, firestore_data: Dict[str, Any], doc_id: str = '') -> Dict[str, str]:
         """Convert Firestore company data to RAG format"""
         try:
-            # Extract basic info
-            company_name = firestore_data.get('companyName', 'Unknown')
+            # Extract basic info - try multiple sources for company name
+            company_name = (
+                firestore_data.get('companyName', '') or 
+                firestore_data.get('name', '') or 
+                doc_id.replace('_', ' ').title() or 
+                'Unknown'
+            )
+            
             description = firestore_data.get('description', '')
             website = firestore_data.get('website', '')
             category = firestore_data.get('category', 'AI Tools')
@@ -121,17 +127,20 @@ Employees: {employees}"""
                 'pricing': pricing,
                 'use_cases': use_cases_text,
                 'folder_name': company_name,
-                'original_company_name': company_name  # Add backup field
+                'original_company_name': company_name,
+                'doc_id': doc_id  # Store document ID as backup
             }
             
         except Exception as e:
             logger.error(f"Failed to convert Firestore data: {e}")
+            fallback_name = doc_id.replace('_', ' ').title() if doc_id else 'Unknown'
             return {
-                'company_info': f"Company: {firestore_data.get('companyName', 'Unknown')}",
+                'company_info': f"Company: {fallback_name}",
                 'features': '',
                 'pricing': 'Contact for pricing',
                 'use_cases': '',
-                'folder_name': firestore_data.get('companyName', 'Unknown')
+                'folder_name': fallback_name,
+                'original_company_name': fallback_name
             }
     
     def search_companies(self, query: str, limit: int = 50) -> List[Dict[str, Any]]:
@@ -161,10 +170,14 @@ Employees: {employees}"""
                     query_lower in description or 
                     query_lower in category):
                     
+                    # Convert data and extract proper company name
+                    converted_data = self._convert_firestore_to_rag_format(company_data, company_doc.id)
+                    actual_company_name = converted_data.get('folder_name', company_doc.id.replace('_', ' ').title())
+                    
                     results.append({
                         'id': company_doc.id,
-                        'data': self._convert_firestore_to_rag_format(company_data),
-                        'company_name': company_data.get('companyName', 'Unknown')
+                        'data': converted_data,
+                        'company_name': actual_company_name
                     })
             
             logger.info(f"Found {len(results)} companies matching query: {query}")
