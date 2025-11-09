@@ -95,6 +95,7 @@ export default function ResultsPage() {
     // Check if mobile view (screen width < 768px)
     return window.innerWidth < 768;
   });
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   
   // Handle screen resize for responsive sidebar
   useEffect(() => {
@@ -102,6 +103,7 @@ export default function ResultsPage() {
       const isMobile = window.innerWidth < 768;
       if (isMobile && !sidebarMinimized) {
         setSidebarMinimized(true);
+        setMobileSidebarOpen(false);
       } else if (!isMobile && sidebarMinimized) {
         setSidebarMinimized(false);
       }
@@ -781,31 +783,49 @@ export default function ResultsPage() {
       <div className="fixed inset-0 w-full h-full z-0">
         {tinderMode ? <RaycastBlueBackground /> : <RaycastBackground />}
       </div>
+      {/* Mobile Toggle Button */}
+      <div className="md:hidden fixed top-4 left-4 z-50">
+        <button
+          onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 transition"
+        >
+          <PanelLeftOpen className="h-5 w-5" />
+        </button>
+      </div>
+
       {/* Fixed Sidebar */}
       {showSidebar && (
-        <ConversationSidebar 
-          onNewConversation={handleNewConversation}
-          onSelectConversation={handleSelectConversation}
-          isMinimized={sidebarMinimized}
-          onToggleMinimized={() => setSidebarMinimized(!sidebarMinimized)}
-          relatedQuestions={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.suggestions || [] : []}
-          onQuestionClick={handleSuggestionClick}
-          aiResponse={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.aiResponse : ''}
-          citations={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.citations || [] : []}
-          currentQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
-          conversationHistory={contentItems.slice(1).filter(item => item.type === 'result').map(item => ({
-            question: item.data.query,
-            answer: item.data.aiResponse,
-            citations: item.data.citations || [],
-            relatedQuestions: item.data.suggestions || []
-          }))}
-        />
+        <div className={`${window.innerWidth < 768 && !mobileSidebarOpen ? 'hidden' : ''}`}>
+          <ConversationSidebar 
+            onNewConversation={handleNewConversation}
+            onSelectConversation={handleSelectConversation}
+            isMinimized={sidebarMinimized && !mobileSidebarOpen}
+            onToggleMinimized={() => {
+              if (window.innerWidth < 768) {
+                setMobileSidebarOpen(!mobileSidebarOpen);
+              } else {
+                setSidebarMinimized(!sidebarMinimized);
+              }
+            }}
+            relatedQuestions={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.suggestions || [] : []}
+            onQuestionClick={handleSuggestionClick}
+            aiResponse={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.aiResponse : ''}
+            citations={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.citations || [] : []}
+            currentQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+            conversationHistory={contentItems.slice(1).filter(item => item.type === 'result').map(item => ({
+              question: item.data.query,
+              answer: item.data.aiResponse,
+              citations: item.data.citations || [],
+              relatedQuestions: item.data.suggestions || []
+            }))}
+          />
+        </div>
       )}
 
 
 
       {/* Main Content */}
-      <div className={`px-2 sm:px-4 md:px-6 lg:px-8 transition-all duration-300 ${showSidebar ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'}`}>
+      <div className={`px-2 sm:px-4 md:px-6 lg:px-8 transition-all duration-300 ${showSidebar && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'}`}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
         <div className="space-y-4">
           {contentItems.map((item) => (

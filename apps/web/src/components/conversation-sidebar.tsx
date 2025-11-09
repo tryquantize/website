@@ -163,7 +163,16 @@ export function ConversationSidebar({ onSelectConversation, isMinimized, onToggl
   };
 
   return (
-    <div className="fixed left-0 top-16 bottom-0 w-80 bg-white/5 backdrop-blur-2xl border-r border-white/15 flex flex-col z-30">
+    <>
+      {/* Mobile Overlay */}
+      {window.innerWidth < 768 && !isMinimized && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+          onClick={onToggleMinimized}
+        />
+      )}
+      
+      <div className={`fixed left-0 top-0 bottom-0 w-80 bg-white/5 backdrop-blur-2xl border-r border-white/15 flex flex-col ${window.innerWidth < 768 ? 'z-50' : 'z-30'} ${window.innerWidth < 768 ? 'top-0' : 'top-16'}`}>
       {/* Header */}
       <div className="p-4 border-b border-white/10 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -562,6 +571,7 @@ export function ConversationSidebar({ onSelectConversation, isMinimized, onToggl
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
