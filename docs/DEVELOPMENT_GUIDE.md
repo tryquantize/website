@@ -4,9 +4,11 @@
 
 ### Prerequisites
 
+- **Docker Desktop** (required for development)
 - **Node.js** 18+ and **Yarn**
-- **Python** 3.8+
+- **Python** 3.8+ (for AI service development)
 - **Git**
+- **Firebase Account** (for authentication setup)
 
 ### Quick Setup
 
@@ -58,21 +60,29 @@ quantize-website/
 ### Available Scripts
 
 ```bash
-# Development
-yarn dev          # Start development server (API only)
-yarn launch       # Start all services (recommended)
+# Development (Docker - Recommended)
+yarn launch       # Start all services with Docker
+yarn dev          # Alternative: Start with Docker
+yarn docker:dev   # Explicit Docker development mode
+
+# Development (Manual)
+yarn setup        # One-time setup for manual development
+cd apps/ai-service && python app.py  # Start AI service manually
 
 # Building
 yarn build        # Build for production
 yarn start        # Start production server
+yarn docker:prod  # Production Docker build
 
 # Maintenance
-yarn clean        # Clean build artifacts
+yarn clean        # Stop and clean Docker containers
+yarn docker:down  # Stop Docker containers
+yarn docker:logs  # View container logs
 yarn check        # Type check TypeScript
 
-# Setup
-yarn setup        # Automated setup script
-yarn setup-manual # Manual setup steps
+# Docker Management
+yarn docker:build # Build Docker containers
+yarn docker:up    # Start containers without rebuild
 ```
 
 ### Environment Configuration
@@ -83,7 +93,17 @@ Create `.env.local` with required variables:
 # AI Service Configuration
 OPENROUTER_API_KEY=your_openrouter_key_here
 EXA_API_KEY=your_exa_key_here
+FIRECRAWL_API_KEY=your_firecrawl_key_here
 AI_SERVICE_URL=http://localhost:5002
+
+# Firebase Authentication (Optional but recommended)
+VITE_FIREBASE_API_KEY=your_firebase_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456
+VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
 
 # Development Settings
 NODE_ENV=development
@@ -95,16 +115,30 @@ VERCEL_ANALYTICS_ID=your_analytics_id
 
 ### Getting API Keys
 
-1. **OpenRouter API Key**:
+1. **OpenRouter API Key** (Required):
    - Visit [openrouter.ai](https://openrouter.ai)
    - Sign up for an account
    - Generate API key in dashboard
    - Add to `.env.local` as `OPENROUTER_API_KEY`
+   - Used for: AI model access (GPT-4o Mini, Gemini 2.0, etc.)
 
-2. **Exa API Key**:
+2. **Exa API Key** (Required for web search):
    - Visit [exa.ai](https://exa.ai)
    - Create account and get API key
    - Add to `.env.local` as `EXA_API_KEY`
+   - Used for: Real-time web search functionality
+
+3. **Firecrawl API Key** (Required for company auto-fill):
+   - Visit [firecrawl.dev](https://firecrawl.dev)
+   - Sign up and get API key
+   - Add to `.env.local` as `FIRECRAWL_API_KEY`
+   - Used for: Web scraping and company data extraction
+
+4. **Firebase Setup** (Optional but recommended):
+   - Follow the [Firebase Setup Guide](FIREBASE_SETUP.md)
+   - Configure authentication and get config values
+   - Add all `VITE_FIREBASE_*` variables to `.env.local`
+   - Used for: User authentication and data storage
 
 ## Development Best Practices
 

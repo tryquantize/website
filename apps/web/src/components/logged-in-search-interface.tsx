@@ -29,7 +29,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const { user } = useAuth();
   const { currentUser } = useFirebaseAuth();
   const [, setLocation] = useLocation();
-  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['company']));
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
