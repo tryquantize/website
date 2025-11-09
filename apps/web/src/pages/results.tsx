@@ -825,7 +825,7 @@ export default function ResultsPage() {
 
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} px-4 md:px-6 lg:px-8`}>
+      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} pl-0 pr-0 md:px-6 lg:px-8`}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
         <div className="space-y-4">
           {contentItems.map((item) => (
