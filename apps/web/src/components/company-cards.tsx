@@ -466,7 +466,7 @@ export function CompanyCards({
 
       {tinderMode ? (
         /* Tinder Mode View - Using existing cards */
-        <div className="relative h-[700px] flex items-center justify-center px-4">
+        <div className="relative h-[700px] flex items-center justify-center px-4 md:px-8">
           {currentCardIndex >= filteredCompanies.length ? (
             <div className="text-center text-white">
               <Heart className="w-16 h-16 mx-auto mb-4 text-pink-500" />
@@ -477,7 +477,7 @@ export function CompanyCards({
               </Button>
             </div>
           ) : (
-            <div className="relative w-full max-w-2xl h-[500px]">
+            <div className="relative w-full max-w-2xl h-[500px] mx-auto">
               {/* Stack of existing cards in tinder style */}
               {filteredCompanies.slice(currentCardIndex, currentCardIndex + 3).map((company, stackIndex) => {
                 const actualIndex = currentCardIndex + stackIndex;
@@ -865,14 +865,14 @@ export function CompanyCards({
         /* Original Grid View */
         <div className="space-y-6">
         {/* Mobile: Horizontal scroll with single cards */}
-        <div className="md:hidden">
+        <div className="md:hidden px-2">
           {filteredCompanies.length > 1 && (
-            <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center justify-between mb-4 px-2">
               <span className="text-white/60 text-sm">Swipe to explore more companies</span>
               <span className="text-white/40 text-xs">{filteredCompanies.length} companies</span>
             </div>
           )}
-          <div className="flex gap-4 overflow-x-auto pb-4 mobile-card-scroll">
+          <div className="flex gap-4 overflow-x-auto pb-4 mobile-card-scroll px-2">
             {filteredCompanies.map((company, index) => {
           const availableSections = getAvailableSections(company);
           const isExpanded = expandedCards[index];
@@ -881,7 +881,7 @@ export function CompanyCards({
           return (
           <div 
             key={index} 
-            className={`gradient-company-card ${isExpanded ? 'expanded' : ''} mobile-card w-80`}
+            className={`gradient-company-card ${isExpanded ? 'expanded' : ''} mobile-card w-[85vw] max-w-sm mx-auto flex-shrink-0`}
             onClick={isExpanded ? (e) => {
               // Only collapse if clicking on blank area (not on interactive elements)
               if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('blank-area')) {
@@ -1451,12 +1451,12 @@ export function CompanyCards({
             })}
           </div>
           {filteredCompanies.length > 1 && (
-            <div className="flex justify-center mt-4">
-              <div className="flex gap-1">
+            <div className="flex justify-center mt-6 px-4">
+              <div className="flex gap-2">
                 {filteredCompanies.map((_, index) => (
                   <div 
                     key={index} 
-                    className="w-2 h-2 rounded-full bg-white/20"
+                    className="w-2 h-2 rounded-full bg-white/30"
                   />
                 ))}
               </div>
@@ -2054,7 +2054,7 @@ export function CompanyCards({
       
       {/* Compare Section - only show in grid mode */}
       {!tinderMode && selectedForComparison.size >= 2 && (
-        <div className="mt-6 bg-black/20 backdrop-blur-3xl p-4 border border-white/10 rounded-lg">
+        <div className="mt-6 bg-black/20 backdrop-blur-3xl p-4 md:p-6 border border-white/10 rounded-lg mx-2 md:mx-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <GitCompare className="w-5 h-5 text-blue-400" />

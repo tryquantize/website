@@ -361,11 +361,11 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
           ? 'opacity-0 scale-90 pointer-events-none'
           : 'transform translate-y-0 opacity-100 scale-100'
       }`}>
-        <div className={`relative rounded-[16px] xs:rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[80px] xs:h-[85px] sm:h-[90px] md:h-[100px] lg:h-[110px] ${
+        <div className={`relative rounded-[16px] xs:rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[88px] xs:h-[94px] sm:h-[90px] md:h-[100px] lg:h-[110px] ${
           isSearching ? 'transform scale-95' : 'transform scale-100'
         }`}>
           {/* Search input area - mobile optimized */}
-          <div className="relative px-3 xs:px-4 sm:px-6 flex items-center h-[48px] xs:h-[50px] sm:h-[55px] md:h-[60px]">
+          <div className="relative px-3 xs:px-4 sm:px-6 flex items-center h-[53px] xs:h-[55px] sm:h-[55px] md:h-[60px]">
             {/* Undo button (only show if there's history) - Mobile optimized */}
             {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
               <TooltipProvider>
@@ -441,7 +441,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
           </div>
 
           {/* Bottom row - Icons - mobile optimized */}
-          <div className="relative border-t border-white/10 px-3 xs:px-4 sm:px-6 py-1 h-[30px] xs:h-[32px] sm:h-[34px] md:h-[36px]">
+          <div className="relative border-t border-white/10 px-3 xs:px-4 sm:px-6 py-1 h-[33px] xs:h-[35px] sm:h-[34px] md:h-[36px]">
             <div className="flex items-center justify-between">
               {/* Left - Brain icon, model name, and Location selector - Mobile optimized */}
               <div className="relative flex items-center space-x-1.5 sm:space-x-2">

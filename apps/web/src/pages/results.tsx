@@ -783,25 +783,25 @@ export default function ResultsPage() {
       <div className="fixed inset-0 w-full h-full z-0">
         {tinderMode ? <RaycastBlueBackground /> : <RaycastBackground />}
       </div>
-      {/* Mobile Toggle Button */}
-      <div className="md:hidden fixed top-4 left-4 z-50">
+      {/* Mobile Toggle Button - Bottom Left */}
+      <div className="md:hidden fixed bottom-6 left-4 z-50">
         <button
           onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 transition"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 transition shadow-lg"
         >
-          <PanelLeftOpen className="h-5 w-5" />
+          <PanelLeftOpen className="h-6 w-6" />
         </button>
       </div>
 
       {/* Fixed Sidebar */}
       {showSidebar && (
-        <div className={`${window.innerWidth < 768 && !mobileSidebarOpen ? 'hidden' : ''}`}>
+        <div className={`${typeof window !== 'undefined' && window.innerWidth < 768 && !mobileSidebarOpen ? 'hidden' : ''}`}>
           <ConversationSidebar 
             onNewConversation={handleNewConversation}
             onSelectConversation={handleSelectConversation}
             isMinimized={sidebarMinimized && !mobileSidebarOpen}
             onToggleMinimized={() => {
-              if (window.innerWidth < 768) {
+              if (typeof window !== 'undefined' && window.innerWidth < 768) {
                 setMobileSidebarOpen(!mobileSidebarOpen);
               } else {
                 setSidebarMinimized(!sidebarMinimized);
@@ -825,7 +825,7 @@ export default function ResultsPage() {
 
 
       {/* Main Content */}
-      <div className={`px-2 sm:px-4 md:px-6 lg:px-8 transition-all duration-300 ${showSidebar && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'}`}>
+      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} px-4 md:px-6 lg:px-8`}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
         <div className="space-y-4">
           {contentItems.map((item) => (
@@ -908,7 +908,7 @@ export default function ResultsPage() {
         
         {/* Suppliers Section */}
         {showSuppliersSection && allCompanies.length > 0 && (
-          <div className="bg-black/20 backdrop-blur-xl p-4 border border-white/10">
+          <div className="bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
             <h3 className="text-lg font-semibold text-white mb-2">Would you like Companies to reach out to you?</h3>
             <p className="text-white/70 text-sm mb-4">Get personalized quotes and offers directly from verified Companies</p>
             <div className="flex space-x-4">
@@ -930,7 +930,7 @@ export default function ResultsPage() {
         
         {/* Tinder Mode Toggle */}
         {allCompanies.length > 0 && (
-          <div className="bg-black/20 backdrop-blur-xl p-4 border border-white/10">
+          <div className="bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Button

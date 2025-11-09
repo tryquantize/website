@@ -14,6 +14,8 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    padding-left: 0;
+    padding-right: 0;
   }
   
   .mobile-card-scroll::-webkit-scrollbar {
@@ -35,7 +37,12 @@
   }
   
   .mobile-card {
-    scroll-snap-align: start;
+    scroll-snap-align: center;
     flex-shrink: 0;
+  }
+  
+  /* Ensure proper mobile layout */
+  .gradient-company-card.mobile-card {
+    min-height: 280px;
   }
 }
