@@ -1,4 +1,4 @@
-import { MoveRight, PhoneCall } from "lucide-react";
+import { MoveRight, PhoneCall, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ParticleTextEffect } from "@/components/ui/particle-text-effect";
 
@@ -12,6 +12,11 @@ function Hero() {
   // Handle navigation to login with redirect
   const navigateToLogin = () => {
     window.location.href = "https://quantize.site/auth?redirect=/home";
+  };
+
+  // Handle navigation to add company page
+  const navigateToAddCompany = () => {
+    window.location.href = "/add-company";
   };
 
   return (
@@ -87,6 +92,12 @@ function Hero() {
               Try for free
               <div className="icon">
                 <MoveRight className="w-4 h-4" />
+              </div>
+            </button>
+            <button className="cssbuttons-io-button" onClick={navigateToAddCompany}>
+              Add Your Company
+              <div className="icon">
+                <Building2 className="w-4 h-4" />
               </div>
             </button>
           </div>
