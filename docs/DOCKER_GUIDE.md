@@ -1,6 +1,6 @@
 # 🐳 Docker Guide for Quantize Website
 
-This guide covers how to run the Quantize Website using Docker for both development and production environments.
+This guide covers how to run the Quantize Website using Docker for both development and production environments. The project features a comprehensive Docker setup with multi-service architecture including React frontend, Express API, Python AI service with RAG capabilities, and Firebase integration.
 
 ## 📋 Prerequisites
 
@@ -13,6 +13,8 @@ This guide covers how to run the Quantize Website using Docker for both developm
 ### Development Mode
 ```bash
 # Using yarn script (recommended)
+yarn launch
+# or
 yarn docker:dev
 
 # Or directly with Docker Compose
@@ -41,18 +43,22 @@ docker-compose -f docker-compose.prod.yml up --build -d
 
 ```bash
 # Development
-yarn docker:dev          # Start development environment
+yarn launch              # Start development environment (recommended)
+yarn docker:dev          # Alternative development start
 yarn docker:build        # Build all containers
 yarn docker:up           # Start containers (without rebuild)
 yarn docker:down         # Stop and remove containers
 yarn docker:logs         # View logs from all services
+yarn clean               # Stop containers and clean up
 
 # Production
 yarn docker:prod         # Start production environment
 
 # Direct Docker Compose commands
 docker-compose up --build              # Development
-docker-compose -f docker-compose.prod.yml up -d  # Production
+docker-compose down --remove-orphans   # Stop and cleanup
+docker-compose logs -f                 # Follow logs
+docker-compose ps                      # Check service status
 ```
 
 ## 🏗️ Architecture
@@ -61,18 +67,23 @@ docker-compose -f docker-compose.prod.yml up -d  # Production
 
 1. **web** (Port 3001)
    - Node.js application with Express API
-   - Serves React frontend
-   - Handles authentication and API routing
+   - Serves React frontend with Vite
+   - Handles Firebase authentication
+   - API proxy to AI service
+   - Real-time streaming support
 
 2. **ai-service** (Port 5002)
    - Python Flask application
-   - AI-powered search and enrichment
-   - Health checks enabled
+   - Advanced RAG system with 18+ companies
+   - Dual-mode search (RAG + Web)
+   - OpenRouter, Exa, and Firecrawl integration
+   - Health checks and comprehensive logging
 
 3. **nginx** (Port 80, Production only)
    - Reverse proxy for load balancing
    - SSL termination ready
    - Static file serving
+   - Gzip compression
 
 ### Networks
 - `quantize-network` - Internal Docker network for service communication
@@ -83,15 +94,24 @@ docker-compose -f docker-compose.prod.yml up -d  # Production
 
 Create `.env.local` with:
 ```bash
-# AI Service
+# AI Service APIs (Required)
 OPENROUTER_API_KEY=your_openrouter_key
 EXA_API_KEY=your_exa_key
+FIRECRAWL_API_KEY=your_firecrawl_key
+AI_SERVICE_URL=http://localhost:5002
 
-# Firebase (optional)
+# Firebase Authentication (Optional but recommended)
 VITE_FIREBASE_API_KEY=your_firebase_key
-VITE_FIREBASE_AUTH_DOMAIN=your_domain
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your_project_id
-# ... other Firebase config
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abcdef123456
+VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
+
+# Development Settings
+NODE_ENV=development
+PORT=3001
 ```
 
 ### Development vs Production
@@ -103,6 +123,9 @@ VITE_FIREBASE_PROJECT_ID=your_project_id
 | Nginx Proxy | ❌ Direct access | ✅ Reverse proxy |
 | Container Restart | Manual | ✅ Auto-restart |
 | Health Checks | ✅ Basic | ✅ Enhanced |
+| RAG Data | ✅ Volume mounted | ✅ Copied to image |
+| Firebase Auth | ✅ Development | ✅ Production |
+| API Integration | ✅ All APIs | ✅ All APIs |
 
 ## 🔍 Monitoring & Debugging
 
@@ -121,12 +144,28 @@ docker-compose -f docker-compose.prod.yml logs -f
 
 ### Health Checks
 ```bash
-# Check service health
+# Check AI service health (comprehensive)
 curl http://localhost:5002/health
-curl http://localhost:3001/api/health
+
+# Check web service
+curl http://localhost:3001
 
 # Docker health status
 docker-compose ps
+
+# Check specific service logs
+docker-compose logs ai-service
+docker-compose logs web
+
+# Test RAG search
+curl -X POST http://localhost:5002/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "AI tools", "webSearchEnabled": false}'
+
+# Test web search
+curl -X POST http://localhost:5002/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "latest AI tools", "webSearchEnabled": true}'
 ```
 
 ### Container Shell Access
@@ -164,6 +203,18 @@ docker-compose exec ai-service bash
 4. **AI Service Connection Issues**
    - Verify `AI_SERVICE_URL=http://ai-service:5002` in web service
    - Check network connectivity: `docker-compose exec web ping ai-service`
+   - Test AI service health: `curl http://localhost:5002/health`
+   - Check RAG data loading: Look for "RAG companies loaded" in health response
+
+5. **RAG Data Issues**
+   - Ensure company data exists: `ls apps/ai-service/src/rag/companies/`
+   - Check file permissions: `chmod -R 644 apps/ai-service/src/rag/companies/`
+   - Verify data loading in logs: `docker-compose logs ai-service | grep "companies loaded"`
+
+6. **Firebase Authentication Issues**
+   - Check all `VITE_FIREBASE_*` variables are set
+   - Verify authorized domains in Firebase Console
+   - Test authentication in browser console
 
 ### Performance Optimization
 
@@ -234,18 +285,52 @@ yarn docker:prod
 
 ### Container Stats
 ```bash
+# Real-time container resource usage
 docker stats
+
+# Specific service stats
+docker stats quantize-web quantize-ai-service
 ```
 
 ### Resource Usage
 ```bash
+# Docker system resource usage
 docker system df
+
+# Clean up unused resources
+docker system prune -a
 ```
 
 ### Container Inspection
 ```bash
+# Process inspection
 docker-compose exec web ps aux
 docker-compose exec ai-service ps aux
+
+# Container details
+docker inspect quantize-web
+docker inspect quantize-ai-service
+
+# Network inspection
+docker network ls
+docker network inspect quantize-network
+```
+
+### Performance Testing
+```bash
+# Test search performance
+time curl -s -X POST http://localhost:5002/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "AI chatbots", "webSearchEnabled": false}' | jq '.processingTime'
+
+# Load test with multiple requests
+for i in {1..10}; do
+  curl -s http://localhost:5002/health > /dev/null &
+done
+wait
+
+# Monitor logs during testing
+docker-compose logs -f --tail=50
 ```
 
 This Docker setup provides a complete containerized environment for the Quantize Website, ensuring consistency across development and production environments.
