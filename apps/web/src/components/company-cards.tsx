@@ -1385,7 +1385,7 @@ export function CompanyCards({
                           className="w-full text-left flex items-center justify-between text-sm font-semibold text-white hover:text-white/80 transition-colors py-2 border-t border-white/10"
                         >
                           <span>About Company</span>
-                          <span className={`transform transition-transform ${aboutDropdownStates[index] ? 'rotate-180' : ''}`}>▼</span>
+                          <span className={`transform transition-transform ${aboutDropdownStates[index] ? 'rotate-180' : ''}`}>v</span>
                         </button>
                         {aboutDropdownStates[index] && (
                           <div className="mt-2 text-xs text-white/80 bg-white/5 p-3 rounded leading-relaxed max-h-32 overflow-y-auto">
@@ -1981,7 +1981,7 @@ export function CompanyCards({
                           className="w-full text-left flex items-center justify-between text-sm font-semibold text-white hover:text-white/80 transition-colors py-2 border-t border-white/10"
                         >
                           <span>About Company</span>
-                          <span className={`transform transition-transform ${aboutDropdownStates[index] ? 'rotate-180' : ''}`}>▼</span>
+                          <span className={`transform transition-transform ${aboutDropdownStates[index] ? 'rotate-180' : ''}`}>v</span>
                         </button>
                         {aboutDropdownStates[index] && (
                           <div className="mt-2 text-xs text-white/80 bg-white/5 p-3 rounded leading-relaxed max-h-32 overflow-y-auto">
