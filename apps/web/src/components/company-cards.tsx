@@ -2047,8 +2047,6 @@ export function CompanyCards({
             })}
           </div>
         ))}
-          </div>
-        ))}
         </div>
         </div>
       
