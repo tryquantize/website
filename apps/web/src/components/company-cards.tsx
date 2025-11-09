@@ -648,10 +648,10 @@ export function CompanyCards({
                                 </div>
                                 <div className="space-y-1">
                                   {company.specifications ? company.specifications.slice(0, 5).map((spec, i) => (
-                                    <div key={i} className="text-xs text-white/80">• {spec}</div>
+                                    <div key={i} className="text-xs text-white/80">- {spec}</div>
                                   )) : (
                                     company.features && company.features.slice(0, 5).map((feature, i) => (
-                                      <div key={i} className="text-xs text-white/80">• {feature}</div>
+                                      <div key={i} className="text-xs text-white/80">- {feature}</div>
                                     ))
                                   )}
                                 </div>
@@ -723,7 +723,7 @@ export function CompanyCards({
                                 </div>
                                 <div className="space-y-1">
                                   {company.productsServices.slice(0, 3).map((product, i) => (
-                                    <div key={i} className="text-xs text-white/80 leading-relaxed">• {product}</div>
+                                    <div key={i} className="text-xs text-white/80 leading-relaxed">- {product}</div>
                                   ))}
                                 </div>
                               </div>
@@ -775,7 +775,7 @@ export function CompanyCards({
                                 </div>
                                 <div className="space-y-1">
                                   {(company.enhancedUseCases as string[]).slice(0, 3).map((useCase, i) => (
-                                    <div key={i} className="text-xs text-white/80">• {useCase}</div>
+                                    <div key={i} className="text-xs text-white/80">- {useCase}</div>
                                   ))}
                                 </div>
                               </div>
@@ -1273,7 +1273,7 @@ export function CompanyCards({
                         </div>
                         <div className="space-y-1">
                           {(expandedProducts[index] ? company.productsServices : company.productsServices!.slice(0, 3)).map((product, i) => (
-                            <div key={i} className="text-xs text-white/80 leading-relaxed">• {product.length > 120 ? product.substring(0, 120) + '...' : product}</div>
+                            <div key={i} className="text-xs text-white/80 leading-relaxed">- {product.length > 120 ? product.substring(0, 120) + '...' : product}</div>
                           ))}
                           {company.productsServices!.length > 3 && (
                             <button
@@ -1297,10 +1297,10 @@ export function CompanyCards({
                         </div>
                         <div className="space-y-1">
                           {company.specifications ? company.specifications.slice(0, 5).map((spec, i) => (
-                            <div key={i} className="text-xs text-white/80">• {spec}</div>
+                            <div key={i} className="text-xs text-white/80">- {spec}</div>
                           )) : (
                             company.features && company.features.slice(0, 5).map((feature, i) => (
-                              <div key={i} className="text-xs text-white/80">• {feature}</div>
+                              <div key={i} className="text-xs text-white/80">- {feature}</div>
                             ))
                           )}
                         </div>
@@ -1357,7 +1357,7 @@ export function CompanyCards({
                         </div>
                         <div className="space-y-1">
                           {(company.enhancedUseCases as string[]).slice(0, 3).map((useCase, i) => (
-                            <div key={i} className="text-xs text-white/80">• {useCase}</div>
+                            <div key={i} className="text-xs text-white/80">- {useCase}</div>
                           ))}
                         </div>
                       </div>
@@ -1869,7 +1869,7 @@ export function CompanyCards({
                         </div>
                         <div className="space-y-1">
                           {(expandedProducts[index] ? company.productsServices : company.productsServices!.slice(0, 3)).map((product, i) => (
-                            <div key={i} className="text-xs text-white/80 leading-relaxed">• {product.length > 120 ? product.substring(0, 120) + '...' : product}</div>
+                            <div key={i} className="text-xs text-white/80 leading-relaxed">- {product.length > 120 ? product.substring(0, 120) + '...' : product}</div>
                           ))}
                           {company.productsServices!.length > 3 && (
                             <button
@@ -1893,10 +1893,10 @@ export function CompanyCards({
                         </div>
                         <div className="space-y-1">
                           {company.specifications ? company.specifications.slice(0, 5).map((spec, i) => (
-                            <div key={i} className="text-xs text-white/80">• {spec}</div>
+                            <div key={i} className="text-xs text-white/80">- {spec}</div>
                           )) : (
                             company.features && company.features.slice(0, 5).map((feature, i) => (
-                              <div key={i} className="text-xs text-white/80">• {feature}</div>
+                              <div key={i} className="text-xs text-white/80">- {feature}</div>
                             ))
                           )}
                         </div>
@@ -1953,7 +1953,7 @@ export function CompanyCards({
                         </div>
                         <div className="space-y-1">
                           {(company.enhancedUseCases as string[]).slice(0, 3).map((useCase, i) => (
-                            <div key={i} className="text-xs text-white/80">• {useCase}</div>
+                            <div key={i} className="text-xs text-white/80">- {useCase}</div>
                           ))}
                         </div>
                       </div>
