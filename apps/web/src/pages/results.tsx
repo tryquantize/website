@@ -792,7 +792,7 @@ export default function ResultsPage() {
       />
       
       {/* Fixed Mobile Sections - Below Header */}
-      <div className="md:hidden sticky top-16 z-40 bg-black/20 backdrop-blur-xl border-b border-white/10">
+      <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-black/20 backdrop-blur-xl border-b border-white/10">
         {/* Suppliers Section */}
         {showSuppliersSection && allCompanies.length > 0 && (
           <div className="p-4 border-b border-white/10">
@@ -888,7 +888,7 @@ export default function ResultsPage() {
 
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} pl-0 pr-0 md:px-6 lg:px-8 pb-8 pt-4 md:pt-6`}>
+      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} pl-0 pr-0 md:px-6 lg:px-8 pb-8 pt-4 md:pt-6`} style={{marginTop: typeof window !== 'undefined' && window.innerWidth < 768 && (showSuppliersSection || allCompanies.length > 0) ? '120px' : '0'}}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
         <div className="space-y-4">
           {contentItems.map((item) => (

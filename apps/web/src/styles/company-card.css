@@ -108,12 +108,18 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .gradient-company-card {
-    width: 340px;
+    width: 100%;
     height: 286px;
+    flex: none;
   }
   
   .gradient-company-card.expanded {
-    width: 95vw;
-    max-width: 500px;
+    width: 100%;
+    max-width: none;
+  }
+  
+  .gradient-company-card.mobile-card {
+    width: 100%;
+    margin-bottom: 1rem;
   }
 }
