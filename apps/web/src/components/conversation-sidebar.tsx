@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ArrowRight, Brain, Building2, User, Package, Sparkles, Loader2, Plus, MessageSquare, ArrowLeft, Globe } from 'lucide-react';
+import { Search, ArrowRight, Brain, Building2, User, Package, Sparkles, Loader2, Plus, MessageSquare, ArrowLeft, Globe, PanelLeftOpen, PanelLeftClose } from 'lucide-react';
 import { LocationSelector } from '@/components/location-selector';
 import { Input } from '@/components/ui/input';
 import { QuantizeLogo } from '@/components/quantize-logo';
@@ -13,6 +13,7 @@ interface ConversationSidebarProps {
   onNewConversation: () => void;
   onSelectConversation: (conversationId: string) => void;
   isMinimized: boolean;
+  onToggleMinimized?: () => void;
   relatedQuestions?: string[];
   onQuestionClick?: (question: string, webSearchEnabled?: boolean) => void;
   aiResponse?: string;
@@ -21,7 +22,7 @@ interface ConversationSidebarProps {
   conversationHistory?: Array<{question: string, answer: string, citations?: Array<{id: number, title: string, url: string}>, relatedQuestions?: string[]}>;
 }
 
-export function ConversationSidebar({ onSelectConversation, isMinimized, relatedQuestions = [], onQuestionClick, aiResponse, citations = [], currentQuery, conversationHistory = [] }: ConversationSidebarProps) {
+export function ConversationSidebar({ onSelectConversation, isMinimized, onToggleMinimized, relatedQuestions = [], onQuestionClick, aiResponse, citations = [], currentQuery, conversationHistory = [] }: ConversationSidebarProps) {
   const [followUpQuery, setFollowUpQuery] = useState('');
   const [isLoadingFollowUp, setIsLoadingFollowUp] = useState(false);
   const [selectedModel, setSelectedModel] = useState("GPT-4o Mini");
@@ -87,6 +88,21 @@ export function ConversationSidebar({ onSelectConversation, isMinimized, related
   if (isMinimized) {
     return (
       <div className="fixed left-0 top-16 bottom-0 w-12 bg-white/5 backdrop-blur-2xl border-r border-white/15 flex flex-col z-30">
+        <div className="p-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={onToggleMinimized}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition"
+                >
+                  <PanelLeftOpen className="h-4 w-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Expand sidebar</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <div className="flex-1" />
       </div>
     );
@@ -154,6 +170,17 @@ export function ConversationSidebar({ onSelectConversation, isMinimized, related
           <h2 className="text-white font-medium text-sm">Welcome {firstName}!</h2>
           <div className="flex items-center space-x-2">
             <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={onToggleMinimized}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 transition md:hidden"
+                  >
+                    <PanelLeftClose className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Minimize sidebar</TooltipContent>
+              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button

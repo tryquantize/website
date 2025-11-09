@@ -864,8 +864,610 @@ export function CompanyCards({
       ) : (
         /* Original Grid View */
         <div className="space-y-6">
+        {/* Mobile: Horizontal scroll with single cards */}
+        <div className="md:hidden">
+          {filteredCompanies.length > 1 && (
+            <div className="flex items-center justify-between mb-3 px-1">
+              <span className="text-white/60 text-sm">Swipe to explore more companies</span>
+              <span className="text-white/40 text-xs">{filteredCompanies.length} companies</span>
+            </div>
+          )}
+          <div className="flex gap-4 overflow-x-auto pb-4 mobile-card-scroll">
+            {filteredCompanies.map((company, index) => {
+          const availableSections = getAvailableSections(company);
+          const isExpanded = expandedCards[index];
+          const cardHeight = isExpanded ? "auto" : "200px";
+          
+          return (
+          <div 
+            key={index} 
+            className={`gradient-company-card ${isExpanded ? 'expanded' : ''} mobile-card w-80`}
+            onClick={isExpanded ? (e) => {
+              // Only collapse if clicking on blank area (not on interactive elements)
+              if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('blank-area')) {
+                toggleCardExpansion(index);
+              }
+            } : undefined}
+          >
+            <div className="gradient-company-card-info">
+            {chatStates[index] ? (
+              <div className="space-y-3 h-full flex flex-col p-4">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-white text-base font-medium">{formatCompanyName(company.name)}</h5>
+                  <Button
+                    onClick={() => handleBackClick(index)}
+                    size="sm"
+                    variant="outline"
+                    className="border-white/20 text-white/80 hover:bg-white/10 text-xs"
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                  </Button>
+                </div>
+                
+                <div className="bg-black/20 rounded-lg p-3 flex-1 overflow-y-auto space-y-2">
+                  {(messages[index] || []).map((msg, msgIndex) => (
+                    <div key={msgIndex} className={`text-xs ${msg.isUser ? 'text-right' : 'text-left'}`}>
+                      <span className={`inline-block px-2 py-1 rounded ${msg.isUser ? 'bg-blue-600 text-white' : 'bg-white/10 text-white/80'}`}>
+                        {msg.text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Input
+                    value={inputValues[index] || ""}
+                    onChange={(e) => setInputValues(prev => ({...prev, [index]: e.target.value}))}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(index)}
+                    placeholder="Type your message..."
+                    className="flex-1 h-8 text-xs bg-white/5 border-white/20 text-white"
+                  />
+                  <Button
+                    onClick={() => handleSendMessage(index)}
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Send className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className={`space-y-3 h-full flex flex-col p-4 ${isExpanded ? 'overflow-y-auto' : ''}`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-4">
+                    <motion.div
+                      className={`${isExpanded ? 'w-12 h-12' : 'w-14 h-14'} rounded-full flex items-center justify-center overflow-hidden flex-shrink-0`}
+                      style={{
+                        background: company.logoUrl ? "transparent" : "linear-gradient(225deg, #171c2c 0%, #121624 100%)",
+                        boxShadow: "0 4px 8px -1px rgba(0, 0, 0, 0.2), inset 1px 1px 3px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.4)"
+                      }}
+                      whileHover={{ y: -1, boxShadow: "0 6px 12px -1px rgba(0, 0, 0, 0.3), inset 1px 1px 3px rgba(255, 255, 255, 0.15), inset -1px -1px 2px rgba(0, 0, 0, 0.5)" }}
+                    >
+                      {company.logoUrl ? (
+                        <img src={company.logoUrl} alt={`${company.name} logo`} className="w-full h-full object-cover" />
+                      ) : (
+                        <Building2 className={`${isExpanded ? 'w-6 h-6' : 'w-7 h-7'} text-white`} />
+                      )}
+                    </motion.div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h5 className={`text-white ${isExpanded ? 'text-lg' : 'text-xl'} font-semibold truncate`}>{formatCompanyName(company.name)}</h5>
+                          {isExpanded && company.linkedin_url && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(company.linkedin_url, "_blank", "noopener,noreferrer");
+                              }}
+                              className="text-white/60 hover:text-blue-400 transition-colors flex-shrink-0"
+                              title="View LinkedIn Profile"
+                            >
+                              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+
+                      </div>
+                      <span className={`${isExpanded ? 'text-xs' : 'text-sm'} bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full font-medium`}>{company.category}</span>
+                    </div>
+                  </div>
+                  {currentUser && (
+                    <div className="flex space-x-1">
+                      {isExpanded && (
+                        <Button
+                          onClick={() => toggleCardExpansion(index)}
+                          size="sm"
+                          variant="ghost"
+                          className="p-1 h-auto"
+                          title="Collapse card"
+                        >
+                          <X className="w-4 h-4 text-white/60 hover:text-white" />
+                        </Button>
+                      )}
+                      <Button
+                        onClick={() => handleCompareToggle(index)}
+                        size="sm"
+                        variant="ghost"
+                        className="p-1 h-auto"
+                      >
+                        <GitCompare className={`w-4 h-4 ${selectedForComparison.has(index) ? 'text-blue-500' : 'text-white/40 hover:text-blue-400'}`} />
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          const companyId = `company_${index}_${company.name}`;
+                          if (isFavorite(companyId)) {
+                            removeFromFavorites(companyId);
+                          } else {
+                            trackEngagement(company.name, 'save');
+                            addToFavorites({
+                              id: companyId,
+                              type: 'company',
+                              name: company.name,
+                              description: company.description,
+                              features: company.features,
+                              pricing: company.pricing,
+                              website: company.website,
+                              category: company.category,
+                              specifications: company.specifications,
+                              location: company.location,
+                              about: company.about,
+                              linkedin_url: company.linkedin_url,
+                              rating: company.rating,
+                              companyStage: company.companyStage,
+                              industriesServed: company.industriesServed,
+                              pricingRanges: company.pricingRanges,
+                              pricingModel: company.pricingModel,
+                              employees: company.employees,
+                              productsServices: company.productsServices,
+                              topClients: company.topClients,
+                              logoUrl: company.logoUrl,
+                              founded: company.founded,
+                              enhancedAbout: company.enhancedAbout,
+                              enhancedUseCases: company.enhancedUseCases,
+                              tagline: company.tagline,
+                              trialAvailable: company.trialAvailable,
+                              customerSegments: company.customerSegments,
+                              uspTagline: company.uspTagline,
+                              deploymentType: company.deploymentType,
+                              idealScenarios: company.idealScenarios
+                            }, showFavoritesNotification);
+                          }
+                        }}
+                        size="sm"
+                        variant="ghost"
+                        className="p-1 h-auto"
+                      >
+                        <Heart className={`w-4 h-4 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Compact View - Basic Info */}
+                {!isExpanded && (
+                  <div className="flex-1 flex flex-col justify-between">
+                    {/* USP Tagline or Company Tagline */}
+                    {(hasData(company.uspTagline) || hasData(company.tagline)) && (
+                      <div className="mb-4">
+                        <p className="text-sm text-white/80 leading-relaxed">
+                          {company.uspTagline ? 
+                            (company.uspTagline.length > 140 ? company.uspTagline.substring(0, 140) + '...' : company.uspTagline) :
+                            (company.tagline!.length > 140 ? company.tagline!.substring(0, 140) + '...' : company.tagline)
+                          }
+                        </p>
+                      </div>
+                    )}
+                    
+
+                    
+                    {/* Engagement Stats */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-4 text-xs text-white/60">
+                        <div className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          <span>{engagementData[company.name]?.views || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MousePointer className="w-3 h-3" />
+                          <span>{engagementData[company.name]?.clicks || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Heart className="w-3 h-3" />
+                          <span>{engagementData[company.name]?.saves || 0}</span>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => toggleCardExpansion(index)}
+                        size="sm"
+                        className="bg-white text-black hover:bg-gray-100 text-xs px-3 py-1 h-7"
+                      >
+                        Learn More
+                      </Button>
+                    </div>
+                    
+                    {/* Bottom section with icons and actions */}
+                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/10">
+                      <div className="flex items-center gap-3">
+                        {company.website && company.website !== "#" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleVisitWebsite(company.website, company.name);
+                            }}
+                            className="text-white/60 hover:text-blue-400 transition-colors p-1"
+                            title="Visit Website"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </button>
+                        )}
+                        {company.linkedin_url && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(company.linkedin_url, "_blank", "noopener,noreferrer");
+                            }}
+                            className="text-white/60 hover:text-blue-400 transition-colors p-1"
+                            title="View LinkedIn Profile"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                            </svg>
+                          </button>
+                        )}
+                        {company.trialAvailable && (
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-green-300 text-xs font-medium">Trial</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {/* Section Icons */}
+                        {availableSections.slice(0, 5).map((section) => (
+                          <div key={section} className="text-white/60" title={section}>
+                            {getSectionIcon(section)}
+                          </div>
+                        ))}
+                        {availableSections.length > 5 && (
+                          <span className="text-xs text-white/60">+{availableSections.length - 5}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Expanded View - Full Details */}
+                {isExpanded && (
+                  <div className="space-y-4 blank-area" onClick={(e) => e.stopPropagation()}>
+                    
+                    {/* Company Info Grid */}
+                    <div className="grid grid-cols-4 gap-3 text-xs">
+                      {hasData(company.location) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <MapPin className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Location</span>
+                          </div>
+                          <div className="text-white/80">{company.location}</div>
+                        </div>
+                      )}
+                      {hasData(company.employees) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Users className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Employees</span>
+                          </div>
+                          <div className="text-white/80">{company.employees}</div>
+                        </div>
+                      )}
+                      {hasData(company.founded) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Calendar className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Founded</span>
+                          </div>
+                          <div className="text-white/80">{company.founded}</div>
+                        </div>
+                      )}
+                      {hasData(company.companyStage) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <TrendingUp className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Stage</span>
+                          </div>
+                          <div className="text-white/80">{company.companyStage}</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* New Fields Section */}
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      {hasData(company.customerSegments) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Target className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Customer Segments</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {company.customerSegments!.map((segment, i) => (
+                              <span key={i} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
+                                {segment}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {hasData(company.deploymentType) && (
+                        <div>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Building2 className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Deployment</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {company.deploymentType!.map((type, i) => (
+                              <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">
+                                {type}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {hasData(company.idealScenarios) && (
+                        <div className="col-span-2">
+                          <div className="flex items-center gap-1 mb-1">
+                            <Briefcase className="w-3 h-3 text-white/60" />
+                            <span className="font-semibold text-white">Ideal For</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {company.idealScenarios!.map((scenario, i) => (
+                              <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">
+                                {scenario}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {company.trialAvailable && (
+                        <div className="col-span-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-green-300 font-medium text-sm">Free Trial Available</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Industries */}
+                    {hasData(company.industriesServed) && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Target className="w-4 h-4 text-white/60" />
+                          <h6 className="text-sm font-semibold text-white">Industries Served</h6>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {(expandedIndustries[index] ? company.industriesServed : company.industriesServed!.slice(0, 3)).map((industry, i) => (
+                            <span key={i} className="text-xs text-white/80">
+                              {industry}{i < (expandedIndustries[index] ? company.industriesServed! : company.industriesServed!.slice(0, 3)).length - 1 ? ', ' : ''}
+                            </span>
+                          ))}
+                          {company.industriesServed!.length > 3 && (
+                            <button
+                              onClick={() => toggleIndustriesExpansion(index)}
+                              className="text-xs text-white/50 hover:text-white/80 underline ml-1"
+                            >
+                              {expandedIndustries[index] ? 'Show Less' : `+${company.industriesServed!.length - 3} more`}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Products/Services */}
+                    {hasData(company.productsServices) && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Award className="w-4 h-4 text-white/60" />
+                          <h6 className="text-sm font-semibold text-white">Products & Services</h6>
+                        </div>
+                        <div className="space-y-1">
+                          {(expandedProducts[index] ? company.productsServices : company.productsServices!.slice(0, 3)).map((product, i) => (
+                            <div key={i} className="text-xs text-white/80 leading-relaxed">• {product.length > 120 ? product.substring(0, 120) + '...' : product}</div>
+                          ))}
+                          {company.productsServices!.length > 3 && (
+                            <button
+                              onClick={() => toggleProductsExpansion(index)}
+                              className="text-xs text-white/60 hover:text-white/80 underline mt-1"
+                            >
+                              {expandedProducts[index] ? 'Show Less' : `Show ${company.productsServices!.length - 3} more products`}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+
+                    {/* Key Specifications */}
+                    {(hasData(company.specifications) || hasData(company.features)) && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Briefcase className="w-4 h-4 text-white/60" />
+                          <h6 className="text-sm font-semibold text-white">Key Specifications</h6>
+                        </div>
+                        <div className="space-y-1">
+                          {company.specifications ? company.specifications.slice(0, 5).map((spec, i) => (
+                            <div key={i} className="text-xs text-white/80">• {spec}</div>
+                          )) : (
+                            company.features && company.features.slice(0, 5).map((feature, i) => (
+                              <div key={i} className="text-xs text-white/80">• {feature}</div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Pricing Information */}
+                    {hasMeaningfulPricing(company) && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <DollarSign className="w-4 h-4 text-white/60" />
+                          <h6 className="text-sm font-semibold text-white">Pricing Information</h6>
+                        </div>
+                        <div className="text-xs">
+                          <div className="flex flex-wrap items-center gap-4">
+                            {hasData(company.pricingRanges) && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-white/60">Ranges:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {company.pricingRanges!.map((range, i) => (
+                                    <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded">
+                                      {range}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {hasData(company.pricingModel) && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-white/60">Models:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {company.pricingModel!.map((model, i) => (
+                                    <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
+                                      {model}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          {hasData(company.pricing) && !hasData(company.pricingRanges) && !hasData(company.pricingModel) && (
+                            <div className="text-white/80 mt-2">{company.pricing}</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Use Cases */}
+                    {hasData(company.enhancedUseCases) && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Target className="w-4 h-4 text-white/60" />
+                          <h6 className="text-sm font-semibold text-white">Use Cases</h6>
+                        </div>
+                        <div className="space-y-1">
+                          {(company.enhancedUseCases as string[]).slice(0, 3).map((useCase, i) => (
+                            <div key={i} className="text-xs text-white/80">• {useCase}</div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Top Clients */}
+                    {hasData(company.topClients) && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Building2 className="w-4 h-4 text-white/60" />
+                          <h6 className="text-sm font-semibold text-white">Notable Clients</h6>
+                        </div>
+                        <div className="text-xs text-white/80 leading-relaxed">
+                          {company.topClients!.slice(0, 4).join(', ')}
+                          {company.topClients!.length > 4 && ` and ${company.topClients!.length - 4} more`}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* About Company Dropdown */}
+                    {hasData(company.enhancedAbout) && (
+                      <div>
+                        <button
+                          onClick={() => toggleAboutDropdown(index)}
+                          className="w-full text-left flex items-center justify-between text-sm font-semibold text-white hover:text-white/80 transition-colors py-2 border-t border-white/10"
+                        >
+                          <span>About Company</span>
+                          <span className={`transform transition-transform ${aboutDropdownStates[index] ? 'rotate-180' : ''}`}>▼</span>
+                        </button>
+                        {aboutDropdownStates[index] && (
+                          <div className="mt-2 text-xs text-white/80 bg-white/5 p-3 rounded leading-relaxed max-h-32 overflow-y-auto">
+                            {company.enhancedAbout}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+
+                  </div>
+                )}
+                
+                {isExpanded && (
+                  <div className="flex space-x-1 mt-auto">
+                    <Button
+                      onClick={() => handleChatClick(index)}
+                      size="sm"
+                      className="flex-1 bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
+                    >
+                      <MessageCircle className="w-3 h-3 mr-1" />
+                      Chat
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if ((company as any).phoneNumber) {
+                          trackEngagement(company.name, 'click');
+                          window.open(`tel:${(company as any).phoneNumber}`, '_self');
+                        } else {
+                          alert(`No phone number available for ${company.name}`);
+                        }
+                      }}
+                      size="sm"
+                      className="flex-1 bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
+                    >
+                      📞 Call
+                    </Button>
+                    <Button
+                      onClick={() => handlePartnerRequest(company.name)}
+                      size="sm"
+                      className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium hover:from-green-600 hover:to-blue-600 text-xs px-2"
+                      title="Partner with this company"
+                    >
+                      <Handshake className="w-3 h-3 mr-1" />
+                      Partner
+                    </Button>
+                    {company.website && company.website !== "#" && (
+                      <Button
+                        onClick={() => handleVisitWebsite(company.website, company.name)}
+                        size="sm"
+                        className="bg-white text-black font-medium hover:bg-gray-100 text-xs px-2"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            </div>
+          </div>
+              );
+            })}
+          </div>
+          {filteredCompanies.length > 1 && (
+            <div className="flex justify-center mt-4">
+              <div className="flex gap-1">
+                {filteredCompanies.map((_, index) => (
+                  <div 
+                    key={index} 
+                    className="w-2 h-2 rounded-full bg-white/20"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Desktop: Grid layout */}
+        <div className="hidden md:block">
         {Array.from({length: Math.ceil(filteredCompanies.length / 3)}, (_, rowIndex) => (
-          <div key={rowIndex} className="flex gap-6 overflow-x-auto" style={{scrollbarWidth: 'thin'}}>
+          <div key={rowIndex} className="flex gap-6 overflow-x-auto mb-6" style={{scrollbarWidth: 'thin'}}>
             {filteredCompanies.slice(rowIndex * 3, (rowIndex + 1) * 3).map((company, relativeIndex) => {
               const index = rowIndex * 3 + relativeIndex;
           const availableSections = getAvailableSections(company);
@@ -1445,6 +2047,9 @@ export function CompanyCards({
             })}
           </div>
         ))}
+          </div>
+        ))}
+        </div>
         </div>
       
       )}

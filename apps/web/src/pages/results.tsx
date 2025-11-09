@@ -91,7 +91,25 @@ export default function ResultsPage() {
   const { createNewConversation, addMessageToConversation, loadConversation, currentConversation } = useConversations();
   const { isListening, transcript, startListening, stopListening, resetTranscript } = useVoiceInput();
   const [showSidebar, setShowSidebar] = useState(true);
-  const [sidebarMinimized, setSidebarMinimized] = useState(false);
+  const [sidebarMinimized, setSidebarMinimized] = useState(() => {
+    // Check if mobile view (screen width < 768px)
+    return window.innerWidth < 768;
+  });
+  
+  // Handle screen resize for responsive sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile && !sidebarMinimized) {
+        setSidebarMinimized(true);
+      } else if (!isMobile && sidebarMinimized) {
+        setSidebarMinimized(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [sidebarMinimized]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [favoritesNotification, setFavoritesNotification] = useState({ show: false, itemName: '' });
@@ -769,6 +787,7 @@ export default function ResultsPage() {
           onNewConversation={handleNewConversation}
           onSelectConversation={handleSelectConversation}
           isMinimized={sidebarMinimized}
+          onToggleMinimized={() => setSidebarMinimized(!sidebarMinimized)}
           relatedQuestions={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.suggestions || [] : []}
           onQuestionClick={handleSuggestionClick}
           aiResponse={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.aiResponse : ''}
