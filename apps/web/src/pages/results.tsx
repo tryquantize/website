@@ -25,6 +25,7 @@ import { enhancePrompt } from "@/lib/promptEnhancer";
 import { useToast } from "@/hooks/use-toast";
 import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
 import { Component as RaycastBlueBackground } from "@/components/ui/raycast-animated-blue-background";
+import { Header } from "@/components/layout/header";
 
 
 
@@ -778,19 +779,81 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-32 relative overflow-y-auto">
+    <div className="min-h-screen relative overflow-y-auto">
       {/* Raycast Animation Background */}
       <div className="fixed inset-0 w-full h-full z-0">
         {tinderMode ? <RaycastBlueBackground /> : <RaycastBackground />}
       </div>
-      {/* Mobile Toggle Button - Bottom Left */}
-      <div className="md:hidden fixed bottom-6 left-4 z-50">
-        <button
-          onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white hover:bg-white/20 transition shadow-lg"
-        >
-          <PanelLeftOpen className="h-6 w-6" />
-        </button>
+      
+      {/* Header with toggle button */}
+      <Header 
+        onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+        showSidebarToggle={true}
+      />
+      
+      {/* Fixed Mobile Sections - Below Header */}
+      <div className="md:hidden sticky top-16 z-40 bg-black/20 backdrop-blur-xl border-b border-white/10">
+        {/* Suppliers Section */}
+        {showSuppliersSection && allCompanies.length > 0 && (
+          <div className="p-4 border-b border-white/10">
+            <h3 className="text-base font-semibold text-white mb-2">Would you like Companies to reach out to you?</h3>
+            <p className="text-white/70 text-xs mb-3">Get personalized quotes and offers directly from verified Companies</p>
+            <div className="flex space-x-3">
+              <button 
+                onClick={handleSuppliersYes}
+                className="px-4 py-2 bg-white text-black font-medium text-sm rounded-lg hover:bg-gray-100 transition-all"
+              >
+                Yes, I'm interested
+              </button>
+              <button 
+                onClick={handleSuppliersNo}
+                className="px-4 py-2 bg-white/10 border border-white/20 text-white font-medium text-sm rounded-lg hover:bg-white/20 transition-all"
+              >
+                No, thanks
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {/* Tinder Mode Toggle */}
+        {allCompanies.length > 0 && (
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => {
+                    setTinderMode(!tinderMode);
+                    if (!tinderMode) {
+                      setCurrentCardIndex(0);
+                    }
+                  }}
+                  variant={tinderMode ? "default" : "outline"}
+                  size="sm"
+                  className={`${tinderMode ? 'bg-pink-500 hover:bg-pink-600' : 'border-white/20 text-white hover:bg-white/10'} transition-all`}
+                >
+                  <Heart className="w-3 h-3 mr-2" />
+                  Tinder Mode {tinderMode ? 'ON' : 'OFF'}
+                </Button>
+                {tinderMode && (
+                  <Button
+                    onClick={() => setCurrentCardIndex(0)}
+                    variant="outline"
+                    size="sm"
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1" />
+                    Reset
+                  </Button>
+                )}
+              </div>
+              {tinderMode && (
+                <div className="text-white/60 text-xs">
+                  {currentCardIndex + 1} / {allCompanies.length}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Fixed Sidebar */}
@@ -825,7 +888,7 @@ export default function ResultsPage() {
 
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} pl-0 pr-0 md:px-6 lg:px-8 pb-20 md:pb-8`}>
+      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} pl-0 pr-0 md:px-6 lg:px-8 pb-8 pt-4 md:pt-6`}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
         <div className="space-y-4">
           {contentItems.map((item) => (
@@ -906,9 +969,9 @@ export default function ResultsPage() {
 
         </div>
         
-        {/* Suppliers Section */}
+        {/* Desktop Suppliers Section */}
         {showSuppliersSection && allCompanies.length > 0 && (
-          <div className="bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
+          <div className="hidden md:block bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
             <h3 className="text-lg font-semibold text-white mb-2">Would you like Companies to reach out to you?</h3>
             <p className="text-white/70 text-sm mb-4">Get personalized quotes and offers directly from verified Companies</p>
             <div className="flex space-x-4">
@@ -928,9 +991,9 @@ export default function ResultsPage() {
           </div>
         )}
         
-        {/* Tinder Mode Toggle */}
+        {/* Desktop Tinder Mode Toggle */}
         {allCompanies.length > 0 && (
-          <div className="bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
+          <div className="hidden md:block bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Button

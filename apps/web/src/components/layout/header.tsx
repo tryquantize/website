@@ -11,12 +11,17 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useNavigation } from "@/hooks/use-navigation";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
-import { Heart, Menu, X, MoveRight } from "lucide-react";
+import { Heart, Menu, X, MoveRight, PanelLeftOpen } from "lucide-react";
 import { useState } from "react";
 import { QuantizeLogo } from "@/components/quantize-logo";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 
-export function Header() {
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+  showSidebarToggle?: boolean;
+}
+
+export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {}) {
   const navigationItems = [
     {
       title: "Home",
@@ -123,7 +128,21 @@ export function Header() {
             </motion.div>
 
             <div className="flex items-center space-x-4 ml-auto">
-              <span className="text-white/80">Welcome, {currentUser?.displayName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'User'}</span>
+              {/* Mobile Sidebar Toggle */}
+              {showSidebarToggle && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onToggleSidebar}
+                  className="md:hidden border-white/20 text-white hover:bg-white/10"
+                >
+                  <PanelLeftOpen className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {/* Welcome message - hidden on mobile */}
+              <span className="text-white/80 hidden md:block">Welcome, {currentUser?.displayName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'User'}</span>
+              
               {currentUser && (
                 <Button 
                   size="sm" 

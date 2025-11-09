@@ -864,15 +864,15 @@ export function CompanyCards({
       ) : (
         /* Original Grid View */
         <div className="space-y-6">
-        {/* Mobile: Horizontal scroll with single cards */}
+        {/* Mobile: Vertical scroll with stacked cards */}
         <div className="md:hidden px-2">
           {filteredCompanies.length > 1 && (
             <div className="flex items-center justify-between mb-4 px-2">
-              <span className="text-white/60 text-sm">Swipe to explore more companies</span>
+              <span className="text-white/60 text-sm">Scroll to explore more companies</span>
               <span className="text-white/40 text-xs">{filteredCompanies.length} companies</span>
             </div>
           )}
-          <div className="flex gap-4 overflow-x-auto pb-4 mobile-card-scroll px-2">
+          <div className="space-y-4">
             {filteredCompanies.map((company, index) => {
           const availableSections = getAvailableSections(company);
           const isExpanded = expandedCards[index];
@@ -881,7 +881,7 @@ export function CompanyCards({
           return (
           <div 
             key={index} 
-            className={`gradient-company-card ${isExpanded ? 'expanded' : ''} mobile-card w-[85vw] max-w-sm mx-auto flex-shrink-0`}
+            className={`gradient-company-card ${isExpanded ? 'expanded' : ''} mobile-card w-full max-w-full mx-auto`}
             onClick={isExpanded ? (e) => {
               // Only collapse if clicking on blank area (not on interactive elements)
               if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('blank-area')) {
@@ -1450,18 +1450,6 @@ export function CompanyCards({
               );
             })}
           </div>
-          {filteredCompanies.length > 1 && (
-            <div className="flex justify-center mt-6 px-4">
-              <div className="flex gap-2">
-                {filteredCompanies.map((_, index) => (
-                  <div 
-                    key={index} 
-                    className="w-2 h-2 rounded-full bg-white/30"
-                  />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
         
         {/* Desktop: Grid layout */}

@@ -52,8 +52,8 @@ function Router() {
       <LoadingTransition />
       <AnimatedLayout>
         <div className="relative z-10 h-screen flex flex-col">
-          {location !== '/dashboard' && <Header />}
-          <main className={`flex-1 overflow-y-auto ${location !== '/dashboard' ? 'pt-12 md:pt-24' : ''}`}>
+          {location !== '/dashboard' && location !== '/results' && <Header />}
+          <main className={`flex-1 overflow-y-auto ${location !== '/dashboard' && location !== '/results' ? 'pt-12 md:pt-24' : ''}`}>
             <div className="min-h-full flex flex-col">
               <div className="flex-1">
                 <Switch>

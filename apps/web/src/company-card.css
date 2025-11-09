@@ -7,42 +7,16 @@
   transform: translateY(-2px);
 }
 
-/* Mobile horizontal scroll styles */
+/* Mobile vertical scroll styles */
 @media (max-width: 768px) {
-  .mobile-card-scroll {
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-    padding-left: 0;
-    padding-right: 0;
-  }
-  
-  .mobile-card-scroll::-webkit-scrollbar {
-    height: 4px;
-  }
-  
-  .mobile-card-scroll::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-  }
-  
-  .mobile-card-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-  }
-  
-  .mobile-card-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
-  }
-  
   .mobile-card {
-    scroll-snap-align: center;
-    flex-shrink: 0;
+    width: 100%;
+    margin-bottom: 1rem;
   }
   
   /* Ensure proper mobile layout */
   .gradient-company-card.mobile-card {
     min-height: 280px;
+    width: 100%;
   }
 }
