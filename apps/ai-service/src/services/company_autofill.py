@@ -45,55 +45,106 @@ class CompanyAutoFillService:
             }
     
     def _scrape_website(self, url: str) -> str:
-        """Scrape website content using Firecrawl"""
+        """Scrape website content using Firecrawl with fallback"""
         try:
             if not self.firecrawl_api_key:
-                logger.warning("Firecrawl API key not available")
-                return ""
+                logger.warning("Firecrawl API key not available, using fallback")
+                return self._fallback_scrape(url)
+            
+            # Skip LinkedIn entirely - use fallback
+            is_linkedin = 'linkedin.com' in url.lower()
+            if is_linkedin:
+                logger.info(f"LinkedIn URL detected, using fallback scraper: {url}")
+                return self._fallback_scrape(url)
             
             headers = {
                 'Authorization': f'Bearer {self.firecrawl_api_key}',
                 'Content-Type': 'application/json'
             }
             
-            # Special handling for LinkedIn URLs
-            is_linkedin = 'linkedin.com' in url.lower()
+            # Clean URL to prevent protocol errors
+            clean_url = self._clean_url(url)
             
             data = {
-                'url': url,
-                'formats': ['markdown'],
-                'onlyMainContent': True
+                'url': clean_url,
+                'formats': ['markdown']
+                # Remove onlyMainContent and timeout to match console behavior
             }
-            
-            # For LinkedIn, try to get more content
-            if is_linkedin:
-                data['onlyMainContent'] = False
-                data['includeTags'] = ['div', 'section', 'span', 'p', 'h1', 'h2', 'h3']
             
             response = requests.post(
                 'https://api.firecrawl.dev/v1/scrape',
                 headers=headers,
                 json=data,
-                timeout=45  # Longer timeout for LinkedIn
+                timeout=35  # Slightly longer than Firecrawl timeout
             )
             
             if response.status_code == 200:
                 result = response.json()
                 scraped_content = result.get('data', {}).get('markdown', '')
-                logger.info(f"Successfully scraped {url}, content length: {len(scraped_content)}")
-                
-                # If LinkedIn scraping returned very little content, log it
-                if is_linkedin and len(scraped_content) < 100:
-                    logger.warning(f"LinkedIn scraping returned minimal content: {scraped_content[:100]}")
-                
+                logger.info(f"Successfully scraped {clean_url}, content length: {len(scraped_content)}")
                 return scraped_content
+            elif response.status_code == 408:
+                logger.warning(f"Firecrawl timeout for {clean_url}, using fallback")
+                return self._fallback_scrape(url)
             else:
                 error_text = response.text if hasattr(response, 'text') else 'Unknown error'
-                logger.error(f"Firecrawl API error for {url}: {response.status_code} - {error_text}")
+                logger.error(f"Firecrawl API error for {clean_url}: {response.status_code} - {error_text}")
+                return self._fallback_scrape(url)
+                
+        except requests.exceptions.Timeout:
+            logger.warning(f"Request timeout for {url}, using fallback")
+            return self._fallback_scrape(url)
+        except Exception as e:
+            logger.error(f"Failed to scrape {url}: {e}, using fallback")
+            return self._fallback_scrape(url)
+    
+    def _clean_url(self, url: str) -> str:
+        """Clean URL to prevent protocol errors"""
+        # Remove invisible Unicode characters
+        clean_url = ''.join(char for char in url if ord(char) < 127)
+        
+        # Ensure proper protocol
+        if not clean_url.startswith(('http://', 'https://')):
+            clean_url = 'https://' + clean_url.lstrip('/')
+        
+        return clean_url.strip()
+    
+    def _fallback_scrape(self, url: str) -> str:
+        """Fallback scraping using requests and BeautifulSoup"""
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'Connection': 'keep-alive',
+            }
+            
+            clean_url = self._clean_url(url)
+            response = requests.get(clean_url, headers=headers, timeout=15)
+            
+            if response.status_code == 200:
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Remove script and style elements
+                for script in soup(["script", "style", "nav", "footer", "header"]):
+                    script.decompose()
+                
+                # Get text content
+                text = soup.get_text()
+                lines = (line.strip() for line in text.splitlines())
+                chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+                content = ' '.join(chunk for chunk in chunks if chunk)
+                
+                logger.info(f"Fallback scraping successful for {clean_url}, content length: {len(content)}")
+                return content[:3000]  # Limit content length
+            else:
+                logger.warning(f"Fallback scraping failed for {clean_url}: {response.status_code}")
                 return ""
                 
         except Exception as e:
-            logger.error(f"Failed to scrape {url}: {e}")
+            logger.error(f"Fallback scraping failed for {url}: {e}")
             return ""
     
     def _extract_company_info(self, company_name: str, website_content: str, linkedin_content: str) -> Dict[str, Any]:
