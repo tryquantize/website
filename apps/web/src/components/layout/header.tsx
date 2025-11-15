@@ -250,11 +250,10 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
                 </>
               ) : (
                 <Button 
-                  variant="outline" 
-                  className="border-white/20 text-white/70 hover:text-white hover:bg-white/10"
+                  className="bg-white text-black hover:bg-gray-100"
                   onClick={() => navigateWithLoading('/auth')}
                 >
-                  Sign in
+                  Get Started
                 </Button>
               )}
             </div>
@@ -321,13 +320,13 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
                         </>
                       ) : (
                         <button 
-                          className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                          className="block w-full text-left px-4 py-3 bg-white text-black hover:bg-gray-100 transition-colors rounded"
                           onClick={() => {
                             navigateWithLoading('/auth');
                             setIsMobileMenuOpen(false);
                           }}
                         >
-                          Sign in
+                          Get Started
                         </button>
                       )}
                     </div>
