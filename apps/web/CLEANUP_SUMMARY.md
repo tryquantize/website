@@ -52,7 +52,7 @@
 - **independent-google-auth.ts**: Removed debug console.log statements, simplified error handling
 - **animations.ts**: Already well organized (all animations used)
 - **promptEnhancer.ts**: Kept as is (comprehensive utility)
-- **waitlist-service.ts**: Kept as is (active service)
+- **waitlist-service.ts**: Removed (waitlist functionality discontinued)
 
 ### 6. Pages Directory (20+ files)
 - **not-found.tsx**: Removed unnecessary file overview comments

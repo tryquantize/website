@@ -6,7 +6,7 @@ const getPageName = (path: string): string => {
   if (path === '/') return 'Home';
 
   if (path === '/auth' || path === '/auth/register') return 'Get Started';
-  if (path === '/waitlist') return 'Waitlist';
+
   if (path === '/dashboard') return 'Dashboard';
   if (path === '/admin') return 'Admin';
   if (path === '/onboarding') return 'Onboarding';

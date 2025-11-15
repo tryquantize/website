@@ -3,7 +3,6 @@ export const heroData = {
   subtitle: "Experience AI-powered search that understands context, provides intelligent insights, and delivers exactly what you're looking for.",
   ctas: [
     { href: "/products", label: "Try Quantize" },
-    { href: "/onboarding", label: "Join Waitlist" },
   ],
 };
 

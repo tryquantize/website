@@ -14,9 +14,6 @@ export default function HeroSection() {
           <a href="/products" className="px-5 py-3 bg-primary text-primary-foreground rounded-md">
             Try Quantize
           </a>
-          <a href="/onboarding" className="px-5 py-3 border border-border rounded-md">
-            Join Waitlist
-          </a>
         </div>
       </div>
     </section>

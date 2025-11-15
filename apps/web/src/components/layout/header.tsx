@@ -67,7 +67,6 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
   const { scrollY } = useScroll();
 
   const isResultsPage = location === '/results';
-  const isWaitlistPage = location === '/waitlist';
   const isWelcomeTransitionPage = location === '/welcome-transition';
 
   const handleFirebaseLogout = async () => {
@@ -86,8 +85,8 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
 
   const navVariants = {
     top: {
-      backgroundColor: isWaitlistPage || isWelcomeTransitionPage ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.3)',
-      backdropFilter: isWaitlistPage || isWelcomeTransitionPage ? 'blur(0px)' : 'blur(10px)',
+      backgroundColor: isWelcomeTransitionPage ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.3)',
+      backdropFilter: isWelcomeTransitionPage ? 'blur(0px)' : 'blur(10px)',
       borderColor: 'rgba(255, 255, 255, 0)'
     },
     scrolled: {
@@ -107,7 +106,7 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
 
   return (
     <motion.header
-      className={`${isWaitlistPage ? 'fixed' : 'sticky'} top-0 z-50 border-b w-full`}
+      className="sticky top-0 z-50 border-b w-full"
       variants={navVariants}
       animate={isScrolled ? 'scrolled' : 'top'}
     >
@@ -193,9 +192,7 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
                                     {item.description}
                                   </p>
                                 </div>
-                                <Button size="sm" className="mt-10 bg-white text-black hover:bg-gray-100" onClick={() => setLocation('/waitlist')}>
-                                  Join the Waitlist
-                                </Button>
+
                               </div>
                               <div className="flex flex-col text-sm h-full justify-end">
                                 {item.items?.map((subItem) => (
@@ -252,21 +249,13 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
                   </Button>
                 </>
               ) : (
-                <>
-                  <Button 
-                    variant="outline" 
-                    className="border-white/20 text-white/70 hover:text-white hover:bg-white/10"
-                    onClick={() => navigateWithLoading('/auth')}
-                  >
-                    Sign in
-                  </Button>
-                  <Button 
-                    className="bg-white text-black hover:bg-gray-100"
-                    onClick={() => navigateWithLoading('/waitlist')}
-                  >
-                    Join the Waitlist
-                  </Button>
-                </>
+                <Button 
+                  variant="outline" 
+                  className="border-white/20 text-white/70 hover:text-white hover:bg-white/10"
+                  onClick={() => navigateWithLoading('/auth')}
+                >
+                  Sign in
+                </Button>
               )}
             </div>
             
@@ -331,26 +320,15 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
                           </button>
                         </>
                       ) : (
-                        <>
-                          <button 
-                            className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
-                            onClick={() => {
-                              navigateWithLoading('/auth');
-                              setIsMobileMenuOpen(false);
-                            }}
-                          >
-                            Sign in
-                          </button>
-                          <button 
-                            className="block w-full text-left px-4 py-3 bg-white text-black hover:bg-gray-100 transition-colors rounded"
-                            onClick={() => {
-                              navigateWithLoading('/waitlist');
-                              setIsMobileMenuOpen(false);
-                            }}
-                          >
-                            Join the Waitlist
-                          </button>
-                        </>
+                        <button 
+                          className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
+                          onClick={() => {
+                            navigateWithLoading('/auth');
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          Sign in
+                        </button>
                       )}
                     </div>
                   </div>

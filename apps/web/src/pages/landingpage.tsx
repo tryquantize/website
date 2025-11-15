@@ -256,7 +256,7 @@ export default function LandingPage() {
     },
     {
       question: "Can teams collaborate inside Quantize?",
-      answer: "Saved lists and shared notes are coming with early access. Join the waitlist to try it first.",
+      answer: "Saved lists and shared notes are coming with early access. Sign up to get notified when available.",
     },
     {
       question: "How do I contact a vendor through Quantize?",
@@ -268,7 +268,7 @@ export default function LandingPage() {
     },
     {
       question: "Can I save and share shortlists with my team?",
-      answer: "Team lists and shared notes are in early access. Join the waitlist to get it first.",
+      answer: "Team lists and shared notes are in early access. Sign up to get notified when available.",
     },
     {
       question: "Which industries are best represented?",
