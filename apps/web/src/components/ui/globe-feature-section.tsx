@@ -2,8 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import createGlobe, { COBEOptions } from "cobe"
-import { useCallback, useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useNavigation } from "@/hooks/use-navigation";
 
@@ -22,7 +20,7 @@ export default function Featured_05() {
             Build with <span className="text-primary">Quantize</span>{" "}
             <span className="text-gray-500 dark:text-gray-400">Transform your business with AI-powered insights and automation. Quantize brings intelligence and efficiency to your modern workflows.</span>
           </h1>
-          <Button 
+          <Button
             onClick={handleJoinToday}
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 px-5 py-2 text-sm font-semibold text-black transition-all duration-300 shadow-lg hover:shadow-xl"
           >
@@ -37,118 +35,37 @@ export default function Featured_05() {
   );
 }
 
-const GLOBE_CONFIG: COBEOptions = {
-  width: 800,
-  height: 800,
-  onRender: () => {},
-  devicePixelRatio: 2,
-  phi: 0,
-  theta: 0.3,
-  dark: 0,
-  diffuse: 0.4,
-  mapSamples: 16000,
-  mapBrightness: 1.2,
-  baseColor: [1, 1, 1],
-  markerColor: [251 / 255, 100 / 255, 21 / 255],
-  glowColor: [1, 1, 1],
-  markers: [
-    { location: [14.5995, 120.9842], size: 0.03 },
-    { location: [19.076, 72.8777], size: 0.1 },
-    { location: [23.8103, 90.4125], size: 0.05 },
-    { location: [30.0444, 31.2357], size: 0.07 },
-    { location: [39.9042, 116.4074], size: 0.08 },
-    { location: [-23.5505, -46.6333], size: 0.1 },
-    { location: [19.4326, -99.1332], size: 0.1 },
-    { location: [40.7128, -74.006], size: 0.1 },
-    { location: [34.6937, 135.5022], size: 0.05 },
-    { location: [41.0082, 28.9784], size: 0.06 },
-  ],
-}
-
-export function Globe({
-  className,
-  config = GLOBE_CONFIG,
-}: {
-  className?: string
-  config?: COBEOptions
-}) {
-  let phi = 0
-  let width = 0
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const pointerInteracting = useRef(null)
-  const pointerInteractionMovement = useRef(0)
-  const [r, setR] = useState(0)
-
-  const updatePointerInteraction = (value: any) => {
-    pointerInteracting.current = value
-    if (canvasRef.current) {
-      canvasRef.current.style.cursor = value ? "grabbing" : "grab"
-    }
-  }
-
-  const updateMovement = (clientX: any) => {
-    if (pointerInteracting.current !== null) {
-      const delta = clientX - pointerInteracting.current
-      pointerInteractionMovement.current = delta
-      setR(delta / 200)
-    }
-  }
-
-  const onRender = useCallback(
-    (state: Record<string, any>) => {
-      if (!pointerInteracting.current) phi += 0.005
-      state.phi = phi + r
-      state.width = width * 2
-      state.height = width * 2
-    },
-    [r],
-  )
-
-  const onResize = () => {
-    if (canvasRef.current) {
-      width = canvasRef.current.offsetWidth
-    }
-  }
-
-  useEffect(() => {
-    window.addEventListener("resize", onResize)
-    onResize()
-
-    const globe = createGlobe(canvasRef.current!, {
-      ...config,
-      width: width * 2,
-      height: width * 2,
-      onRender,
-    })
-
-    setTimeout(() => (canvasRef.current!.style.opacity = "1"))
-    return () => globe.destroy()
-  }, [])
-
+export function Globe({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        "absolute inset-0 mx-auto aspect-[1/1] w-full max-w-[600px]",
-        className,
-      )}
-    >
-      <canvas
-        className={cn(
-          "size-full opacity-0 transition-opacity duration-500 [contain:layout_paint_size]",
-        )}
-        ref={canvasRef}
-        onPointerDown={(e) =>
-          updatePointerInteraction(
-            e.clientX - pointerInteractionMovement.current,
-          )
+    <div className={cn("relative w-full max-w-[600px] aspect-square mx-auto", className)}>
+      <style>{`
+        @keyframes spin-earth {
+          from { background-position: 0 0; }
+          to { background-position: -200% 0; }
         }
-        onPointerUp={() => updatePointerInteraction(null)}
-        onPointerOut={() => updatePointerInteraction(null)}
-        onMouseMove={(e) => updateMovement(e.clientX)}
-        onTouchMove={(e) =>
-          e.touches[0] && updateMovement(e.touches[0].clientX)
+        .earth-globe {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          background-image: url('https://raw.githubusercontent.com/shuding/cobe/main/website/public/map.png');
+          background-size: 200% 100%;
+          box-shadow: inset 0 0 20px rgba(0,0,0,1), 0 0 20px rgba(100,100,255,0.2);
+          animation: spin-earth 20s linear infinite;
+          opacity: 0.8;
+          filter: grayscale(100%) invert(100%);
         }
-      />
+        .earth-globe::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          box-shadow: -20px -20px 50px 2px #000 inset;
+        }
+      `}</style>
+      <div className="earth-globe" />
     </div>
   )
 }

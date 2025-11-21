@@ -149,7 +149,9 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
 
   // Mobile optimization
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-  const pixelSteps = isMobile ? 6 : 3  // Fewer particles on mobile
+  // Balanced pixelSteps: Lower = more particles (heavier). 
+  // Increased to 6/9 for maximum performance while keeping legibility.
+  const pixelSteps = isMobile ? 9 : 6
   const drawAsPoints = true
 
   const generateRandomPos = (x: number, y: number, mag: number): Vector2D => {
@@ -211,7 +213,7 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
     // Shuffle coordinates for fluid motion
     for (let i = coordsIndexes.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
-      ;[coordsIndexes[i], coordsIndexes[j]] = [coordsIndexes[j], coordsIndexes[i]]
+        ;[coordsIndexes[i], coordsIndexes[j]] = [coordsIndexes[j], coordsIndexes[i]]
     }
 
     for (const coordIndex of coordsIndexes) {
@@ -235,12 +237,13 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
           particle.pos.x = randomPos.x
           particle.pos.y = randomPos.y
 
-          // Faster speeds for mobile
-          const speedMultiplier = isMobile ? 2 : 1
-          particle.maxSpeed = (Math.random() * 4 + 2) * speedMultiplier
-          particle.maxForce = particle.maxSpeed * 0.05
-          particle.particleSize = Math.random() * 4 + 4
-          particle.colorBlendRate = (Math.random() * 0.02 + 0.005) * (isMobile ? 2 : 1)
+          // Faster speeds for "Apple-like" snappy feel
+          // Increased multiplier for even more snap
+          const speedMultiplier = isMobile ? 3.5 : 2.5
+          particle.maxSpeed = (Math.random() * 6 + 4) * speedMultiplier
+          particle.maxForce = particle.maxSpeed * 0.2 // Stronger steering force for snappiness
+          particle.particleSize = Math.random() * 3 + 2
+          particle.colorBlendRate = (Math.random() * 0.05 + 0.02) * (isMobile ? 2 : 1)
 
           particles.push(particle)
         }
@@ -284,7 +287,7 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
       // Remove dead particles after delay
       if (particle.isKilled) {
         const distance = Math.sqrt(
-          Math.pow(particle.pos.x - particle.target.x, 2) + 
+          Math.pow(particle.pos.x - particle.target.x, 2) +
           Math.pow(particle.pos.y - particle.target.y, 2)
         )
         if (distance > 5000) {
@@ -295,7 +298,7 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
 
     // Auto-advance words
     frameCountRef.current++
-    if (frameCountRef.current % 270 === 0) {
+    if (frameCountRef.current % 120 === 0) { // Much faster switching (was 270)
       wordIndexRef.current = (wordIndexRef.current + 1) % words.length
       nextWord(words[wordIndexRef.current], canvas)
     }
