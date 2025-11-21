@@ -1,28 +1,6 @@
 // Independent Firebase Firestore service for waitlist - completely separate from auth
-import { initializeApp } from 'firebase/app';
+import { app } from './firebase-init';
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, onSnapshot } from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAy882-yKs41YpCDKrNOqEgB1iKDQcJqak",
-  authDomain: "firequest-auth.firebaseapp.com",
-  projectId: "firequest-auth",
-  storageBucket: "firequest-auth.firebasestorage.app",
-  messagingSenderId: "1065297438861",
-  appId: "1:1065297438861:web:d746c00a59e9c8eebfdac4",
-  measurementId: "G-64FEYVFBNJ"
-};
-
-// Initialize Firebase (reuse existing app if already initialized)
-let app;
-try {
-  app = initializeApp(firebaseConfig);
-} catch (error: any) {
-  if (error.code === 'app/duplicate-app') {
-    app = initializeApp(firebaseConfig, 'waitlist-app');
-  } else {
-    throw error;
-  }
-}
 
 const db = getFirestore(app);
 
@@ -47,27 +25,27 @@ export class WaitlistService {
         timestamp: serverTimestamp(),
         createdAt: new Date().toISOString()
       };
-      
+
       // Add WhatsApp number if provided
       if (whatsappNumber) {
         data.whatsappNumber = whatsappNumber.trim();
       }
-      
+
       // Add the entry to Firestore
       const docRef = await addDoc(collection(db, this.COLLECTION_NAME), data);
 
       // Get the current position (count of all entries)
       const position = await this.getWaitlistCount();
 
-      return { 
-        success: true, 
-        position: position 
+      return {
+        success: true,
+        position: position
       };
     } catch (error: any) {
       console.error('Error adding to waitlist:', error);
-      return { 
-        success: false, 
-        error: error.message || 'Failed to join waitlist' 
+      return {
+        success: false,
+        error: error.message || 'Failed to join waitlist'
       };
     }
   }
@@ -97,7 +75,7 @@ export class WaitlistService {
     try {
       const q = query(collection(db, this.COLLECTION_NAME), orderBy('timestamp', 'asc'));
       const querySnapshot = await getDocs(q);
-      
+
       return querySnapshot.docs.map((doc, index) => ({
         id: doc.id,
         ...doc.data(),

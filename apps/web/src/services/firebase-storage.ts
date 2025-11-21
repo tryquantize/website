@@ -1,18 +1,7 @@
-import { initializeApp } from 'firebase/app';
+import { app } from '../lib/firebase-init';
 import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { FavoriteItem } from '@/contexts/favorites-context';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAy882-yKs41YpCDKrNOqEgB1iKDQcJqak",
-  authDomain: "firequest-auth.firebaseapp.com",
-  projectId: "firequest-auth",
-  storageBucket: "firequest-auth.firebasestorage.app",
-  messagingSenderId: "1065297438861",
-  appId: "1:1065297438861:web:d746c00a59e9c8eebfdac4",
-  measurementId: "G-64FEYVFBNJ"
-};
-
-const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export interface Conversation {
@@ -94,7 +83,7 @@ export class FirebaseStorageService {
       const conversationsRef = collection(db, 'users', userId, 'conversations');
       const q = query(conversationsRef, orderBy('timestamp', 'desc'));
       const querySnapshot = await getDocs(q);
-      
+
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()

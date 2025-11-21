@@ -1,18 +1,6 @@
-// Completely independent Google authentication
-import { initializeApp } from 'firebase/app';
+import { app } from './firebase-init';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAy882-yKs41YpCDKrNOqEgB1iKDQcJqak",
-  authDomain: "firequest-auth.firebaseapp.com",
-  projectId: "firequest-auth",
-  storageBucket: "firequest-auth.firebasestorage.app",
-  messagingSenderId: "1065297438861",
-  appId: "1:1065297438861:web:d746c00a59e9c8eebfdac4",
-  measurementId: "G-64FEYVFBNJ"
-};
-
-const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
