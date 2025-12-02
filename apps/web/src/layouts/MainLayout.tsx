@@ -8,10 +8,10 @@ type MainLayoutProps = PropsWithChildren<{
 
 export default function MainLayout({ children, showJoinUs }: MainLayoutProps) {
   return (
-    <div className="relative z-10 min-h-screen flex flex-col">
+    <div className="relative min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 pt-12 md:pt-24">{children}</main>
-      <Footer showJoinUs={showJoinUs} />
+      <main className="flex-1 pt-24 md:pt-32">{children}</main>
+      <Footer />
     </div>
   );
 }

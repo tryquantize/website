@@ -1,20 +1,21 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
-    NavigationMenu,
-    NavigationMenuContent,
-    NavigationMenuItem,
-    NavigationMenuLink,
-    NavigationMenuList,
-    NavigationMenuTrigger,
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { useAuth } from "@/lib/auth";
 import { useNavigation } from "@/hooks/use-navigation";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
-import { Heart, Menu, X, MoveRight, PanelLeftOpen } from "lucide-react";
-import { useState } from "react";
+import { Heart, Menu, X, MoveRight, PanelLeftOpen, Search, Sparkles, Globe, Shield, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
 import { QuantizeLogo } from "@/components/quantize-logo";
-import { motion, useScroll, useMotionValueEvent } from "framer-motion";
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -24,35 +25,39 @@ interface HeaderProps {
 export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {}) {
   const navigationItems = [
     {
-      title: "Home",
-      href: "/",
-      description: "",
-    },
-    {
       title: "Product",
-      description: "Discover AI-powered search capabilities and features.",
+      description: "Discover AI-powered search capabilities.",
       items: [
         {
-          title: "Search",
+          title: "Search Engine",
           href: "/home",
+          description: "AI-powered semantic search",
+          icon: Search
         },
+
         {
           title: "Pricing",
           href: "/pricing",
+          description: "Plans for every team",
+          icon: Zap
         },
       ],
     },
     {
       title: "Company",
-      description: "Learn more about Quantize and our mission.",
+      description: "Learn more about our mission.",
       items: [
         {
-          title: "About us",
+          title: "About",
           href: "/about",
+          description: "Our story and vision",
+          icon: Globe
         },
         {
-          title: "Contact us",
-          href: "/contact",
+          title: "Security",
+          href: "/security",
+          description: "Enterprise-grade protection",
+          icon: Shield
         },
       ],
     },
@@ -81,24 +86,8 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
   };
 
   useMotionValueEvent(scrollY, "change", (latest) => {
-    setIsScrolled(latest > 50);
+    setIsScrolled(latest > 10);
   });
-
-  const navVariants = {
-    top: {
-      backgroundColor: isWaitlistPage || isWelcomeTransitionPage ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.3)',
-      backdropFilter: isWaitlistPage || isWelcomeTransitionPage ? 'blur(0px)' : 'blur(10px)',
-      borderColor: 'rgba(255, 255, 255, 0)'
-    },
-    scrolled: {
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      backdropFilter: 'blur(20px)',
-      borderColor: 'rgba(255, 255, 255, 0.1)',
-      transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
-    }
-  };
-
-
 
   // Don't render header on welcome transition page
   if (isWelcomeTransitionPage) {
@@ -107,259 +96,248 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
 
   return (
     <motion.header
-      className={`${isWaitlistPage ? 'fixed' : 'sticky'} top-0 z-50 border-b w-full`}
-      variants={navVariants}
-      animate={isScrolled ? 'scrolled' : 'top'}
+      className="fixed top-0 left-0 right-0 z-[9999] transition-all duration-300 border-b bg-black/50 backdrop-blur-md border-white/10 py-3"
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5, ease: "circOut" }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
-        {isResultsPage ? (
-          <div className="flex items-center justify-between h-14 sm:h-16 md:h-18">
-            <motion.div
-              className="flex items-center space-x-2 flex-shrink-0"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Link href="/home" className="flex items-center space-x-2" data-testid="logo-link">
-                <QuantizeLogo size={64} />
-                <h1 className="text-base font-bold bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent whitespace-nowrap">
-                  Quantize
-                </h1>
-              </Link>
-            </motion.div>
+        <div className="flex items-center justify-between">
 
-            <div className="flex items-center space-x-4 ml-auto">
-              {/* Mobile Sidebar Toggle */}
-              {showSidebarToggle && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onToggleSidebar}
-                  className="md:hidden border-white/20 text-white hover:bg-white/10"
-                >
-                  <PanelLeftOpen className="h-4 w-4" />
-                </Button>
-              )}
-              
-              {/* Welcome message - hidden on mobile */}
-              <span className="text-white/80 hidden md:block">Welcome, {currentUser?.displayName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'User'}</span>
-              
-              {currentUser && (
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => setLocation('/favorites')}
-                  className="border-white/20 text-white hover:bg-white/10"
-                >
-                  <Heart className="w-4 h-4 mr-2" />
-                  Favorites
-                </Button>
-              )}
-              <Button 
-                size="sm" 
-                onClick={handleFirebaseLogout}
-                className="bg-blue-600 text-white hover:bg-blue-700"
+          {/* Logo Section */}
+          <div className="flex items-center gap-4">
+            {showSidebarToggle && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={onToggleSidebar}
+                className="md:hidden text-white/70 hover:text-white hover:bg-white/10"
               >
-                Logout
+                <PanelLeftOpen className="h-5 w-5" />
               </Button>
-            </div>
+            )}
+
+            <Link href={isResultsPage ? "/home" : "/"} className="flex items-center gap-3 group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <QuantizeLogo size={32} className="relative z-10" />
+              </div>
+              <span className="font-bold text-xl tracking-tight text-white group-hover:text-white/90 transition-colors">
+                Quantize
+              </span>
+            </Link>
           </div>
-        ) : (
-          <div className="container relative mx-auto min-h-16 sm:min-h-20 flex items-center justify-between">
-            {/* Desktop Navigation */}
-            <div className="justify-start items-center gap-4 lg:flex hidden flex-row">
-              <NavigationMenu className="flex justify-start items-start">
-                <NavigationMenuList className="flex justify-start gap-4 flex-row">
+
+          {/* Desktop Navigation */}
+          {!isResultsPage && (
+            <div className="hidden lg:flex items-center justify-center flex-1 px-8">
+              <NavigationMenu>
+                <NavigationMenuList className="gap-2">
+                  <NavigationMenuItem>
+                    <Link href="/">
+                      <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/5 text-sm font-medium h-9 px-4 rounded-full transition-all">
+                        Home
+                      </Button>
+                    </Link>
+                  </NavigationMenuItem>
+
                   {navigationItems.map((item) => (
                     <NavigationMenuItem key={item.title}>
-                      {item.href ? (
-                        <NavigationMenuLink asChild>
-                          <Link href={item.href}>
-                            <Button variant="ghost" className="text-white/70 hover:text-white">
-                              {item.title}
-                            </Button>
-                          </Link>
-                        </NavigationMenuLink>
-                      ) : (
-                        <>
-                          <NavigationMenuTrigger className="font-medium text-sm text-white/70 hover:text-white bg-transparent">
-                            {item.title}
-                          </NavigationMenuTrigger>
-                          <NavigationMenuContent className="!w-[450px] p-4 bg-black/90 backdrop-blur-md border border-white/10">
-                            <div className="flex flex-col lg:grid grid-cols-2 gap-4">
-                              <div className="flex flex-col h-full justify-between">
-                                <div className="flex flex-col">
-                                  <p className="text-base text-white">{item.title}</p>
-                                  <p className="text-white/60 text-sm">
-                                    {item.description}
-                                  </p>
-                                </div>
-                                <Button size="sm" className="mt-10 bg-white text-black hover:bg-gray-100" onClick={() => setLocation('/waitlist')}>
-                                  Join the Waitlist
-                                </Button>
-                              </div>
-                              <div className="flex flex-col text-sm h-full justify-end">
-                                {item.items?.map((subItem) => (
-                                  <NavigationMenuLink
-                                    asChild
-                                    key={subItem.title}
-                                  >
-                                    <Link
-                                      href={subItem.href}
-                                      className="flex flex-row justify-between items-center hover:bg-white/10 py-2 px-4 rounded text-white/70 hover:text-white"
-                                    >
-                                      <span>{subItem.title}</span>
-                                      <MoveRight className="w-4 h-4 text-white/40" />
-                                    </Link>
-                                  </NavigationMenuLink>
-                                ))}
-                              </div>
-                            </div>
-                          </NavigationMenuContent>
-                        </>
-                      )}
+                      <NavigationMenuTrigger className="bg-transparent text-white/70 hover:text-white hover:bg-white/5 text-sm font-medium h-9 px-4 rounded-full transition-all data-[state=open]:bg-white/10 data-[state=open]:text-white">
+                        {item.title}
+                      </NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                        <div className="w-[400px] p-4">
+                          <div className="grid gap-3">
+                            {item.items.map((subItem) => (
+                              <NavigationMenuLink key={subItem.title} asChild>
+                                <Link
+                                  href={subItem.href}
+                                  className="flex items-start gap-4 p-3 rounded-xl hover:bg-white/10 transition-colors group select-none"
+                                  onClick={(e) => {
+                                    if (subItem.href.includes('#')) {
+                                      const [path, hash] = subItem.href.split('#');
+                                      if (location === path || (path === '/' && location === '/home') || (path === '/home' && location === '/')) {
+                                        e.preventDefault();
+                                        const element = document.getElementById(hash);
+                                        if (element) {
+                                          element.scrollIntoView({ behavior: 'smooth' });
+                                          window.history.pushState(null, '', subItem.href);
+                                        }
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <div className="mt-1 p-2 rounded-lg bg-white/5 group-hover:bg-blue-500/20 text-white/70 group-hover:text-blue-400 transition-colors">
+                                    <subItem.icon className="w-4 h-4" />
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-medium text-white mb-1 group-hover:text-blue-400 transition-colors">
+                                      {subItem.title}
+                                    </div>
+                                    <p className="text-xs text-white/50 leading-relaxed">
+                                      {subItem.description}
+                                    </p>
+                                  </div>
+                                </Link>
+                              </NavigationMenuLink>
+                            ))}
+                          </div>
+                        </div>
+                      </NavigationMenuContent>
                     </NavigationMenuItem>
                   ))}
                 </NavigationMenuList>
               </NavigationMenu>
             </div>
-            
-            {/* Logo - Center on desktop, left on mobile */}
-            <div className="flex lg:justify-center lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
-              <Link href="/home" className="flex items-center space-x-2" data-testid="logo-link">
-                <QuantizeLogo size={20} className="sm:w-6 sm:h-6" />
-                <h1 className="font-semibold text-base sm:text-lg bg-gradient-to-r from-purple-400 via-violet-500 to-indigo-600 bg-clip-text text-transparent">
-                  Quantize
-                </h1>
-              </Link>
-            </div>
-            
-            {/* Desktop Auth Buttons */}
-            <div className="hidden lg:flex justify-end gap-4">
-              {currentUser || (isAuthenticated && user) ? (
-                <>
-                  <Button 
-                    variant="outline" 
-                    className="border-white/20 text-white/70 hover:text-white hover:bg-white/10"
-                    onClick={() => setLocation('/favorites')}
-                  >
-                    Favorites
-                  </Button>
-                  <Button 
-                    className="bg-blue-600 hover:bg-blue-700"
-                    onClick={handleFirebaseLogout}
-                  >
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button 
-                    variant="outline" 
-                    className="border-white/20 text-white/70 hover:text-white hover:bg-white/10"
-                    onClick={() => navigateWithLoading('/auth')}
-                  >
-                    Sign in
-                  </Button>
-                  <Button 
-                    className="bg-white text-black hover:bg-gray-100"
-                    onClick={() => navigateWithLoading('/waitlist')}
-                  >
-                    Join the Waitlist
-                  </Button>
-                </>
-              )}
-            </div>
-            
-            {/* Mobile Menu Button */}
-            <div className="lg:hidden">
-              <Button variant="ghost" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white p-1.5 sm:p-2">
-                {isMobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
-              </Button>
-              
-              {/* Mobile Dropdown Menu */}
-              {isMobileMenuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-black/95 backdrop-blur-md border-t border-white/10 shadow-lg z-50">
-                  <div className="container mx-auto py-4 space-y-1 px-4">
-                    {navigationItems.map((item) => (
-                      <div key={item.title}>
-                        {item.href ? (
-                          <Link
-                            href={item.href}
-                            className="block px-4 py-3 text-white hover:bg-white/10 transition-colors"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            {item.title}
-                          </Link>
-                        ) : (
-                          <>
-                            <div className="px-4 py-2 text-white/60 text-sm font-medium">{item.title}</div>
-                            {item.items?.map((subItem) => (
-                              <Link
-                                key={subItem.title}
-                                href={subItem.href}
-                                className="block px-6 py-2 text-white/80 hover:bg-white/10 transition-colors"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                              >
-                                {subItem.title}
-                              </Link>
-                            ))}
-                          </>
-                        )}
-                      </div>
-                    ))}
-                    
-                    <div className="border-t border-white/10 mt-4 pt-4 space-y-1">
-                      {currentUser || (isAuthenticated && user) ? (
-                        <>
-                          <button 
-                            className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
-                            onClick={() => {
-                              setLocation('/favorites');
-                              setIsMobileMenuOpen(false);
-                            }}
-                          >
-                            Favorites
-                          </button>
-                          <button 
-                            className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
-                            onClick={() => {
-                              handleFirebaseLogout();
-                              setIsMobileMenuOpen(false);
-                            }}
-                          >
-                            Logout
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button 
-                            className="block w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors"
-                            onClick={() => {
-                              navigateWithLoading('/auth');
-                              setIsMobileMenuOpen(false);
-                            }}
-                          >
-                            Sign in
-                          </button>
-                          <button 
-                            className="block w-full text-left px-4 py-3 bg-white text-black hover:bg-gray-100 transition-colors rounded"
-                            onClick={() => {
-                              navigateWithLoading('/waitlist');
-                              setIsMobileMenuOpen(false);
-                            }}
-                          >
-                            Join the Waitlist
-                          </button>
-                        </>
-                      )}
+          )}
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-3">
+            {currentUser || (isAuthenticated && user) ? (
+              <>
+                <span className="hidden md:block text-sm text-white/60 mr-2">
+                  {currentUser?.displayName?.split(' ')[0] || 'User'}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden sm:flex text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+                  onClick={() => setLocation('/favorites')}
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  Favorites
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleFirebaseLogout}
+                  className="bg-white text-black hover:bg-white/90 rounded-full px-5 font-medium transition-transform hover:scale-105 active:scale-95"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden sm:flex text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+                  onClick={() => navigateWithLoading('/auth')}
+                >
+                  Sign in
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-white text-black hover:bg-white/90 rounded-full px-5 font-medium transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_-5px_rgba(255,255,255,0.5)]"
+                  onClick={() => navigateWithLoading('/waitlist')}
+                >
+                  Join Waitlist
+                </Button>
+              </>
+            )}
+
+            {/* Mobile Menu Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden text-white/70 hover:text-white hover:bg-white/10"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-black/95 backdrop-blur-xl border-b border-white/10 overflow-hidden"
+          >
+            <div className="px-4 py-6 space-y-6">
+              <div className="space-y-4">
+                <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-medium text-white hover:text-blue-400 transition-colors">
+                  Home
+                </Link>
+                {navigationItems.map((item) => (
+                  <div key={item.title} className="space-y-3">
+                    <div className="text-xs font-semibold text-white/40 uppercase tracking-wider">
+                      {item.title}
+                    </div>
+                    <div className="space-y-2 pl-4 border-l border-white/10">
+                      {item.items.map((subItem) => (
+                        <Link
+                          key={subItem.title}
+                          href={subItem.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="flex items-center gap-3 text-white/70 hover:text-white py-1 transition-colors"
+                        >
+                          <subItem.icon className="w-4 h-4" />
+                          {subItem.title}
+                        </Link>
+                      ))}
                     </div>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
+
+              <div className="pt-6 border-t border-white/10 space-y-3">
+                {currentUser || (isAuthenticated && user) ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start border-white/10 text-white hover:bg-white/5"
+                      onClick={() => {
+                        setLocation('/favorites');
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <Heart className="w-4 h-4 mr-2" />
+                      Favorites
+                    </Button>
+                    <Button
+                      className="w-full bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 border border-red-500/20"
+                      onClick={() => {
+                        handleFirebaseLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full border-white/10 text-white hover:bg-white/5"
+                      onClick={() => {
+                        navigateWithLoading('/auth');
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      Sign in
+                    </Button>
+                    <Button
+                      className="w-full bg-white text-black hover:bg-white/90"
+                      onClick={() => {
+                        navigateWithLoading('/waitlist');
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      Join Waitlist
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      </div>
-    </motion.header>
+      </AnimatePresence>
+    </motion.header >
   );
 }

@@ -38,15 +38,48 @@ import AddCompanyPage from "@/pages/add-company";
 
 function Router() {
   const [location] = useLocation();
-  
+
   // Scroll to top on route change
+  // Scroll to top on route change, unless hash is present
   useEffect(() => {
     const mainElement = document.querySelector('main');
     if (mainElement) {
-      mainElement.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!window.location.hash) {
+        mainElement.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Handle hash scroll
+        const id = window.location.hash.slice(1);
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          // Retry after a short delay for lazy loaded content
+          setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 500);
+        }
+      }
     }
   }, [location]);
-  
+
+  // Handle hash change for same-page navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const id = hash.slice(1);
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   return (
     <>
       <LoadingTransition />
@@ -82,6 +115,12 @@ function Router() {
                   <Route path="/contact" component={ContactPage} />
                   <Route path="/pricing" component={PricingPage} />
                   <Route path="/add-company" component={AddCompanyPage} />
+                  <Route path="/features">
+                    {() => {
+                      window.location.href = "/#features";
+                      return null;
+                    }}
+                  </Route>
                   <Route component={NotFound} />
                 </Switch>
               </div>
