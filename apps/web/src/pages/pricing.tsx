@@ -1,6 +1,6 @@
 import { Pricing } from "@/components/ui/pricing";
-import TestimonialsColumns from "@/components/ui/testimonials-demo";
-import { Component as AnimatedBackground } from "@/components/ui/raycast-animated-black-background";
+import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
+import { SectionBadge } from "@/components/ui/section-badge";
 
 const quantizePlans = [
   {
@@ -63,24 +63,29 @@ const quantizePlans = [
 
 export function PricingPage() {
   return (
-    <div className="min-h-screen bg-black relative">
-      {/* Animated Background */}
-      <div className="fixed inset-0 z-0">
-        <AnimatedBackground />
+    <div className="relative w-full min-h-screen bg-black overflow-hidden">
+      {/* Raycast Animation Background */}
+      <div className="fixed inset-0 w-full h-full z-0">
+        <RaycastBackground />
       </div>
-      
+
       {/* Content */}
-      <div className="relative z-10">
-        <Pricing 
-          plans={quantizePlans}
-          title="Unlock the Power of AI Search"
-          description="Choose the plan that fits your search needs\nAll plans include access to our advanced AI search engine and comprehensive web integration."
-        />
-        
-        {/* Testimonials Section */}
-        <section className="py-8 px-2">
-          <TestimonialsColumns />
+      <div className="relative z-10 pt-32 pb-24">
+        {/* Hero Section */}
+        <section className="text-center mb-20 px-4">
+          <div className="max-w-3xl mx-auto">
+            <SectionBadge>PRICING</SectionBadge>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-[#f5f5f7] mb-6">
+              Unlock the Power of AI Search
+            </h1>
+            <p className="text-lg text-[#86868b] leading-relaxed">
+              Choose the plan that fits your search needs. All plans include access to our advanced AI search engine and comprehensive web integration.
+            </p>
+          </div>
         </section>
+
+        {/* Pricing Section */}
+        <Pricing plans={quantizePlans} />
       </div>
     </div>
   );

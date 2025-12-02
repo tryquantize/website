@@ -72,9 +72,9 @@ export default function FeaturesSection() {
             key={index}
             className={cn(
               "group relative overflow-hidden rounded-3xl",
-              "bg-gradient-to-br from-white/8 to-white/4 backdrop-blur-2xl border border-white/10",
+              "bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20",
               "shadow-[0_8px_32px_rgba(0,0,0,0.12)]",
-              "hover:shadow-[0_16px_48px_rgba(59,130,246,0.12)] hover:border-white/20",
+              "hover:shadow-[0_16px_48px_rgba(59,130,246,0.12)] hover:border-white/30",
               "p-8 transition-all duration-500 hover:scale-[1.02] hover:-translate-y-1",
               feature.className,
               inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
@@ -90,11 +90,11 @@ export default function FeaturesSection() {
                 <feature.icon className="h-6 w-6" />
               </div>
 
-              <h3 className="text-xl font-bold text-[#f5f5f7] mb-3 group-hover:text-[#0071e3] transition-colors">
+              <h3 className="text-xl font-bold text-white mb-3 group-hover:text-[#0071e3] transition-colors">
                 {feature.title}
               </h3>
 
-              <p className="text-[#86868b] leading-relaxed text-sm">
+              <p className="text-white/70 leading-relaxed text-sm">
                 {feature.description}
               </p>
             </div>

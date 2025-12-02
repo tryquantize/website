@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
 import { useState, useRef } from "react";
+// @ts-ignore
 import confetti from "canvas-confetti";
 import NumberFlow from "@number-flow/react";
 
@@ -23,15 +24,9 @@ interface PricingPlan {
 
 interface PricingProps {
   plans: PricingPlan[];
-  title?: string;
-  description?: string;
 }
 
-export function Pricing({
-  plans,
-  title = "Simple, Transparent Pricing",
-  description = "Choose the plan that works for you\nAll plans include access to our platform, lead generation tools, and dedicated support.",
-}: PricingProps) {
+export function Pricing({ plans }: PricingProps) {
   const [isMonthly, setIsMonthly] = useState(true);
   const switchRef = useRef<HTMLButtonElement>(null);
 
@@ -49,66 +44,38 @@ export function Pricing({
           x: x / window.innerWidth,
           y: y / window.innerHeight,
         },
-        colors: [
-          "hsl(var(--primary))",
-          "hsl(var(--accent))",
-          "hsl(var(--secondary))",
-          "hsl(var(--muted))",
-        ],
-        ticks: 200,
-        gravity: 1.2,
-        decay: 0.94,
-        startVelocity: 30,
-        shapes: ["circle"],
       });
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-24 relative overflow-hidden">
-      <div className="container max-w-7xl mx-auto px-4 relative z-10">
-
-        {/* Header */}
-        <div className="text-center space-y-6 mb-16">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-4xl md:text-6xl font-bold tracking-tighter text-white"
-          >
-            {title}
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-white/60 text-lg md:text-xl max-w-2xl mx-auto whitespace-pre-line leading-relaxed"
-          >
-            {description}
-          </motion.p>
-        </div>
-
-        {/* Toggle */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex justify-center items-center mb-16 gap-4"
-        >
-          <span className={cn("text-sm font-medium transition-colors", isMonthly ? "text-white" : "text-white/50")}>Monthly</span>
+    <section className="px-4">
+      <div className="container mx-auto max-w-7xl">
+        {/* Billing Toggle */}
+        <div className="flex items-center justify-center gap-4 mb-16">
+          <span className={cn(
+            "text-base font-medium transition-colors",
+            isMonthly ? "text-[#f5f5f7]" : "text-[#86868b]"
+          )}>
+            Monthly
+          </span>
           <Switch
-            ref={switchRef as any}
+            ref={switchRef}
             checked={!isMonthly}
             onCheckedChange={handleToggle}
-            className="data-[state=checked]:bg-blue-600 bg-white/10 border-white/10"
+            className="data-[state=checked]:bg-[#0071e3]"
           />
-          <span className={cn("text-sm font-medium transition-colors", !isMonthly ? "text-white" : "text-white/50")}>
-            Yearly <span className="text-blue-400 ml-1 font-bold">(-20%)</span>
+          <span className={cn(
+            "text-base font-medium transition-colors",
+            !isMonthly ? "text-[#f5f5f7]" : "text-[#86868b]"
+          )}>
+            Yearly
+            <span className="ml-2 text-xs text-green-400 font-semibold">Save 20%</span>
           </span>
-        </motion.div>
+        </div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           {plans.map((plan, index) => (
             <motion.div
               key={index}
@@ -117,36 +84,37 @@ export function Pricing({
               viewport={{ once: true }}
               transition={{
                 duration: 0.8,
-                delay: index * 0.1 + 0.3,
+                delay: index * 0.1,
                 ease: [0.21, 0.47, 0.32, 0.98]
               }}
               className={cn(
-                "relative flex flex-col p-6 md:p-8 rounded-[2rem] backdrop-blur-3xl transition-all duration-500 group",
-                plan.isPopular
-                  ? "bg-white/10 border border-white/20 shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)]"
-                  : "bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20"
+                "relative flex flex-col p-8 rounded-3xl backdrop-blur-2xl transition-all duration-500",
+                "bg-gradient-to-br from-white/12 to-white/8 border border-white/20",
+                "shadow-[0_8px_32px_rgba(0,0,0,0.12)]",
+                "hover:shadow-[0_16px_48px_rgba(59,130,246,0.12)] hover:border-white/30",
+                plan.isPopular && "scale-105 border-[#0071e3]/50"
               )}
             >
               {plan.isPopular && (
                 <div className="absolute -top-4 left-0 right-0 flex justify-center">
-                  <span className="bg-gradient-to-r from-blue-600 to-violet-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" /> Most Popular
+                  <span className="bg-gradient-to-r from-blue-600 to-violet-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" /> Most Popular
                   </span>
                 </div>
               )}
 
-              <div className="mb-6 md:mb-8">
-                <h3 className="text-lg font-medium text-white/80 mb-2">{plan.name}</h3>
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-[#86868b] mb-3 uppercase tracking-wider">{plan.name}</h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+                  <span className="text-5xl font-extrabold text-[#f5f5f7] tracking-tight">
                     <NumberFlow
                       value={isMonthly ? Number(plan.price) : Number(plan.yearlyPrice)}
                       format={{ style: "currency", currency: "USD", minimumFractionDigits: 0 }}
                     />
                   </span>
-                  <span className="text-white/50 text-sm">/{plan.period.replace("per ", "")}</span>
+                  <span className="text-[#86868b] text-base">/{plan.period.replace("per ", "")}</span>
                 </div>
-                <p className="text-white/50 text-sm mt-4 leading-relaxed min-h-[40px]">
+                <p className="text-[#86868b] text-sm mt-4 leading-relaxed">
                   {plan.description}
                 </p>
               </div>
@@ -154,11 +122,11 @@ export function Pricing({
               <div className="flex-1 mb-8">
                 <ul className="space-y-4">
                   {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-sm text-white/80">
-                      <div className="mt-1 w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-                        <Check className="w-2.5 h-2.5 text-blue-400" />
+                    <li key={idx} className="flex items-start gap-3 text-sm text-[#f5f5f7]">
+                      <div className="mt-0.5 w-5 h-5 rounded-full bg-[#0071e3]/20 flex items-center justify-center shrink-0">
+                        <Check className="w-3 h-3 text-[#0071e3]" />
                       </div>
-                      <span className="leading-tight">{feature}</span>
+                      <span className="leading-relaxed">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -167,11 +135,10 @@ export function Pricing({
               <a
                 href={plan.href}
                 className={cn(
-                  buttonVariants({ variant: plan.isPopular ? "default" : "outline" }),
-                  "w-full rounded-xl py-6 text-base font-semibold transition-all duration-300",
+                  "w-full h-12 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center",
                   plan.isPopular
-                    ? "bg-white text-black hover:bg-white/90 shadow-lg hover:shadow-xl hover:scale-[1.02]"
-                    : "bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 hover:text-white"
+                    ? "bg-white text-black hover:bg-gray-100 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                    : "bg-white/10 border border-white/10 text-[#f5f5f7] hover:bg-white/15 hover:border-white/20"
                 )}
               >
                 {plan.buttonText}
@@ -180,6 +147,6 @@ export function Pricing({
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
