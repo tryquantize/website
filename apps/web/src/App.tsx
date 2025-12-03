@@ -22,8 +22,7 @@ import Dashboard from "@/pages/dashboard";
 import Admin from "@/pages/admin";
 import Register from "@/pages/auth/register";
 import ResultsPage from "@/pages/results";
-import WaitlistPage from "@/pages/waitlist";
-import WaitlistAdminPage from "@/pages/waitlist-admin";
+
 import OnboardingPage from "@/pages/onboarding";
 import LoggedInHome from "@/pages/loggedinhome";
 import WelcomeTransition from "@/pages/welcome-transition";
@@ -86,7 +85,7 @@ function Router() {
       <AnimatedLayout>
         <div className="relative z-10 h-screen flex flex-col">
           {location !== '/dashboard' && location !== '/results' && <Header />}
-          <main className={`flex-1 overflow-y-auto ${location !== '/dashboard' && location !== '/results' ? 'pt-12 md:pt-24' : ''}`}>
+          <main className={`flex-1 overflow-y-auto ${location !== '/dashboard' && location !== '/results' && location !== '/' ? 'pt-12 md:pt-24' : ''}`}>
             <div className="min-h-full flex flex-col">
               <div className="flex-1">
                 <Switch>
@@ -104,8 +103,7 @@ function Router() {
                   <Route path="/admin" component={Admin} />
                   <Route path="/auth" component={Register} />
                   <Route path="/auth/register" component={Register} />
-                  <Route path="/waitlist" component={WaitlistPage} />
-                  <Route path="/waitlist-admin" component={WaitlistAdminPage} />
+
                   <Route path="/onboarding" component={OnboardingPage} />
                   <Route path="/search-transition" component={SearchTransition} />
                   <Route path="/results" component={ResultsPage} />

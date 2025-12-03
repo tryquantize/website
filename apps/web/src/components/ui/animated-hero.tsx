@@ -120,7 +120,7 @@ function Hero() {
                   <MoveRight className="w-4 h-4" />
                 </div>
               </button>
-              <button className="cssbuttons-io-button secondary" onClick={navigateToAddCompany}>
+              <button className="cssbuttons-io-button primary" onClick={navigateToAddCompany}>
                 Add Your Company
                 <div className="icon">
                   <Building2 className="w-4 h-4" />
@@ -129,7 +129,7 @@ function Hero() {
             </div>
 
             {/* Trust indicators */}
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-white/60 text-sm">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-white text-sm font-medium">
               <span className="text-xs">No credit card required</span>
               <span className="hidden sm:inline text-white/30">•</span>
               <span className="text-xs">Free forever</span>

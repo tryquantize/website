@@ -57,7 +57,7 @@ export function FaqSection() {
                             viewport={{ once: true }}
                         >
                             <Accordion type="single" collapsible className="w-full">
-                                <AccordionItem value={`item-${index}`} className="border-white/10 bg-white/5 rounded-xl px-6">
+                                <AccordionItem value={`item-${index}`} className="border-white/10 bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20 rounded-xl px-6">
                                     <AccordionTrigger className="text-left text-white hover:text-blue-400 hover:no-underline py-4 text-base font-medium">
                                         {faq.question}
                                     </AccordionTrigger>
@@ -74,7 +74,7 @@ export function FaqSection() {
                 <div className="md:hidden space-y-4">
                     {mobileFaqs.map((faq, index) => (
                         <Accordion key={index} type="single" collapsible className="w-full">
-                            <AccordionItem value={`item-${index}`} className="border-white/10 bg-white/5 rounded-xl px-5">
+                            <AccordionItem value={`item-${index}`} className="border-white/10 bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20 rounded-xl px-5">
                                 <AccordionTrigger className="text-left text-white hover:text-blue-400 hover:no-underline py-4 text-sm font-medium">
                                     {faq.question}
                                 </AccordionTrigger>

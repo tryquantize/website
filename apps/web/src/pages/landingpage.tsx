@@ -4,8 +4,8 @@ import { useEffect, useState, useRef, lazy, Suspense } from "react";
 // UI components
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
-import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
 import { Hero } from "@/components/ui/animated-hero";
+import { VantaRingsBackground } from "@/components/ui/vanta-rings-background";
 
 // Components
 import { motion, useInView } from "framer-motion";
@@ -18,24 +18,14 @@ const Featured_05 = lazy(() => import("@/components/ui/globe-feature-section"));
 const FeaturesSection = lazy(() => import("@/components/ui/features-section"));
 const FeatureCarousel = lazy(() => import("@/components/ui/animated-feature-carousel").then(module => ({ default: module.FeatureCarousel })));
 const LogoCarouselBasic = lazy(() => import("@/components/ui/logo-carousel-demo").then(module => ({ default: module.LogoCarouselBasic })));
+const StorySection = lazy(() => import("@/components/ui/story-section").then(module => ({ default: module.StorySection })));
 
 
-import { StorySection } from "@/components/ui/story-section";
 import { FaqSection } from "@/components/ui/faq-section";
 import { SectionBadge } from "@/components/ui/section-badge";
 
 export default function LandingPage() {
   const [startVisible, setStartVisible] = useState(false);
-  // Start with background hidden to prioritize first paint of text/UI
-  const [showBackground, setShowBackground] = useState(false);
-
-  useEffect(() => {
-    // Enable background after a short delay to allow main thread to clear
-    const timer = setTimeout(() => {
-      setShowBackground(true);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Handle navigation to home page
   const navigateToHomePage = () => {
@@ -52,25 +42,7 @@ export default function LandingPage() {
     window.location.href = "/onboarding";
   };
 
-  // Optimize scroll performance and interaction
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const windowHeight = window.innerHeight;
 
-      // "showBackground" here effectively means "is in Hero section"
-      // We use this to toggle pointer-events.
-      // When false, the background is non-interactive (no mouse, no scroll hijacking).
-      if (scrollY > windowHeight * 0.8) {
-        setShowBackground(false);
-      } else {
-        setShowBackground(true);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Fade in the buttons after page loads
   useEffect(() => {
@@ -83,22 +55,18 @@ export default function LandingPage() {
 
 
 
+
   return (
     <div className="relative w-full min-h-screen bg-black overflow-hidden">
-      {/* Raycast Animation Background */}
-      <div
-        className="fixed inset-0 w-full h-full z-0"
-        style={{
-          // Only allow pointer events (mouse interaction) when at the top of the page
-          // This prevents the background from stealing scrolls or clicks when reading content
-          pointerEvents: showBackground ? "auto" : "none"
-        }}
-      >
-        <RaycastBackground />
+      {/* Vanta.js Rings Background */}
+      <div className="fixed inset-0 w-full h-full z-0">
+        <VantaRingsBackground />
+        {/* Dark vignette overlay for better text visibility */}
+        <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/20 to-black/60" />
       </div>
 
       {/* Hero Section */}
-      <section className="relative w-full min-h-[80vh] sm:h-[85vh] flex items-center justify-center z-10 px-4">
+      <section className="relative w-full min-h-[80vh] sm:h-[85vh] flex items-center justify-center z-10 px-4 pt-20 md:pt-24">
         <Hero />
       </section>
 
@@ -117,10 +85,10 @@ export default function LandingPage() {
             <div className="container mx-auto px-4">
               <div className="max-w-15xl mx-auto">
                 <motion.div
-                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 shadow-2xl"
-                  initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20 rounded-2xl p-6 shadow-2xl"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                   viewport={{ once: true, amount: 0.3 }}
                 >
                   <video
@@ -129,7 +97,7 @@ export default function LandingPage() {
                     loop
                     muted
                     playsInline
-                    preload="none"
+                    preload="metadata"
                   >
                     <source src="/video.mp4" type="video/mp4" />
                     Your browser does not support the video tag.
@@ -178,7 +146,9 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <StorySection />
+              <Suspense fallback={<div className="grid grid-cols-1 md:grid-cols-3 gap-4"><Skeleton className="h-64 bg-white/5" /><Skeleton className="h-64 bg-white/5" /><Skeleton className="h-64 bg-white/5" /></div>}>
+                <StorySection />
+              </Suspense>
             </div>
           </section>
 

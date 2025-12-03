@@ -147,16 +147,16 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
   const frameCountRef = useRef(0)
   const wordIndexRef = useRef(0)
 
-  // Mobile optimization
+  // Mobile optimization - keep same particle density, adjust canvas size
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-  // Balanced pixelSteps: Lower = more particles (heavier). 
-  // Increased to 6/9 for maximum performance while keeping legibility.
-  const pixelSteps = isMobile ? 9 : 6
+  // Keep same particle density for good visuals
+  const pixelSteps = 6
   const drawAsPoints = true
 
   const generateRandomPos = (x: number, y: number, mag: number): Vector2D => {
-    const canvasWidth = isMobile ? 800 : 1200
-    const canvasHeight = isMobile ? 200 : 300
+    // Adjusted for better mobile aspect ratio
+    const canvasWidth = isMobile ? 600 : 1200
+    const canvasHeight = isMobile ? 150 : 300
     const randomX = Math.random() * canvasWidth
     const randomY = Math.random() * canvasHeight
 

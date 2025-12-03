@@ -11,8 +11,8 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useNavigation } from "@/hooks/use-navigation";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
-import { Heart, Menu, X, MoveRight, PanelLeftOpen, Search, Sparkles, Globe, Shield, Zap } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Heart, Menu, X, MoveRight, PanelLeftOpen, Search, Sparkles, Globe, Shield, Zap, MessageSquare } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { QuantizeLogo } from "@/components/quantize-logo";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,8 @@ interface HeaderProps {
 }
 
 export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {}) {
-  const navigationItems = [
+  // Memoize navigation items to prevent re-renders
+  const navigationItems = useMemo(() => [
     {
       title: "Product",
       description: "Discover AI-powered search capabilities.",
@@ -34,7 +35,6 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
           description: "AI-powered semantic search",
           icon: Search
         },
-
         {
           title: "Pricing",
           href: "/pricing",
@@ -54,14 +54,14 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
           icon: Globe
         },
         {
-          title: "Security",
-          href: "/security",
-          description: "Enterprise-grade protection",
-          icon: Shield
+          title: "Contact Us",
+          href: "/contact",
+          description: "Get in touch with us",
+          icon: MessageSquare
         },
       ],
     },
-  ];
+  ], []);
 
   const { user, isAuthenticated, logout } = useAuth();
   const { currentUser, signOut: firebaseSignOut } = useFirebaseAuth();
@@ -72,7 +72,7 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
   const { scrollY } = useScroll();
 
   const isResultsPage = location === '/results';
-  const isWaitlistPage = location === '/waitlist';
+
   const isWelcomeTransitionPage = location === '/welcome-transition';
 
   const handleFirebaseLogout = async () => {
@@ -95,11 +95,8 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
   }
 
   return (
-    <motion.header
-      className="fixed top-0 left-0 right-0 z-[9999] transition-all duration-300 border-b bg-black/50 backdrop-blur-md border-white/10 py-3"
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5, ease: "circOut" }}
+    <header
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-b bg-black/50 backdrop-blur-md border-white/10 py-3"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         <div className="flex items-center justify-between">
@@ -143,11 +140,11 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
 
                   {navigationItems.map((item) => (
                     <NavigationMenuItem key={item.title}>
-                      <NavigationMenuTrigger className="bg-transparent text-white/70 hover:text-white hover:bg-white/5 text-sm font-medium h-9 px-4 rounded-full transition-all data-[state=open]:bg-white/10 data-[state=open]:text-white">
+                      <NavigationMenuTrigger className="bg-transparent text-white/70 hover:text-white hover:bg-white/5 text-sm font-medium h-10 px-5 rounded-full transition-all data-[state=open]:bg-white/10 data-[state=open]:text-white">
                         {item.title}
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
-                        <div className="w-[400px] p-4">
+                        <div className="min-w-[400px] p-4">
                           <div className="grid gap-3">
                             {item.items.map((subItem) => (
                               <NavigationMenuLink key={subItem.title} asChild>
@@ -222,18 +219,12 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden sm:flex text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+                  className="hidden sm:flex text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-[0_0_15px_-3px_rgba(255,255,255,0.2)]"
                   onClick={() => navigateWithLoading('/auth')}
                 >
                   Sign in
                 </Button>
-                <Button
-                  size="sm"
-                  className="bg-white text-black hover:bg-white/90 rounded-full px-5 font-medium transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_-5px_rgba(255,255,255,0.5)]"
-                  onClick={() => navigateWithLoading('/waitlist')}
-                >
-                  Join Waitlist
-                </Button>
+
               </>
             )}
 
@@ -314,7 +305,7 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
                   <>
                     <Button
                       variant="outline"
-                      className="w-full border-white/10 text-white hover:bg-white/5"
+                      className="w-full border-white/10 text-white hover:bg-white/5 transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-[0_0_15px_-3px_rgba(255,255,255,0.2)]"
                       onClick={() => {
                         navigateWithLoading('/auth');
                         setIsMobileMenuOpen(false);
@@ -322,15 +313,7 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
                     >
                       Sign in
                     </Button>
-                    <Button
-                      className="w-full bg-white text-black hover:bg-white/90"
-                      onClick={() => {
-                        navigateWithLoading('/waitlist');
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      Join Waitlist
-                    </Button>
+
                   </>
                 )}
               </div>
@@ -338,6 +321,6 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.header >
+    </header>
   );
 }

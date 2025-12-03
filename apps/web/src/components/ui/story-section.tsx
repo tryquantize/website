@@ -74,19 +74,19 @@ export function StorySection() {
                 {storyItems.map((item, index) => (
                     <motion.div
                         key={index}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 10 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
                         viewport={{ once: true }}
                         className={cn(
-                            "group relative overflow-hidden rounded-3xl bg-white/5 border border-white/10 p-6 hover:bg-white/10 transition-colors duration-300",
+                            "group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20 p-6 hover:bg-white/10 transition-colors duration-300",
                             item.className
                         )}
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                         <div className="relative z-10 h-full flex flex-col">
-                            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-blue-400 group-hover:scale-110 transition-transform duration-300">
+                            <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-blue-400 transition-transform duration-200">
                                 <item.icon className="h-6 w-6" />
                             </div>
 
