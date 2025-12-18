@@ -5,7 +5,7 @@ import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/ui/animated-hero";
-import { VantaRingsBackground } from "@/components/ui/vanta-rings-background";
+import { OptimizedRaycastBackground } from "@/components/ui/raycast-animated-background";
 
 // Components
 import { motion, useInView } from "framer-motion";
@@ -58,9 +58,9 @@ export default function LandingPage() {
 
   return (
     <div className="relative w-full min-h-screen bg-black overflow-hidden">
-      {/* Vanta.js Rings Background */}
+      {/* Optimized Raycast Background - pauses when scrolled for performance */}
       <div className="fixed inset-0 w-full h-full z-0">
-        <VantaRingsBackground />
+        <OptimizedRaycastBackground />
         {/* Dark vignette overlay for better text visibility */}
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/20 to-black/60" />
       </div>
