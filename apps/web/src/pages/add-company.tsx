@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,9 +6,10 @@ import '@/styles/custom-input.css';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Building2, Plus, X, ChevronLeft, ChevronRight, Sparkles, Check, Loader2 } from 'lucide-react';
+import { Plus, X, ChevronLeft, ChevronRight, Sparkles, Check, Loader2 } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
+import { motion, AnimatePresence } from 'framer-motion';
+
 import { SectionBadge } from "@/components/ui/section-badge";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,30 @@ export default function AddCompanyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [direction, setDirection] = useState(0);
   const [isEnhancingDescription, setIsEnhancingDescription] = useState(false);
+
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 1000 : -1000,
+      opacity: 0
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 1000 : -1000,
+      opacity: 0
+    })
+  };
+
+  const changeStep = (newStep: number) => {
+    setDirection(newStep > currentStep ? 1 : -1);
+    setCurrentStep(newStep);
+  };
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -457,13 +481,13 @@ export default function AddCompanyPage() {
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      changeStep(currentStep + 1);
     }
   };
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      changeStep(currentStep - 1);
     }
   };
 
@@ -523,650 +547,808 @@ export default function AddCompanyPage() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // If it's a textarea, we might want to allow newlines, but for now let's just prevent submit
+      // If we are in an input field that adds items (like products), that logic is handled in the specific input's onKeyDown
+
+      // If we are not on the last step, we could optionally go to next step, 
+      // but let's just prevent submission for now to be safe and avoid accidental skips.
+      // If the user wants to go next, they should click next. 
+      // OR we can make it go next if it's not a multiline text area.
+
+      if (currentStep < steps.length - 1) {
+        // Optional: nextStep(); 
+        // But for "7/7" auto submit issue, preventing default is key.
+      }
+    }
+  };
+
+  // Scroll Indicators Logic - REMOVED per user request
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const isStepComplete = (stepIdx: number) => {
+    switch (stepIdx) {
+      case 0: // Basic Info
+        return !!formData.companyName && !!formData.website;
+      case 1: // Company Details
+        return !!formData.category;
+      case 2: // Products
+        return formData.products.length > 0 && !!formData.description;
+      case 3: // Features
+        return !!formData.features || !!formData.useCases; // At least one
+      case 4: // Business Details
+        return formData.industriesServed.length > 0 || formData.pricingModel.length > 0 || !!formData.companyStage;
+      case 5: // Market
+        return formData.customerSegments.length > 0 || formData.deploymentType.length > 0;
+      case 6: // Final
+        return !!formData.logo || formData.topClients.length > 0 || !!formData.testimonialPage;
+      default:
+        return false;
+    }
+  };
+
   return (
-    <div className="relative w-full min-h-screen bg-black overflow-hidden">
-      {/* Raycast Animation Background */}
-      <div className="fixed inset-0 w-full h-full z-0">
-        <RaycastBackground />
-      </div>
+    <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen bg-black text-white selection:bg-blue-500/30 pt-[72px] lg:overflow-hidden">
+      {/* Fixed Progress Bar (Header - Mobile Only) - REMOVED per user request to move to bottom */}
+      {/* Left Panel - Sticky Info (Hidden on mobile to focus on form, or could be a summary) */}
+      <div className="hidden lg:flex w-full lg:w-[35%] xl:w-[30%] relative flex-col px-8 lg:px-12 py-12 h-full bg-zinc-950 border-r border-white/5 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent pointer-events-none" />
 
-      <div className="relative z-10 pt-32 pb-24 px-4">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <SectionBadge>PARTNER WITH US</SectionBadge>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-[#f5f5f7] mb-6">
-            Add Your Company
-          </h1>
-          <p className="text-lg text-[#86868b] leading-relaxed max-w-2xl mx-auto">
-            Get featured in our directory. Complete the details below to ensure your company is properly represented.
-          </p>
-        </div>
-
-        {/* Main Card */}
-        <div className="max-w-4xl mx-auto bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 sm:p-12 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-
-          {/* Progress Bar */}
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#f5f5f7] flex items-center gap-3">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[#0071e3] text-white text-sm">
-                  {currentStep + 1}
-                </span>
-                {steps[currentStep].title}
-              </h2>
-              <div className="text-[#86868b] text-sm font-medium">
-                Step {currentStep + 1} of {steps.length}
-              </div>
-            </div>
-            <div className="w-full bg-white/10 rounded-full h-1.5">
-              <div
-                className="bg-[#0071e3] h-1.5 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-              ></div>
-            </div>
+        <div className="relative z-10 flex flex-col h-full">
+          <div className="flex-none pb-8">
+            <SectionBadge>PARTNER WITH US</SectionBadge>
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mt-6 mb-4">Add Your Company</h1>
+            <p className="text-white/60 text-lg leading-relaxed">
+              Join our directory of innovative AI companies.
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Step 0: Basic Information */}
-            {currentStep === 0 && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                  <p className="text-sm text-blue-200 flex gap-2">
-                    <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span>
-                      <strong>Pro Tip:</strong> Enter your company name and website, then use our AI Auto-fill feature to populate the rest of the form automatically!
-                    </span>
-                  </p>
-                </div>
+          {/* Vertical Stepper (Scrollable) */}
+          <div className="flex-1 overflow-y-auto scrollbar-hide flex flex-col">
+            <div className="py-12 space-y-6">
+              {steps.map((step, idx) => {
+                const isCompleted = isStepComplete(idx);
+                const isActive = currentStep === idx;
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white">Company Name <span className="text-red-400">*</span></label>
-                    <Input
-                      required
-                      value={formData.companyName}
-                      onChange={(e) => handleInputChange('companyName', e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="e.g., OpenAI"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white">Website <span className="text-red-400">*</span></label>
-                    <Input
-                      required
-                      type="url"
-                      value={formData.website}
-                      onChange={(e) => handleInputChange('website', e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="https://yourcompany.com"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="text-sm font-medium text-white">LinkedIn Page</label>
-                    <Input
-                      type="url"
-                      value={formData.linkedinPage}
-                      onChange={(e) => handleInputChange('linkedinPage', e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="https://linkedin.com/company/yourcompany"
-                    />
-                  </div>
-                </div>
-
-                {/* Auto-fill Button */}
-                {formData.companyName && formData.website && (
-                  <div className="flex flex-col items-center gap-4 pt-4">
-                    <Button
-                      type="button"
-                      onClick={handleAutoFill}
-                      disabled={isAutoFilling}
-                      className="h-14 px-8 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-semibold rounded-2xl shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    >
-                      {isAutoFilling ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Analyzing Company Data...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-5 h-5 mr-2" />
-                          Auto-fill with AI
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-[#86868b] text-sm">
-                      or <button type="button" onClick={() => setCurrentStep(1)} className="text-[#f5f5f7] hover:underline">continue manually</button>
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Step 1: Company Details */}
-            {currentStep === 1 && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white">Phone Number</label>
-                    <Input
-                      type="tel"
-                      value={formData.phoneNumber}
-                      onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white">Founded Year</label>
-                    <Input
-                      value={formData.founded}
-                      onChange={(e) => handleInputChange('founded', e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="2023"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white">Headquarters</label>
-                    <Input
-                      value={formData.headquarters}
-                      onChange={(e) => handleInputChange('headquarters', e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="San Francisco, CA"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white">Category <span className="text-red-400">*</span></label>
-                    <Input
-                      required
-                      value={formData.category}
-                      onChange={(e) => handleInputChange('category', e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="AI Platform, SaaS, etc."
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white">Employees</label>
-                    <Select value={formData.employees} onValueChange={(val) => handleInputChange('employees', val)}>
-                      <SelectTrigger className="h-12 bg-white/10 border-white/20 text-white">
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-black/90 border-white/20 text-white backdrop-blur-xl">
-                        {employeeOptions.map(opt => (
-                          <SelectItem key={opt} value={opt} className="focus:bg-white/10 focus:text-white">{opt}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white">
-                    Company Tagline
-                    <span className="block text-xs text-white/60 font-normal mt-1">A short, catchy phrase describing what you do</span>
-                  </label>
-                  <Input
-                    value={formData.tagline}
-                    onChange={(e) => handleInputChange('tagline', e.target.value)}
-                    className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                    placeholder="e.g., 'AI for everyone'"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white">
-                    USP Tagline
-                    <span className="block text-xs text-white/60 font-normal mt-1">What makes you unique?</span>
-                  </label>
-                  <Input
-                    value={formData.uspTagline}
-                    onChange={(e) => handleInputChange('uspTagline', e.target.value)}
-                    className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                    placeholder="e.g., 'The fastest AI engine on the market'"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Products & Description */}
-            {currentStep === 2 && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Products / Services <span className="text-red-400">*</span></label>
-                  <div className="flex gap-3">
-                    <Input
-                      value={newProduct}
-                      onChange={(e) => setNewProduct(e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="Add a product..."
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addItem('products', newProduct);
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => addItem('products', newProduct)}
-                      className="h-12 w-12 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 min-h-[40px] p-4 bg-white/10 border border-white/20 rounded-xl">
-                    {formData.products.length === 0 && (
-                      <span className="text-white/50 text-sm italic">No products added yet</span>
-                    )}
-                    {formData.products.map((item, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0071e3]/20 text-blue-200 text-sm border border-[#0071e3]/30">
-                        {item}
-                        <button
-                          type="button"
-                          onClick={() => removeItem('products', idx)}
-                          className="hover:text-white transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-sm font-medium text-white">Description <span className="text-red-400">*</span></label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={enhanceDescription}
-                      disabled={isEnhancingDescription || !formData.description}
-                      className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                    >
-                      {isEnhancingDescription ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2" />}
-                      Enhance with AI
-                    </Button>
-                  </div>
-                  <Textarea
-                    required
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    className="min-h-[200px] bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all resize-none"
-                    placeholder="Describe your company, mission, and what makes you special..."
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Features & Use Cases */}
-            {currentStep === 3 && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Key Features</label>
-                  <div className="flex gap-3">
-                    <Input
-                      value={newFeature}
-                      onChange={(e) => setNewFeature(e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="Add a feature..."
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addItem('features', newFeature);
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => addItem('features', newFeature)}
-                      className="h-12 w-12 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                  </div>
-
-                  <div className="p-4 bg-white/10 border border-white/20 rounded-xl">
-                    <Textarea
-                      value={formData.features}
-                      onChange={(e) => handleInputChange('features', e.target.value)}
-                      className="min-h-[100px] bg-transparent border-none text-white placeholder:text-white/50 focus:ring-0 resize-none p-0"
-                      placeholder="Or paste a list of features here..."
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Use Cases</label>
-                  <div className="flex gap-3">
-                    <Input
-                      value={newUseCase}
-                      onChange={(e) => setNewUseCase(e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="Add a use case..."
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addItem('useCases', newUseCase);
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => addItem('useCases', newUseCase)}
-                      className="h-12 w-12 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                  </div>
-
-                  <div className="p-4 bg-white/10 border border-white/20 rounded-xl">
-                    <Textarea
-                      value={formData.useCases}
-                      onChange={(e) => handleInputChange('useCases', e.target.value)}
-                      className="min-h-[100px] bg-transparent border-none text-white placeholder:text-white/50 focus:ring-0 resize-none p-0"
-                      placeholder="Or paste a list of use cases here..."
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Business Details */}
-            {currentStep === 4 && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Industries Served</label>
-                  <div className="flex flex-wrap gap-2">
-                    {industryOptions.map(option => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => formData.industriesServed.includes(option) ? removeIndustry(option) : addIndustry(option)}
-                        className={cn(
-                          "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
-                          formData.industriesServed.includes(option)
-                            ? "bg-[#0071e3] border-[#0071e3] text-white shadow-lg shadow-blue-500/20"
-                            : "bg-white/10 border-white/20 text-white/80 hover:bg-white/20 hover:text-white"
-                        )}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Pricing Model</label>
-                  <div className="flex flex-wrap gap-2">
-                    {pricingModelOptions.map(option => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => formData.pricingModel.includes(option) ? removePricingModel(option) : addPricingModel(option)}
-                        className={cn(
-                          "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
-                          formData.pricingModel.includes(option)
-                            ? "bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-500/20"
-                            : "bg-white/10 border-white/20 text-white/80 hover:bg-white/20 hover:text-white"
-                        )}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Pricing Range</label>
-                  <div className="flex flex-wrap gap-2">
-                    {pricingOptions.map(option => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => formData.pricingRanges.includes(option) ? removePricingRange(option) : addPricingRange(option)}
-                        className={cn(
-                          "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
-                          formData.pricingRanges.includes(option)
-                            ? "bg-green-600 border-green-600 text-white shadow-lg shadow-green-500/20"
-                            : "bg-white/10 border-white/20 text-white/80 hover:bg-white/20 hover:text-white"
-                        )}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white">Company Stage</label>
-                  <Select value={formData.companyStage} onValueChange={(val) => handleInputChange('companyStage', val)}>
-                    <SelectTrigger className="h-12 bg-white/10 border-white/20 text-white">
-                      <SelectValue placeholder="Select stage" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-black/90 border-white/20 text-white backdrop-blur-xl">
-                      {companyStageOptions.map(opt => (
-                        <SelectItem key={opt} value={opt} className="focus:bg-white/10 focus:text-white">{opt}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-
-            {/* Step 5: Market & Deployment */}
-            {currentStep === 5 && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Customer Segments</label>
-                  <div className="flex flex-wrap gap-2">
-                    {customerSegmentOptions.map(option => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => formData.customerSegments.includes(option) ? removeCustomerSegment(option) : addCustomerSegment(option)}
-                        className={cn(
-                          "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
-                          formData.customerSegments.includes(option)
-                            ? "bg-pink-600 border-pink-600 text-white shadow-lg shadow-pink-500/20"
-                            : "bg-white/10 border-white/20 text-white/80 hover:bg-white/20 hover:text-white"
-                        )}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Deployment Type</label>
-                  <div className="flex flex-wrap gap-2">
-                    {deploymentTypeOptions.map(option => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => formData.deploymentType.includes(option) ? removeDeploymentType(option) : addDeploymentType(option)}
-                        className={cn(
-                          "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
-                          formData.deploymentType.includes(option)
-                            ? "bg-orange-600 border-orange-600 text-white shadow-lg shadow-orange-500/20"
-                            : "bg-white/10 border-white/20 text-white/80 hover:bg-white/20 hover:text-white"
-                        )}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Ideal Scenarios</label>
-                  <div className="flex flex-wrap gap-2">
-                    {idealScenarioOptions.map(option => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => formData.idealScenarios.includes(option) ? removeIdealScenario(option) : addIdealScenario(option)}
-                        className={cn(
-                          "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
-                          formData.idealScenarios.includes(option)
-                            ? "bg-teal-600 border-teal-600 text-white shadow-lg shadow-teal-500/20"
-                            : "bg-white/10 border-white/20 text-white/80 hover:bg-white/20 hover:text-white"
-                        )}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-4 bg-white/10 border border-white/20 rounded-xl">
-                  <input
-                    type="checkbox"
-                    id="trialAvailable"
-                    checked={formData.trialAvailable}
-                    onChange={(e) => setFormData(prev => ({ ...prev, trialAvailable: e.target.checked }))}
-                    className="w-5 h-5 rounded border-white/30 bg-white/10 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
-                  />
-                  <label htmlFor="trialAvailable" className="text-white font-medium cursor-pointer">
-                    Free Trial / Demo Available
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* Step 6: Additional Info */}
-            {currentStep === 6 && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Top Clients</label>
-                  <div className="flex gap-3">
-                    <Input
-                      value={newClient}
-                      onChange={(e) => setNewClient(e.target.value)}
-                      className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                      placeholder="Add a client..."
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addItem('topClients', newClient);
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => addItem('topClients', newClient)}
-                      className="h-12 w-12 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 min-h-[40px] p-4 bg-white/10 border border-white/20 rounded-xl">
-                    {formData.topClients.length === 0 && (
-                      <span className="text-white/50 text-sm italic">No clients added yet</span>
-                    )}
-                    {formData.topClients.map((item, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 text-white text-sm border border-white/20">
-                        {item}
-                        <button
-                          type="button"
-                          onClick={() => removeItem('topClients', idx)}
-                          className="hover:text-white transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white">Testimonial Page URL</label>
-                  <Input
-                    type="url"
-                    value={formData.testimonialPage}
-                    onChange={(e) => handleInputChange('testimonialPage', e.target.value)}
-                    className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-                    placeholder="https://yourcompany.com/testimonials"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white">Company Logo</label>
-                  <div className="p-8 border-2 border-dashed border-white/20 rounded-xl text-center hover:bg-white/10 transition-colors cursor-pointer relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
-                        <Plus className="w-6 h-6 text-white" />
-                      </div>
-                      <p className="text-white font-medium">Click to upload logo</p>
-                      <p className="text-white/60 text-sm">SVG, PNG, JPG (max 2MB)</p>
-                      {formData.logo && (
-                        <p className="text-green-400 text-sm mt-2 font-medium flex items-center gap-1">
-                          <Check className="w-4 h-4" /> {formData.logo.name}
-                        </p>
-                      )}
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => changeStep(idx)}
+                    className="relative flex items-center gap-4 group text-left w-full hover:bg-white/5 p-2 rounded-xl transition-all duration-300"
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 z-10 border",
+                      isActive ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-110" :
+                        isCompleted ? "bg-zinc-800 border-zinc-700 text-green-400" :
+                          "bg-transparent border-white/10 text-white/30 group-hover:border-white/30 group-hover:text-white/50"
+                    )}>
+                      {isCompleted ? <Check className="w-4 h-4" /> : idx + 1}
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
+                    <div className="flex flex-col">
+                      <span className={cn(
+                        "text-sm font-medium transition-colors duration-300",
+                        isActive ? "text-white" :
+                          isCompleted ? "text-white/80" :
+                            "text-white/30 group-hover:text-white/50"
+                      )}>
+                        {step.title}
+                      </span>
+                    </div>
+                    {idx !== steps.length - 1 && (
+                      <div className={cn(
+                        "absolute left-6 top-10 w-px h-6 -ml-px transition-colors duration-300",
+                        isCompleted ? "bg-zinc-800" : "bg-white/5"
+                      )} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between pt-8 border-t border-white/10">
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Scrollable Form + Fixed Bottom Bar */}
+      <div className="flex-1 relative bg-black h-auto lg:h-full flex flex-col lg:overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-soft-light"></div>
+
+        {/* Scrollable Content */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 lg:overflow-y-auto scrollbar-hide relative z-10 overflow-x-hidden"
+        >
+          <div className="max-w-3xl mx-auto p-6 lg:p-12 pb-32">
+            <form onKeyDown={handleKeyDown} className="grid grid-cols-1">
+              <AnimatePresence mode="popLayout" custom={direction}>
+                {/* Step 0: Basic Information */}
+                {currentStep === 0 && (
+                  <motion.div
+                    key="step0"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                      <p className="text-sm text-blue-200 flex gap-2">
+                        <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <span>
+                          <strong>Pro Tip:</strong> Enter your company name and website, then use our AI Auto-fill feature to populate the rest of the form automatically!
+                        </span>
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Company Name <span className="text-red-400">*</span></label>
+                        <Input
+                          required
+                          value={formData.companyName}
+                          onChange={(e) => handleInputChange('companyName', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="e.g., OpenAI"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Website <span className="text-red-400">*</span></label>
+                        <Input
+                          required
+                          type="url"
+                          value={formData.website}
+                          onChange={(e) => handleInputChange('website', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="https://yourcompany.com"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 space-y-2">
+                        <label className="text-sm font-medium text-white">LinkedIn Page</label>
+                        <Input
+                          type="url"
+                          value={formData.linkedinPage}
+                          onChange={(e) => handleInputChange('linkedinPage', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="https://linkedin.com/company/yourcompany"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Auto-fill Button */}
+                    {formData.companyName && formData.website && (
+                      <div className="flex flex-col items-center gap-4 pt-4">
+                        <Button
+                          type="button"
+                          onClick={handleAutoFill}
+                          disabled={isAutoFilling}
+                          className="relative h-14 px-8 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-2xl shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden group"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                          {isAutoFilling ? (
+                            <>
+                              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                              Analyzing Company Data...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-5 h-5 mr-2" />
+                              Auto-fill with AI
+                            </>
+                          )}
+                        </Button>
+                        <div className="flex items-center gap-2 text-sm text-zinc-400">
+                          <span>or</span>
+                          <button
+                            type="button"
+                            onClick={() => changeStep(1)}
+                            className="text-zinc-300 hover:text-white font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-px after:bg-white after:transition-all after:duration-300 hover:after:w-full"
+                          >
+                            continue manually
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* Step 1: Company Details */}
+                {currentStep === 1 && (
+                  <motion.div
+                    key="step1"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Phone Number</label>
+                        <Input
+                          type="tel"
+                          value={formData.phoneNumber}
+                          onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="+1 (555) 123-4567"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Founded Year</label>
+                        <Input
+                          value={formData.founded}
+                          onChange={(e) => handleInputChange('founded', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="2023"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Headquarters</label>
+                        <Input
+                          value={formData.headquarters}
+                          onChange={(e) => handleInputChange('headquarters', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="San Francisco, CA"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Category <span className="text-red-400">*</span></label>
+                        <Input
+                          required
+                          value={formData.category}
+                          onChange={(e) => handleInputChange('category', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="AI Platform, SaaS, etc."
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Employees</label>
+                        <Select value={formData.employees} onValueChange={(val) => handleInputChange('employees', val)}>
+                          <SelectTrigger className="h-14 bg-zinc-900/50 border-white/10 text-white rounded-xl focus:border-white/30 transition-colors duration-200 focus:outline-none focus:ring-0">
+                            <SelectValue placeholder="Select size" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-black/90 border-white/20 text-white backdrop-blur-xl">
+                            {employeeOptions.map(opt => (
+                              <SelectItem key={opt} value={opt} className="focus:bg-white/10 focus:text-white">{opt}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">
+                        Company Tagline
+                        <span className="block text-xs text-white/60 font-normal mt-1">A short, catchy phrase describing what you do</span>
+                      </label>
+                      <Input
+                        value={formData.tagline}
+                        onChange={(e) => handleInputChange('tagline', e.target.value)}
+                        className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                        placeholder="e.g., 'AI for everyone'"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">
+                        USP Tagline
+                        <span className="block text-xs text-white/60 font-normal mt-1">What makes you unique?</span>
+                      </label>
+                      <Input
+                        value={formData.uspTagline}
+                        onChange={(e) => handleInputChange('uspTagline', e.target.value)}
+                        className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                        placeholder="e.g., 'The fastest AI engine on the market'"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 2: Products & Description */}
+                {currentStep === 2 && (
+                  <motion.div
+                    key="step2"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Products / Services <span className="text-red-400">*</span></label>
+                      <div className="flex gap-3">
+                        <Input
+                          value={newProduct}
+                          onChange={(e) => setNewProduct(e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Add a product..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addItem('products', newProduct);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => addItem('products', newProduct)}
+                          className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 min-h-[40px] p-4 bg-white/10 border border-white/20 rounded-xl">
+                        {formData.products.length === 0 && (
+                          <span className="text-white/50 text-sm italic">No products added yet</span>
+                        )}
+                        {formData.products.map((item, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0071e3]/20 text-blue-200 text-sm border border-[#0071e3]/30">
+                            {item}
+                            <button
+                              type="button"
+                              onClick={() => removeItem('products', idx)}
+                              className="hover:text-white transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <label className="text-sm font-medium text-white">Description <span className="text-red-400">*</span></label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={enhanceDescription}
+                          disabled={isEnhancingDescription || !formData.description}
+                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                        >
+                          {isEnhancingDescription ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2" />}
+                          Enhance with AI
+                        </Button>
+                      </div>
+                      <Textarea
+                        required
+                        value={formData.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        className="min-h-[200px] bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 resize-none rounded-xl focus:outline-none focus:ring-0"
+                        placeholder="Describe your company, mission, and what makes you special..."
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 3: Features & Use Cases */}
+                {currentStep === 3 && (
+                  <motion.div
+                    key="step3"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Key Features</label>
+                      <div className="flex gap-3">
+                        <Input
+                          value={newFeature}
+                          onChange={(e) => setNewFeature(e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Add a feature..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addItem('features', newFeature);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => addItem('features', newFeature)}
+                          className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      <div className="p-4 bg-white/10 border border-white/20 rounded-xl">
+                        <Textarea
+                          value={formData.features}
+                          onChange={(e) => handleInputChange('features', e.target.value)}
+                          className="min-h-[100px] bg-transparent border-none text-white placeholder:text-white/50 focus:ring-0 resize-none p-0"
+                          placeholder="Or paste a list of features here..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Use Cases</label>
+                      <div className="flex gap-3">
+                        <Input
+                          value={newUseCase}
+                          onChange={(e) => setNewUseCase(e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Add a use case..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addItem('useCases', newUseCase);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => addItem('useCases', newUseCase)}
+                          className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      <div className="p-4 bg-white/10 border border-white/20 rounded-xl">
+                        <Textarea
+                          value={formData.useCases}
+                          onChange={(e) => handleInputChange('useCases', e.target.value)}
+                          className="min-h-[100px] bg-transparent border-none text-white placeholder:text-white/50 focus:ring-0 resize-none p-0"
+                          placeholder="Or paste a list of use cases here..."
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 4: Business Details */}
+                {currentStep === 4 && (
+                  <motion.div
+                    key="step4"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Industries Served</label>
+                      <div className="flex flex-wrap gap-2">
+                        {industryOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.industriesServed.includes(option) ? removeIndustry(option) : addIndustry(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.industriesServed.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Pricing Model</label>
+                      <div className="flex flex-wrap gap-2">
+                        {pricingModelOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.pricingModel.includes(option) ? removePricingModel(option) : addPricingModel(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.pricingModel.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Pricing Range</label>
+                      <div className="flex flex-wrap gap-2">
+                        {pricingOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.pricingRanges.includes(option) ? removePricingRange(option) : addPricingRange(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.pricingRanges.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">Company Stage</label>
+                      <Select value={formData.companyStage} onValueChange={(val) => handleInputChange('companyStage', val)}>
+                        <SelectTrigger className="h-14 bg-zinc-900/50 border-white/10 text-white rounded-xl focus:border-white/30 transition-colors duration-200 focus:outline-none focus:ring-0">
+                          <SelectValue placeholder="Select stage" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-black/90 border-white/20 text-white backdrop-blur-xl">
+                          {companyStageOptions.map(opt => (
+                            <SelectItem key={opt} value={opt} className="focus:bg-white/10 focus:text-white">{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 5: Market & Deployment */}
+                {currentStep === 5 && (
+                  <motion.div
+                    key="step5"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Customer Segments</label>
+                      <div className="flex flex-wrap gap-2">
+                        {customerSegmentOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.customerSegments.includes(option) ? removeCustomerSegment(option) : addCustomerSegment(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.customerSegments.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Deployment Type</label>
+                      <div className="flex flex-wrap gap-2">
+                        {deploymentTypeOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.deploymentType.includes(option) ? removeDeploymentType(option) : addDeploymentType(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.deploymentType.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Ideal Scenarios</label>
+                      <div className="flex flex-wrap gap-2">
+                        {idealScenarioOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.idealScenarios.includes(option) ? removeIdealScenario(option) : addIdealScenario(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.idealScenarios.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 bg-white/10 border border-white/20 rounded-xl">
+                      <input
+                        type="checkbox"
+                        id="trialAvailable"
+                        checked={formData.trialAvailable}
+                        onChange={(e) => setFormData(prev => ({ ...prev, trialAvailable: e.target.checked }))}
+                        className="w-5 h-5 rounded border-white/30 bg-white/10 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                      />
+                      <label htmlFor="trialAvailable" className="text-white font-medium cursor-pointer">
+                        Free Trial / Demo Available
+                      </label>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 6: Additional Info */}
+                {currentStep === 6 && (
+                  <motion.div
+                    key="step6"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Top Clients</label>
+                      <div className="flex gap-3">
+                        <Input
+                          value={newClient}
+                          onChange={(e) => setNewClient(e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Add a client..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addItem('topClients', newClient);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => addItem('topClients', newClient)}
+                          className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 min-h-[40px] p-4 bg-white/10 border border-white/20 rounded-xl">
+                        {formData.topClients.length === 0 && (
+                          <span className="text-white/50 text-sm italic">No clients added yet</span>
+                        )}
+                        {formData.topClients.map((item, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 text-white text-sm border border-white/20">
+                            {item}
+                            <button
+                              type="button"
+                              onClick={() => removeItem('topClients', idx)}
+                              className="hover:text-white transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">Testimonial Page URL</label>
+                      <Input
+                        type="url"
+                        value={formData.testimonialPage}
+                        onChange={(e) => handleInputChange('testimonialPage', e.target.value)}
+                        className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                        placeholder="https://yourcompany.com/testimonials"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">Company Logo</label>
+                      <div className="p-8 border-2 border-dashed border-white/10 bg-zinc-900/30 rounded-xl text-center hover:bg-zinc-900/50 hover:border-white/20 transition-all cursor-pointer relative group">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
+                            <Plus className="w-6 h-6 text-white" />
+                          </div>
+                          <p className="text-white font-medium">Click to upload logo</p>
+                          <p className="text-white/60 text-sm">SVG, PNG, JPG (max 2MB)</p>
+                          {formData.logo && (
+                            <p className="text-green-400 text-sm mt-2 font-medium flex items-center gap-1">
+                              <Check className="w-4 h-4" /> {formData.logo.name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+            </form>
+          </div>
+        </div>
+
+        {/* Fixed Bottom Bar */}
+        <div className="fixed bottom-0 left-0 right-0 lg:relative p-6 lg:px-12 border-t border-white/10 bg-black/80 backdrop-blur-xl z-50">
+          {/* Minimalist Section Progress Bar */}
+          <div
+            className="absolute top-0 left-0 h-[2px] bg-white transition-all duration-500 ease-out z-30"
+            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+          />
+
+          <div className="max-w-3xl mx-auto flex justify-between items-center">
+            <Button
+              type="button"
+              onClick={prevStep}
+              disabled={currentStep === 0}
+              variant="ghost"
+              className="group h-14 px-8 text-zinc-500 hover:text-white hover:bg-white/5 disabled:opacity-30 rounded-2xl transition-all duration-200"
+            >
+              <ChevronLeft className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1" />
+              Back
+            </Button>
+
+            {currentStep < steps.length - 1 ? (
               <Button
                 type="button"
-                onClick={prevStep}
-                disabled={currentStep === 0}
-                variant="ghost"
-                className="h-12 px-6 text-[#f5f5f7] hover:bg-white/10 hover:text-white disabled:opacity-30"
+                onClick={nextStep}
+                className="group h-14 px-10 bg-white text-black hover:bg-zinc-100 font-semibold tracking-tight rounded-2xl shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
               >
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Back
+                Next Step
+                <ChevronRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
               </Button>
-
-              {currentStep < steps.length - 1 ? (
-                <Button
-                  type="button"
-                  onClick={nextStep}
-                  className="h-12 px-8 bg-white text-black hover:bg-gray-200 font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
-                >
-                  Next Step
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="h-12 px-8 bg-[#0071e3] text-white hover:bg-[#0077ED] font-semibold rounded-xl shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] transition-all disabled:opacity-50"
-                >
+            ) : (
+              <Button
+                type="button"
+                onClick={(e) => handleSubmit(e)}
+                disabled={isSubmitting}
+                className="group h-14 px-10 bg-[#0071e3] text-white hover:bg-[#0077ED] font-semibold tracking-tight rounded-2xl shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+              >
+                <div className="relative flex items-center">
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                       Submitting...
                     </>
                   ) : (
                     <>
                       Submit Company
-                      <Check className="w-4 h-4 ml-2" />
+                      <Check className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:scale-110" />
                     </>
                   )}
-                </Button>
-              )}
-            </div>
-          </form>
+                </div>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
