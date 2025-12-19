@@ -7,7 +7,7 @@ const googleProvider = new GoogleAuthProvider();
 export const handleIndependentGoogleAuth = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    window.location.href = 'https://quantize.site/home';
+    window.location.href = '/home';
     return { success: true, user: result.user };
   } catch (error: any) {
     if (error.code === 'auth/popup-blocked') {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Sparkles, Copy, Building2, User, Brain, Mic, MicOff, PanelLeftClose, PanelLeftOpen, Loader2, Undo, ArrowRight, Heart, RotateCcw } from "lucide-react";
@@ -26,6 +27,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
 import { Component as RaycastBlueBackground } from "@/components/ui/raycast-animated-blue-background";
 import { Header } from "@/components/layout/header";
+import { getSearchResults, clearSearchResults } from "@/lib/search-session";
+
 
 
 
@@ -45,7 +48,7 @@ interface SearchResult {
   aiResponse?: string;
   suggestions?: string[];
   companies?: Company[];
-  citations?: Array<{id: number, title: string, url: string}>;
+  citations?: Array<{ id: number, title: string, url: string }>;
   traditionalResults?: any[];
   aiPowered?: boolean;
   timestamp: number;
@@ -66,7 +69,7 @@ const mockSearchResults = [
     website: "https://example.com"
   },
   {
-    name: "Example Company 2", 
+    name: "Example Company 2",
     description: "Another sample company",
     category: "Business",
     pricing: "$10/month",
@@ -76,6 +79,8 @@ const mockSearchResults = [
 
 export default function ResultsPage() {
   const [location, setLocation] = useLocation();
+  const [, routeParams] = useRoute("/results/:id");
+
   const { user, logout } = useAuth();
   const { currentUser, signOut } = useFirebaseAuth();
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,7 +102,7 @@ export default function ResultsPage() {
     return window.innerWidth < 768;
   });
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  
+
   // Handle screen resize for responsive sidebar
   useEffect(() => {
     const handleResize = () => {
@@ -109,7 +114,7 @@ export default function ResultsPage() {
         setSidebarMinimized(false);
       }
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [sidebarMinimized]);
@@ -119,27 +124,27 @@ export default function ResultsPage() {
   const [tinderMode, setTinderMode] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
-  
+
   // WEB SEARCH STATE
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
-  
+
   // PROMPT ENHANCEMENT STATE
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [queryHistory, setQueryHistory] = useState<string[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
-  
+
   // SUPPLIERS SECTION STATE
   const [showSuppliersSection, setShowSuppliersSection] = useState(true);
   const [showSuppliersPopup, setShowSuppliersPopup] = useState(false);
   const [supplierEmail, setSupplierEmail] = useState('');
   const [supplierPhone, setSupplierPhone] = useState('');
   const [isSubmittingSuppliers, setIsSubmittingSuppliers] = useState(false);
-  
 
-  
+
+
   // Toast notifications
   const { toast } = useToast();
-  
+
   // Update search query when voice transcript changes
   useEffect(() => {
     if (transcript) {
@@ -151,7 +156,7 @@ export default function ResultsPage() {
   const llmModels = [
     "Claude 3.5 Haiku",
     "GPT-4o Mini",
-    "Gemini 2.5 Flash", 
+    "Gemini 2.5 Flash",
     "Qwen2.5 Coder 32B Instruct",
     "Meta Llama 3.2 3B Instruct",
     "Qwen2.5 72B Instruct",
@@ -168,9 +173,9 @@ export default function ResultsPage() {
    */
   const handlePromptEnhancement = async () => {
     if (!searchQuery.trim() || isEnhancing) return;
-    
+
     setIsEnhancing(true);
-    
+
     try {
       const originalQuery = searchQuery;
       const enhancedQuery = await enhancePrompt(searchQuery, {
@@ -178,16 +183,16 @@ export default function ResultsPage() {
         industry: user?.industry,
         companySize: user?.company?.size
       });
-      
+
       setQueryHistory(prev => [...prev, originalQuery]);
       setCurrentHistoryIndex(queryHistory.length);
       setSearchQuery(enhancedQuery);
-      
+
       toast({
         title: "Prompt enhanced!",
         description: "Your search query has been made more detailed and specific.",
       });
-      
+
     } catch (error) {
       console.error('Prompt enhancement failed:', error);
       toast({
@@ -205,7 +210,7 @@ export default function ResultsPage() {
    */
   const handleUndo = () => {
     if (currentHistoryIndex < 0 || queryHistory.length === 0) return;
-    
+
     const previousQuery = queryHistory[currentHistoryIndex];
     if (previousQuery) {
       setSearchQuery(previousQuery);
@@ -245,10 +250,10 @@ export default function ResultsPage() {
     let currentText = "";
     let isDeleting = false;
     let charIndex = 0;
-    
+
     const typeWriter = () => {
       const currentPhrase = placeholderPhrases[currentPhraseIndex];
-      
+
       if (!isDeleting && charIndex < currentPhrase.length) {
         currentText += currentPhrase.charAt(charIndex);
         setPlaceholder(currentText);
@@ -270,7 +275,7 @@ export default function ResultsPage() {
         timeout = setTimeout(typeWriter, 500);
       }
     };
-    
+
     typeWriter();
     return () => clearTimeout(timeout);
   }, [currentPhraseIndex]);
@@ -288,53 +293,75 @@ export default function ResultsPage() {
     });
   }
 
-  // Get search query from URL params and perform initial search
+  // Get search query from secure session or URL params
   useEffect(() => {
+    // First, check if we have a secure session ID in the route
+    const sessionId = routeParams?.id;
+    if (sessionId) {
+      const secureResults = getSearchResults(sessionId);
+      if (secureResults) {
+        // We have secure results from the search-transition page
+        setSearchQuery(secureResults.query || '');
+
+        // Store in the old sessionStorage format for compatibility with performInitialSearch
+        sessionStorage.setItem('searchResults', JSON.stringify(secureResults));
+
+        // Clean up secure storage
+        clearSearchResults(sessionId);
+
+        const conversationId = createNewConversation(secureResults.query || 'Search');
+        setCurrentConversationId(conversationId);
+        setShowNewConversation(false);
+
+        setTimeout(() => {
+          performInitialSearch(secureResults.query || '', conversationId, false);
+        }, 100);
+        return;
+      }
+    }
+
+    // Legacy: Fall back to URL params (for backwards compatibility)
     const params = new URLSearchParams(window.location.search);
     const query = params.get('q') || '';
     const types = params.get('types');
     const locations = params.get('locations');
     const webSearch = params.get('websearch') === 'true';
-    
-    console.log('URL params - websearch:', params.get('websearch'), 'parsed as:', webSearch);
-    
+
     setSearchQuery(query);
     setWebSearchEnabled(webSearch);
-    
+
     // Restore selected types from URL
     if (types) {
       const typesArray = types.split(',').filter(t => t.trim());
       const newSelectedTypes = new Set(typesArray);
       setSelectedTypes(newSelectedTypes);
-      console.log('Restored types from URL:', typesArray, 'Set size:', newSelectedTypes.size);
     } else {
       setSelectedTypes(new Set());
     }
-    
-    // Store locations for search (we'll add location state management later if needed)
+
+    // Store locations for search
     const selectedLocations = locations ? locations.split(',').filter(l => l.trim()) : [];
-    console.log('Restored locations from URL:', selectedLocations);
-    console.log('Web search from URL:', webSearch);
-    
+
     if (query) {
       // Create new conversation for initial search
       const conversationId = createNewConversation(query);
       setCurrentConversationId(conversationId);
       setShowNewConversation(false);
-      
+
       // Small delay to ensure selectedTypes is set before search
       setTimeout(() => {
         performInitialSearch(query, conversationId, webSearch);
       }, 100);
     }
-  }, [location]);
+  }, [location, routeParams?.id]);
+
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
       setShowModelDropdown(false);
     };
-    
+
     if (showModelDropdown) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
@@ -348,7 +375,7 @@ export default function ResultsPage() {
     // Check for cached results from search transition
     const cachedResults = sessionStorage.getItem('searchResults');
     let data;
-    
+
     if (cachedResults) {
       // Use cached results and clear them
       data = JSON.parse(cachedResults);
@@ -367,7 +394,7 @@ export default function ResultsPage() {
       const locations = params.get('locations');
       const currentSelectedTypes = types ? types.split(',').filter(t => t.trim()) : Array.from(selectedTypes);
       const currentSelectedLocations = locations ? locations.split(',').filter(l => l.trim()) : [];
-      
+
       console.log('Performing search with types:', currentSelectedTypes, 'and locations:', currentSelectedLocations);
 
       try {
@@ -379,17 +406,17 @@ export default function ResultsPage() {
           selectedLocations: currentSelectedLocations,
           webSearchEnabled: webSearchEnabled
         });
-        
+
         data = await response.json();
       } catch (error) {
         console.error('Search failed:', error);
         // Fallback to mock data
-        const filteredResults = mockSearchResults.filter(result => 
+        const filteredResults = mockSearchResults.filter(result =>
           result.name.toLowerCase().includes(query.toLowerCase()) ||
           result.description.toLowerCase().includes(query.toLowerCase()) ||
           result.category.toLowerCase().includes(query.toLowerCase())
         );
-        
+
         data = {
           query,
           aiResponse: "AI search is currently unavailable. Showing traditional search results.",
@@ -435,7 +462,7 @@ export default function ResultsPage() {
           data: result
         }
       ]);
-      
+
       // Add to conversation history
       if (conversationId || currentConversationId) {
         const msgId = conversationId || currentConversationId;
@@ -460,7 +487,7 @@ export default function ResultsPage() {
     try {
       // Use the passed parameter if provided, otherwise use current state
       const shouldUseWebSearch = useWebSearch !== undefined ? useWebSearch : webSearchEnabled;
-      
+
       const response = await apiRequest("POST", "/api/search", {
         query: question,
         context: {},
@@ -469,9 +496,9 @@ export default function ResultsPage() {
         selectedLocations: [], // Use empty array for follow-up questions
         webSearchEnabled: shouldUseWebSearch
       });
-      
+
       const data = await response.json();
-      
+
       const newCompanies = data.companies || [];
       // Accumulate cards - add new companies to existing ones, avoiding duplicates
       const existingNames = new Set(allCompanies.map(c => c.name));
@@ -550,7 +577,7 @@ export default function ResultsPage() {
       type: 'loading',
       data: { query }
     }]);
-    
+
     // Add query to conversation
     addMessageToConversation(conversationId, {
       id: `msg-${Date.now()}`,
@@ -568,12 +595,12 @@ export default function ResultsPage() {
         selectedLocations: [], // Use empty array for new searches
         webSearchEnabled: webSearchEnabled // Use current web search state
       });
-      
+
       const data = await response.json();
-      
+
       const newCompanies = data.companies || [];
       // For new searches, show pinned cards + new results
-      const pinnedCompanies = pinnedCards.filter(pin => 
+      const pinnedCompanies = pinnedCards.filter(pin =>
         !newCompanies.some((newCompany: Company) => newCompany.name === pin.name)
       );
       const updatedAllCompanies = [...pinnedCompanies, ...newCompanies];
@@ -603,7 +630,7 @@ export default function ResultsPage() {
         }
         return newItems;
       });
-      
+
       // Add response to conversation
       if (currentConversationId) {
         addMessageToConversation(currentConversationId, {
@@ -648,7 +675,7 @@ export default function ResultsPage() {
         });
         return newItems;
       });
-      
+
       // Add error response to conversation
       if (currentConversationId) {
         addMessageToConversation(currentConversationId, {
@@ -669,10 +696,10 @@ export default function ResultsPage() {
 
 
   // Get user's first name
-  const firstName = currentUser?.displayName?.split(' ')[0] || 
-                   currentUser?.email?.split('@')[0] || 
-                   user?.name?.split(' ')[0] || 
-                   'User';
+  const firstName = currentUser?.displayName?.split(' ')[0] ||
+    currentUser?.email?.split('@')[0] ||
+    user?.name?.split(' ')[0] ||
+    'User';
 
   const handleLogout = async () => {
     try {
@@ -713,18 +740,18 @@ export default function ResultsPage() {
   const handleSuppliersSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supplierEmail.trim() || !supplierPhone.trim()) return;
-    
+
     setIsSubmittingSuppliers(true);
-    
+
     try {
       // Here you would typically send the data to your API
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
+
       toast({
         title: "Success!",
         description: "We'll connect you with relevant Companies soon.",
       });
-      
+
       setShowSuppliersPopup(false);
       setShowSuppliersSection(false);
       setSupplierEmail('');
@@ -751,7 +778,7 @@ export default function ResultsPage() {
   const handleSelectConversation = (conversationId: string) => {
     loadConversation(conversationId);
     setCurrentConversationId(conversationId);
-    
+
     // Load conversation messages into content items
     const conversation = currentConversation;
     if (conversation) {
@@ -773,7 +800,7 @@ export default function ResultsPage() {
         }
         return null;
       }).filter(Boolean);
-      
+
       setContentItems(items as any[]);
     }
   };
@@ -784,13 +811,13 @@ export default function ResultsPage() {
       <div className="fixed inset-0 w-full h-full z-0">
         {tinderMode ? <RaycastBlueBackground /> : <RaycastBackground />}
       </div>
-      
+
       {/* Header with toggle button */}
-      <Header 
+      <Header
         onToggleSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
         showSidebarToggle={true}
       />
-      
+
       {/* Fixed Mobile Sections - Below Header */}
       <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-black/20 backdrop-blur-xl border-b border-white/10">
         {/* Suppliers Section */}
@@ -799,13 +826,13 @@ export default function ResultsPage() {
             <h3 className="text-base font-semibold text-white mb-2">Would you like Companies to reach out to you?</h3>
             <p className="text-white/70 text-xs mb-3">Get personalized quotes and offers directly from verified Companies</p>
             <div className="flex space-x-3">
-              <button 
+              <button
                 onClick={handleSuppliersYes}
                 className="px-4 py-2 bg-white text-black font-medium text-sm rounded-lg hover:bg-gray-100 transition-all"
               >
                 Yes, I'm interested
               </button>
-              <button 
+              <button
                 onClick={handleSuppliersNo}
                 className="px-4 py-2 bg-white/10 border border-white/20 text-white font-medium text-sm rounded-lg hover:bg-white/20 transition-all"
               >
@@ -814,7 +841,7 @@ export default function ResultsPage() {
             </div>
           </div>
         )}
-        
+
         {/* Tinder Mode Toggle */}
         {allCompanies.length > 0 && (
           <div className="p-4">
@@ -859,7 +886,7 @@ export default function ResultsPage() {
       {/* Fixed Sidebar */}
       {showSidebar && (
         <div className={`${typeof window !== 'undefined' && window.innerWidth < 768 && !mobileSidebarOpen ? 'hidden' : ''}`}>
-          <ConversationSidebar 
+          <ConversationSidebar
             onNewConversation={handleNewConversation}
             onSelectConversation={handleSelectConversation}
             isMinimized={sidebarMinimized && !mobileSidebarOpen}
@@ -888,211 +915,211 @@ export default function ResultsPage() {
 
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} pl-0 pr-0 md:px-6 lg:px-8 pb-8 pt-4 md:pt-6`} style={{marginTop: typeof window !== 'undefined' && window.innerWidth < 768 && (showSuppliersSection || allCompanies.length > 0) ? '120px' : '0'}}>
+      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} pl-0 pr-0 md:px-6 lg:px-8 pb-8 pt-4 md:pt-6`} style={{ marginTop: typeof window !== 'undefined' && window.innerWidth < 768 && (showSuppliersSection || allCompanies.length > 0) ? '120px' : '0' }}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
-        <div className="space-y-4">
-          {contentItems.map((item) => (
-            <div key={item.id}>
+          <div className="space-y-4">
+            {contentItems.map((item) => (
+              <div key={item.id}>
 
 
 
-              {/* Selected Question */}
-              {item.type === 'selected-question' && (
-                <div className="bg-black/20 backdrop-blur-xl p-4 border border-white/10 relative group">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm text-white/80 font-medium">
-                      {item.data.question}
-                    </span>
+                {/* Selected Question */}
+                {item.type === 'selected-question' && (
+                  <div className="bg-black/20 backdrop-blur-xl p-4 border border-white/10 relative group">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm text-white/80 font-medium">
+                        {item.data.question}
+                      </span>
+                    </div>
+
+                    {/* Copy button for Selected Question */}
+                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-all">
+                      <button
+                        onClick={() => navigator.clipboard.writeText(item.data.question)}
+                        className="p-1.5 bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
+                        title="Copy question"
+                      >
+                        <Copy className="w-3 h-3 text-white/70" />
+                      </button>
+                    </div>
                   </div>
-                  
-                  {/* Copy button for Selected Question */}
-                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-all">
-                    <button
-                      onClick={() => navigator.clipboard.writeText(item.data.question)}
-                      className="p-1.5 bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
-                      title="Copy question"
-                    >
-                      <Copy className="w-3 h-3 text-white/70" />
-                    </button>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {/* Suggestions */}
-              {item.type === 'suggestions' && item.data.questions.length > 0 && (
-                <div className="space-y-0">
-                  <div className="grid grid-cols-1">
-                    {item.data.questions.map((question, index) => (
-                      <div key={index} className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-lg relative group border-t-0 first:border-t">
-                        <button
-                          onClick={() => handleSuggestionClick(question)}
-                          className="text-left p-4 w-full hover:border-white/20 transition-all"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <span className="text-sm text-white/80 group-hover:text-white transition-colors">
-                              {question}
-                            </span>
-                            <ArrowRight className="w-4 h-4 text-white/40 ml-auto group-hover:text-white transition-colors" />
-                          </div>
-                        </button>
-                        
-                        {/* Copy button for Questions */}
-                        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-all">
+                {/* Suggestions */}
+                {item.type === 'suggestions' && item.data.questions.length > 0 && (
+                  <div className="space-y-0">
+                    <div className="grid grid-cols-1">
+                      {item.data.questions.map((question, index) => (
+                        <div key={index} className="bg-black/40 backdrop-blur-xl border border-white/10 shadow-lg relative group border-t-0 first:border-t">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigator.clipboard.writeText(question);
-                            }}
-                            className="p-1.5 bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
-                            title="Copy question"
+                            onClick={() => handleSuggestionClick(question)}
+                            className="text-left p-4 w-full hover:border-white/20 transition-all"
                           >
-                            <Copy className="w-3 h-3 text-white/70" />
+                            <div className="flex items-center space-x-3">
+                              <span className="text-sm text-white/80 group-hover:text-white transition-colors">
+                                {question}
+                              </span>
+                              <ArrowRight className="w-4 h-4 text-white/40 ml-auto group-hover:text-white transition-colors" />
+                            </div>
                           </button>
+
+                          {/* Copy button for Questions */}
+                          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(question);
+                              }}
+                              className="p-1.5 bg-white/10 hover:bg-white/20 border border-white/20 transition-all"
+                              title="Copy question"
+                            >
+                              <Copy className="w-3 h-3 text-white/70" />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+
+
                   </div>
-                  
-
-                </div>
-              )}
+                )}
 
 
-            </div>
-          ))}
+              </div>
+            ))}
 
-          {/* No Results - Show welcome message when no content */}
-          {contentItems.length === 0 && !isInitialLoading && !showNewConversation && (
-            <NewConversationState firstName={firstName} />
-          )}
-          
+            {/* No Results - Show welcome message when no content */}
+            {contentItems.length === 0 && !isInitialLoading && !showNewConversation && (
+              <NewConversationState firstName={firstName} />
+            )}
 
-        </div>
-        
-        {/* Desktop Suppliers Section */}
-        {showSuppliersSection && allCompanies.length > 0 && (
-          <div className="hidden md:block bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
-            <h3 className="text-lg font-semibold text-white mb-2">Would you like Companies to reach out to you?</h3>
-            <p className="text-white/70 text-sm mb-4">Get personalized quotes and offers directly from verified Companies</p>
-            <div className="flex space-x-4">
-              <button 
-                onClick={handleSuppliersYes}
-                className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all"
-              >
-                Yes, I'm interested
-              </button>
-              <button 
-                onClick={handleSuppliersNo}
-                className="px-6 py-2 bg-white/10 border border-white/20 text-white font-medium rounded-lg hover:bg-white/20 transition-all"
-              >
-                No, thanks
-              </button>
-            </div>
+
           </div>
-        )}
-        
-        {/* Desktop Tinder Mode Toggle */}
-        {allCompanies.length > 0 && (
-          <div className="hidden md:block bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={() => {
-                    setTinderMode(!tinderMode);
-                    if (!tinderMode) {
-                      setCurrentCardIndex(0);
-                    }
-                  }}
-                  variant={tinderMode ? "default" : "outline"}
-                  className={`${tinderMode ? 'bg-pink-500 hover:bg-pink-600' : 'border-white/20 text-white hover:bg-white/10'} transition-all`}
+
+          {/* Desktop Suppliers Section */}
+          {showSuppliersSection && allCompanies.length > 0 && (
+            <div className="hidden md:block bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
+              <h3 className="text-lg font-semibold text-white mb-2">Would you like Companies to reach out to you?</h3>
+              <p className="text-white/70 text-sm mb-4">Get personalized quotes and offers directly from verified Companies</p>
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleSuppliersYes}
+                  className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all"
                 >
-                  <Heart className="w-4 h-4 mr-2" />
-                  Tinder Mode {tinderMode ? 'ON' : 'OFF'}
-                </Button>
-                {tinderMode && (
+                  Yes, I'm interested
+                </button>
+                <button
+                  onClick={handleSuppliersNo}
+                  className="px-6 py-2 bg-white/10 border border-white/20 text-white font-medium rounded-lg hover:bg-white/20 transition-all"
+                >
+                  No, thanks
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Desktop Tinder Mode Toggle */}
+          {allCompanies.length > 0 && (
+            <div className="hidden md:block bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <Button
-                    onClick={() => setCurrentCardIndex(0)}
-                    variant="outline"
-                    size="sm"
-                    className="border-white/20 text-white hover:bg-white/10"
+                    onClick={() => {
+                      setTinderMode(!tinderMode);
+                      if (!tinderMode) {
+                        setCurrentCardIndex(0);
+                      }
+                    }}
+                    variant={tinderMode ? "default" : "outline"}
+                    className={`${tinderMode ? 'bg-pink-500 hover:bg-pink-600' : 'border-white/20 text-white hover:bg-white/10'} transition-all`}
                   >
-                    <RotateCcw className="w-4 h-4 mr-1" />
-                    Reset
+                    <Heart className="w-4 h-4 mr-2" />
+                    Tinder Mode {tinderMode ? 'ON' : 'OFF'}
                   </Button>
+                  {tinderMode && (
+                    <Button
+                      onClick={() => setCurrentCardIndex(0)}
+                      variant="outline"
+                      size="sm"
+                      className="border-white/20 text-white hover:bg-white/10"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-1" />
+                      Reset
+                    </Button>
+                  )}
+                </div>
+                {tinderMode && (
+                  <div className="text-white/60 text-sm">
+                    {currentCardIndex + 1} / {allCompanies.length}
+                  </div>
                 )}
               </div>
-              {tinderMode && (
-                <div className="text-white/60 text-sm">
-                  {currentCardIndex + 1} / {allCompanies.length}
-                </div>
-              )}
             </div>
-          </div>
-        )}
-        
+          )}
 
-        
 
-        
 
-        
 
-        
-        {/* Cards - Show below all content */}
-        {allCompanies.length > 0 && (() => {
-          // Show appropriate cards based on selected types
-          const params = new URLSearchParams(window.location.search);
-          const urlTypes = params.get('types');
-          const urlLocations = params.get('locations');
-          const currentTypes = urlTypes ? new Set(urlTypes.split(',').filter(t => t.trim())) : selectedTypes;
-          const currentLocations = urlLocations ? urlLocations.split(',').filter(l => l.trim()) : [];
-          
-          if (currentTypes.has('product') && currentTypes.size === 1) {
-            return <ProductCards products={allCompanies} />;
-          } else if (currentTypes.has('company') && currentTypes.size === 1) {
-            return (
-              <CompanyCards 
-                companies={allCompanies} 
-                webSearchEnabled={webSearchEnabled} 
-                searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
-                selectedLocations={currentLocations}
-                tinderMode={tinderMode}
-                currentCardIndex={currentCardIndex}
-                onCardIndexChange={setCurrentCardIndex}
-              />
-            );
-          } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
-            return <FreelancerCards freelancers={allCompanies} />;
-          } else {
-            // Show exactly 5 company cards + remaining as product cards when no specific type is selected
-            const companies = allCompanies.slice(0, 5);
-            const products = allCompanies.slice(5, 10).map(companyItem => ({
-              name: companyItem.name,
-              description: companyItem.description,
-              pricing: companyItem.pricing,
-              website: companyItem.website
-            }));
-            return (
-              <div className="mt-6">
-                <CompanyCards 
-                  companies={companies} 
-                  webSearchEnabled={webSearchEnabled} 
+
+
+
+
+
+          {/* Cards - Show below all content */}
+          {allCompanies.length > 0 && (() => {
+            // Show appropriate cards based on selected types
+            const params = new URLSearchParams(window.location.search);
+            const urlTypes = params.get('types');
+            const urlLocations = params.get('locations');
+            const currentTypes = urlTypes ? new Set(urlTypes.split(',').filter(t => t.trim())) : selectedTypes;
+            const currentLocations = urlLocations ? urlLocations.split(',').filter(l => l.trim()) : [];
+
+            if (currentTypes.has('product') && currentTypes.size === 1) {
+              return <ProductCards products={allCompanies} />;
+            } else if (currentTypes.has('company') && currentTypes.size === 1) {
+              return (
+                <CompanyCards
+                  companies={allCompanies}
+                  webSearchEnabled={webSearchEnabled}
                   searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
                   selectedLocations={currentLocations}
                   tinderMode={tinderMode}
                   currentCardIndex={currentCardIndex}
                   onCardIndexChange={setCurrentCardIndex}
                 />
-                {products.length > 0 && <ProductToolCards products={products} />}
-              </div>
-            );
-          }
-        })()}
+              );
+            } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
+              return <FreelancerCards freelancers={allCompanies} />;
+            } else {
+              // Show exactly 5 company cards + remaining as product cards when no specific type is selected
+              const companies = allCompanies.slice(0, 5);
+              const products = allCompanies.slice(5, 10).map(companyItem => ({
+                name: companyItem.name,
+                description: companyItem.description,
+                pricing: companyItem.pricing,
+                website: companyItem.website
+              }));
+              return (
+                <div className="mt-6">
+                  <CompanyCards
+                    companies={companies}
+                    webSearchEnabled={webSearchEnabled}
+                    searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+                    selectedLocations={currentLocations}
+                    tinderMode={tinderMode}
+                    currentCardIndex={currentCardIndex}
+                    onCardIndexChange={setCurrentCardIndex}
+                  />
+                  {products.length > 0 && <ProductToolCards products={products} />}
+                </div>
+              );
+            }
+          })()}
         </NotificationProvider>
       </div>
-      
+
       {/* Favorites Notification */}
-      <FavoritesNotification 
+      <FavoritesNotification
         show={favoritesNotification.show}
         itemName={favoritesNotification.itemName}
         onClose={hideFavoritesNotification}
@@ -1106,7 +1133,7 @@ export default function ResultsPage() {
               {contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : 'Connect with Suppliers'}
             </h3>
             <p className="text-white/70 text-sm mb-4">Enter your contact details to receive personalized quotes</p>
-            
+
             <form onSubmit={handleSuppliersSubmit} className="space-y-4">
               <div>
                 <label className="block text-white/80 text-sm mb-2">Email Address</label>
@@ -1119,7 +1146,7 @@ export default function ResultsPage() {
                   placeholder="your@email.com"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-white/80 text-sm mb-2">Phone Number</label>
                 <input
@@ -1131,7 +1158,7 @@ export default function ResultsPage() {
                   placeholder="+1 (555) 123-4567"
                 />
               </div>
-              
+
               <div className="flex space-x-3 pt-2">
                 <button
                   type="submit"

@@ -6,12 +6,12 @@ function Hero() {
 
   // Handle navigation to home page
   const navigateToHomePage = () => {
-    window.location.href = "https://quantize.site/home";
+    window.location.href = "/home";
   };
 
   // Handle navigation to login with redirect
   const navigateToLogin = () => {
-    window.location.href = "https://quantize.site/auth?redirect=/home";
+    window.location.href = "/auth?redirect=/home";
   };
 
   // Handle navigation to add company page

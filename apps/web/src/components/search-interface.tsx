@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { enhancePrompt } from "@/lib/promptEnhancer";
 import { useToast } from "@/hooks/use-toast";
+import { createSearchSession } from "@/lib/search-session";
 
 interface SearchInterfaceProps {
   onSearchResults?: (results: any) => void;
@@ -188,10 +189,17 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
       return;
     }
 
-    const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
-    const locationsParam = selectedLocations.length > 0 ? `&locations=${selectedLocations.join(',')}` : '';
-    const webSearchParam = webSearchEnabled ? '&websearch=true' : '&websearch=false';
-    setLocation(`/results?q=${encodeURIComponent(query)}${typesParam}${locationsParam}${webSearchParam}`);
+    // Create secure search session and get random ID
+    const searchId = createSearchSession({
+      query: query.trim(),
+      types: Array.from(selectedTypes),
+      locations: selectedLocations,
+      webSearch: webSearchEnabled,
+      model: selectedModel
+    });
+
+    // Navigate to search page with opaque ID (no query in URL)
+    setLocation(`/search/${searchId}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -371,8 +379,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
 
         {/* Glassmorphism Search Bar - Mobile optimized */}
         <div className={`transition-all duration-1500 ease-out ${isSearching
-            ? 'opacity-0 scale-90 pointer-events-none'
-            : 'w-full max-w-4xl mx-auto mb-4 sm:mb-6 md:mb-8 px-3 sm:px-4 transform translate-y-0 opacity-100 scale-100'
+          ? 'opacity-0 scale-90 pointer-events-none'
+          : 'w-full max-w-4xl mx-auto mb-4 sm:mb-6 md:mb-8 px-3 sm:px-4 transform translate-y-0 opacity-100 scale-100'
           }`}>
           <div className={`relative rounded-[16px] sm:rounded-[20px] md:rounded-[24px] lg:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[88px] xs:h-[94px] sm:h-[90px] md:h-[100px] lg:h-[110px] ${isSearching ? 'transform scale-95' : 'transform scale-100'
             }`}>
@@ -501,8 +509,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                         <button
                           onClick={() => setWebSearchEnabled(!webSearchEnabled)}
                           className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center transition-all duration-200 aspect-square touch-manipulation ${webSearchEnabled
-                              ? 'text-emerald-400 hover:text-emerald-300'
-                              : 'text-white/40 hover:text-white/70'
+                            ? 'text-emerald-400 hover:text-emerald-300'
+                            : 'text-white/40 hover:text-white/70'
                             }`}
                         >
                           <Globe className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-4.5 sm:w-4.5" />
@@ -546,8 +554,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                       <TooltipTrigger asChild>
                         <button
                           className={`h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition-all duration-200 aspect-square touch-manipulation ${selectedTypes.has('company')
-                              ? 'text-amber-400 hover:text-amber-300'
-                              : 'text-white/40 hover:text-white/70'
+                            ? 'text-amber-400 hover:text-amber-300'
+                            : 'text-white/40 hover:text-white/70'
                             }`}
                           aria-label="Company"
                           onClick={() => toggleType('company')}
@@ -562,8 +570,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                       <TooltipTrigger asChild>
                         <button
                           className={`h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition-all duration-200 aspect-square touch-manipulation ${selectedTypes.has('freelancer')
-                              ? 'text-amber-400 hover:text-amber-300'
-                              : 'text-white/40 hover:text-white/70'
+                            ? 'text-amber-400 hover:text-amber-300'
+                            : 'text-white/40 hover:text-white/70'
                             }`}
                           aria-label="Freelancer"
                           onClick={() => toggleType('freelancer')}
@@ -578,8 +586,8 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
                       <TooltipTrigger asChild>
                         <button
                           className={`h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition-all duration-200 aspect-square touch-manipulation ${selectedTypes.has('product')
-                              ? 'text-amber-400 hover:text-amber-300'
-                              : 'text-white/40 hover:text-white/70'
+                            ? 'text-amber-400 hover:text-amber-300'
+                            : 'text-white/40 hover:text-white/70'
                             }`}
                           aria-label="Product"
                           onClick={() => toggleType('product')}

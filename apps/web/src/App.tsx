@@ -105,7 +105,8 @@ function Router() {
                   <Route path="/auth/register" component={Register} />
 
                   <Route path="/onboarding" component={OnboardingPage} />
-                  <Route path="/search-transition" component={SearchTransition} />
+                  <Route path="/search/:id" component={SearchTransition} />
+                  <Route path="/results/:id" component={ResultsPage} />
                   <Route path="/results" component={ResultsPage} />
                   <Route path="/favorites" component={FavoritesPage} />
                   <Route path="/glowing-search-demo" component={GlowingSearchDemoPage} />
@@ -122,7 +123,7 @@ function Router() {
                   <Route component={NotFound} />
                 </Switch>
               </div>
-              {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/glowing-search-demo' && location !== '/home' && location !== '/dashboard' && <Footer />}
+              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/dashboard' && <Footer />}
             </div>
           </main>
         </div>
