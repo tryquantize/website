@@ -49,6 +49,7 @@ export default function AddCompanyPage() {
     website: '',
     linkedinPage: '',
     phoneNumber: '',
+    email: '',
     founded: '',
     headquarters: '',
     products: [] as string[],
@@ -365,7 +366,7 @@ export default function AddCompanyPage() {
 
   const steps = [
     { title: 'Basic Info', fields: ['companyName', 'website', 'linkedinPage'] },
-    { title: 'Company Details', fields: ['phoneNumber', 'founded', 'headquarters', 'category', 'employees', 'tagline', 'uspTagline'] },
+    { title: 'Company Details', fields: ['phoneNumber', 'email', 'founded', 'headquarters', 'category', 'employees', 'tagline', 'uspTagline'] },
     { title: 'Products & Description', fields: ['products', 'description'] },
     { title: 'Features & Use Cases', fields: ['features', 'useCases'] },
     { title: 'Business Details', fields: ['industriesServed', 'pricingRanges', 'pricingModel', 'companyStage'] },
@@ -573,7 +574,7 @@ export default function AddCompanyPage() {
       case 0: // Basic Info
         return !!formData.companyName && !!formData.website;
       case 1: // Company Details
-        return !!formData.category;
+        return !!formData.category && !!formData.email;
       case 2: // Products
         return formData.products.length > 0 && !!formData.description;
       case 3: // Features
@@ -599,7 +600,7 @@ export default function AddCompanyPage() {
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex-none pb-8">
             <SectionBadge>PARTNER WITH US</SectionBadge>
-            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mt-6 mb-4">Add Your Company</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mt-4 mb-4">Add Your Company</h1>
             <p className="text-white/60 text-lg leading-relaxed">
               Join our directory of innovative AI companies.
             </p>
@@ -782,6 +783,18 @@ export default function AddCompanyPage() {
                       </div>
 
                       <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Email Address <span className="text-red-400">*</span></label>
+                        <Input
+                          required
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="contact@company.com"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
                         <label className="text-sm font-medium text-white">Founded Year</label>
                         <Input
                           value={formData.founded}
@@ -919,10 +932,17 @@ export default function AddCompanyPage() {
                           size="sm"
                           onClick={enhanceDescription}
                           disabled={isEnhancingDescription || !formData.description}
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                          className="relative overflow-hidden group bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-white/10 hover:border-white/20 transition-all duration-300"
                         >
-                          {isEnhancingDescription ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Sparkles className="w-3 h-3 mr-2" />}
-                          Enhance with AI
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                          <span className="relative flex items-center gap-2 bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent font-medium">
+                            {isEnhancingDescription ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-300" />
+                            ) : (
+                              <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                            )}
+                            Enhance with AI
+                          </span>
                         </Button>
                       </div>
                       <Textarea
@@ -949,7 +969,27 @@ export default function AddCompanyPage() {
                     className="space-y-8 col-start-1 row-start-1 w-full"
                   >
                     <div className="space-y-4">
-                      <label className="text-sm font-medium text-white">Key Features</label>
+                      <div className="flex justify-between items-center">
+                        <label className="text-sm font-medium text-white">Key Features</label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => enhanceText(formData.features, 'feature')}
+                          disabled={isEnhancing.feature || !formData.features}
+                          className="relative overflow-hidden group bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-white/10 hover:border-white/20 transition-all duration-300"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                          <span className="relative flex items-center gap-2 bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent font-medium">
+                            {isEnhancing.feature ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-300" />
+                            ) : (
+                              <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                            )}
+                            Enhance with AI
+                          </span>
+                        </Button>
+                      </div>
                       <div className="flex gap-3">
                         <Input
                           value={newFeature}
@@ -983,7 +1023,27 @@ export default function AddCompanyPage() {
                     </div>
 
                     <div className="space-y-4">
-                      <label className="text-sm font-medium text-white">Use Cases</label>
+                      <div className="flex justify-between items-center">
+                        <label className="text-sm font-medium text-white">Use Cases</label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => enhanceText(formData.useCases, 'useCase')}
+                          disabled={isEnhancing.useCase || !formData.useCases}
+                          className="relative overflow-hidden group bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-white/10 hover:border-white/20 transition-all duration-300"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                          <span className="relative flex items-center gap-2 bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent font-medium">
+                            {isEnhancing.useCase ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-300" />
+                            ) : (
+                              <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                            )}
+                            Enhance with AI
+                          </span>
+                        </Button>
+                      </div>
                       <div className="flex gap-3">
                         <Input
                           value={newUseCase}
