@@ -3,6 +3,7 @@ import json
 from typing import Dict, Any
 import logging
 import re
+from .firebase_service import FirebaseService
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +12,7 @@ class CompanySubmissionService:
         self.rag_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'rag')
         self.companies_path = os.path.join(self.rag_path, 'companies')
         self.pending_path = os.path.join(self.rag_path, 'data', 'pending_submissions')
+        self.firebase_service = FirebaseService()
         
         # Ensure directories exist
         os.makedirs(self.companies_path, exist_ok=True)
@@ -68,6 +70,14 @@ class CompanySubmissionService:
             
             # Create company folder and files
             self._create_company_folder(company_folder, form_data)
+            
+            # Also store in Firebase if available
+            if self.firebase_service.db:
+                firebase_result = self.firebase_service.add_company(form_data)
+                if firebase_result.get('success'):
+                    logger.info(f"Company also stored in Firebase with ID: {firebase_result.get('id')}")
+                else:
+                    logger.warning(f"Failed to store in Firebase: {firebase_result.get('error')}")
             
             logger.info(f"Successfully created company folder: {company_folder}")
             

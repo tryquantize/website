@@ -181,7 +181,7 @@ class FirebaseService:
             return []
     
     def add_company(self, company_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Add a new company to Firestore"""
+        """Add a new company to Firestore and VC event collection if interested"""
         try:
             if not self.db:
                 return {"success": False, "error": "Firebase not initialized"}
@@ -192,14 +192,25 @@ class FirebaseService:
             company_data['createdAt'] = firestore.SERVER_TIMESTAMP
             company_data['updatedAt'] = firestore.SERVER_TIMESTAMP
             
-            # Add the company
+            # Add the company to main collection
             doc_ref = companies_ref.add(company_data)
+            company_id = doc_ref[1].id
+            
+            # If company is interested in VC event, also add to VC collection
+            if company_data.get('vcEventInterested', False):
+                vc_ref = self.db.collection('vc-event-interested-companies')
+                vc_ref.add({
+                    **company_data,
+                    'originalCompanyId': company_id,
+                    'vcEventTimestamp': firestore.SERVER_TIMESTAMP
+                })
+                logger.info(f"Added VC-interested company {company_data.get('companyName')} to VC collection")
             
             logger.info(f"Added company {company_data.get('companyName')} to Firebase")
             
             return {
                 "success": True,
-                "id": doc_ref[1].id,
+                "id": company_id,
                 "message": "Company added successfully"
             }
             
