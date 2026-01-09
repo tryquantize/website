@@ -23,6 +23,7 @@ const StorySection = lazy(() => import("@/components/ui/story-section").then(mod
 
 import { FaqSection } from "@/components/ui/faq-section";
 import { SectionBadge } from "@/components/ui/section-badge";
+import { VCEventNotification } from "@/components/ui/vc-event-notification";
 
 export default function LandingPage() {
   const [startVisible, setStartVisible] = useState(false);
@@ -58,6 +59,9 @@ export default function LandingPage() {
 
   return (
     <div className="relative w-full min-h-screen bg-black overflow-hidden">
+      {/* VC Event Notification */}
+      <VCEventNotification />
+      
       {/* Optimized Raycast Background - pauses when scrolled for performance */}
       <div className="fixed inset-0 w-full h-full z-0">
         <OptimizedRaycastBackground />
