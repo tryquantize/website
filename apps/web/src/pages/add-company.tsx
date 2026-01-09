@@ -71,13 +71,18 @@ export default function AddCompanyPage() {
     customerSegments: [] as string[],
     uspTagline: '',
     deploymentType: [] as string[],
-    idealScenarios: [] as string[]
+    idealScenarios: [] as string[],
+    // VC Event Interest
+    vcEventInterested: false,
+    // Founders
+    founders: [] as Array<{ name: string; phone: string; email: string }>
   });
 
   const [newProduct, setNewProduct] = useState('');
   const [newFeature, setNewFeature] = useState('');
   const [newUseCase, setNewUseCase] = useState('');
   const [newClient, setNewClient] = useState('');
+  const [newFounder, setNewFounder] = useState({ name: '', phone: '', email: '' });
   const [isEnhancing, setIsEnhancing] = useState({
     product: false,
     feature: false,
@@ -252,6 +257,23 @@ export default function AddCompanyPage() {
     setFormData(prev => ({
       ...prev,
       idealScenarios: prev.idealScenarios.filter(s => s !== scenario)
+    }));
+  };
+
+  const addFounder = () => {
+    if (!newFounder.name.trim() || !newFounder.email.trim()) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      founders: [...prev.founders, { ...newFounder }]
+    }));
+    setNewFounder({ name: '', phone: '', email: '' });
+  };
+
+  const removeFounder = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      founders: prev.founders.filter((_, i) => i !== index)
     }));
   };
 
@@ -685,6 +707,78 @@ export default function AddCompanyPage() {
                       </p>
                     </div>
 
+                    {/* VC Gathering Event Section */}
+                    <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-xl">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          <span className="text-xs font-medium text-blue-400 uppercase tracking-wider">Exclusive Opportunity</span>
+                        </div>
+                        
+                        <h3 className="text-lg font-semibold text-white mb-3">
+                          🚀 VC Gathering - Bangalore
+                        </h3>
+                        
+                        <div className="space-y-3 text-sm text-white/70 leading-relaxed">
+                          <p>
+                            We are curating a small, invitation-only gathering of <strong className="text-white">~10 deep-tech and AI startups</strong> for an in-person interaction with global VCs from <strong className="text-blue-300">Accel</strong> and a few other leading funds.
+                          </p>
+                          
+                          <p>
+                            The participating investors are US-based global VCs, several of whom are former serial entrepreneurs with successful technology exits. They are specifically interested in <strong className="text-white">deep-tech and AI startups</strong> working on hard-to-replicate, original ideas, with strong technical depth and long-term defensibility.
+                          </p>
+                          
+                          <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                            <div className="grid grid-cols-1 gap-2 text-xs">
+                              <div>
+                                <span className="text-blue-300 font-medium">📍 Location:</span>
+                                <span className="text-white ml-1">Jayanagar, Bangalore</span>
+                              </div>
+                              <div>
+                                <span className="text-blue-300 font-medium">📅 Dates:</span>
+                                <span className="text-white ml-1">Between March 26 and April 13, 2026</span>
+                                <span className="text-white/60 block text-xs">(exact date to be confirmed)</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs">
+                            This is not a symposium or demo day. The format is informal and conversational, focused on direct interaction, idea discussion, and relationship-building with VCs. Where there is strong alignment, conversations may naturally progress toward potential investment.
+                          </p>
+                          
+                          <p className="text-xs">
+                            Participation will be selective to ensure meaningful engagement. Startups across institutes and ecosystems are welcome. <strong className="text-white">Shortlisted teams will be contacted with further details.</strong>
+                          </p>
+                          
+                          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                            <p className="text-xs text-blue-200">
+                              <strong>Contact for queries:</strong><br/>
+                              📞 +91 80906 72982
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 pt-2">
+                          <input
+                            type="checkbox"
+                            id="vcEventInterested"
+                            checked={formData.vcEventInterested}
+                            onChange={(e) => setFormData(prev => ({ ...prev, vcEventInterested: e.target.checked }))}
+                            className="w-4 h-4 rounded border-white/30 bg-white/10 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                          />
+                          <label htmlFor="vcEventInterested" className="text-sm text-white font-medium cursor-pointer">
+                            Yes, I'm interested
+                          </label>
+                        </div>
+                        
+                        {formData.vcEventInterested && (
+                          <p className="text-xs text-green-400 text-center">
+                            ✓ We'll contact shortlisted teams with details
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-white">Company Name <span className="text-red-400">*</span></label>
@@ -864,6 +958,62 @@ export default function AddCompanyPage() {
                         className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
                         placeholder="e.g., 'The fastest AI engine on the market'"
                       />
+                    </div>
+
+                    {/* Founders Section */}
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Founders</label>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Input
+                          value={newFounder.name}
+                          onChange={(e) => setNewFounder(prev => ({ ...prev, name: e.target.value }))}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Founder name"
+                        />
+                        <Input
+                          value={newFounder.phone}
+                          onChange={(e) => setNewFounder(prev => ({ ...prev, phone: e.target.value }))}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Phone number"
+                        />
+                        <div className="flex gap-3">
+                          <Input
+                            value={newFounder.email}
+                            onChange={(e) => setNewFounder(prev => ({ ...prev, email: e.target.value }))}
+                            className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                            placeholder="Email address"
+                          />
+                          <Button
+                            type="button"
+                            onClick={addFounder}
+                            className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        {formData.founders.length === 0 && (
+                          <p className="text-white/50 text-sm italic p-4 bg-white/5 rounded-xl border border-white/10">No founders added yet</p>
+                        )}
+                        {formData.founders.map((founder, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                            <div className="flex-1">
+                              <p className="text-white font-medium">{founder.name}</p>
+                              <p className="text-white/60 text-sm">{founder.email} • {founder.phone}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeFounder(idx)}
+                              className="text-white/60 hover:text-white transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </motion.div>
                 )}

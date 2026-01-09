@@ -157,6 +157,10 @@ class CompanySubmissionService:
         products_list = form_data.get('products', [])
         products_text = '\n'.join([f"- {product}" for product in products_list]) if products_list else 'N/A'
         
+        # Format founders array
+        founders_list = form_data.get('founders', [])
+        founders_text = '\n'.join([f"- {founder.get('name', 'N/A')} (Email: {founder.get('email', 'N/A')}, Phone: {founder.get('phone', 'N/A')})" for founder in founders_list]) if founders_list else 'N/A'
+        
         info_lines = [
             f"Company: {form_data.get('companyName', '')}",
             f"Founded: {form_data.get('founded', 'N/A')}",
@@ -178,9 +182,13 @@ class CompanySubmissionService:
             f"Deployment Types: {', '.join(form_data.get('deploymentType', []))}",
             f"Ideal For: {', '.join(form_data.get('idealScenarios', []))}",
             f"Trial Available: {'Yes' if form_data.get('trialAvailable', False) else 'No'}",
+            f"VC Event Interest: {'Yes' if form_data.get('vcEventInterested', False) else 'No'}",
             "",
             "Products/Services:",
-            products_text
+            products_text,
+            "",
+            "Founders:",
+            founders_text
         ]
         
         content = '\n'.join(info_lines)
