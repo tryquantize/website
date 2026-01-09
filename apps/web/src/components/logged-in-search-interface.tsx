@@ -11,6 +11,8 @@ import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { enhancePrompt } from "@/lib/promptEnhancer";
 import { useToast } from "@/hooks/use-toast";
+import { createSearchSession } from "@/lib/search-session";
+
 
 interface LoggedInSearchInterfaceProps {
   onSearchResults?: (results: any) => void;
@@ -25,11 +27,11 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     }
     return "";
   });
-  
+
   const { user } = useAuth();
   const { currentUser } = useFirebaseAuth();
   const [, setLocation] = useLocation();
-  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set(['company']));
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -44,10 +46,10 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
   const { toast } = useToast();
 
-  const firstName = currentUser?.displayName?.split(' ')[0] || 
-                   currentUser?.email?.split('@')[0] || 
-                   user?.name?.split(' ')[0] || 
-                   'User';
+  const firstName = currentUser?.displayName?.split(' ')[0] ||
+    currentUser?.email?.split('@')[0] ||
+    user?.name?.split(' ')[0] ||
+    'User';
 
   const getGreeting = () => {
     const now = new Date();
@@ -73,7 +75,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   const llmModels = [
     "Claude 3.5 Haiku",
     "GPT-4o Mini",
-    "Gemini 2.5 Flash", 
+    "Gemini 2.5 Flash",
     "Qwen2.5 Coder 32B Instruct",
     "Meta Llama 3.2 3B Instruct",
     "Qwen2.5 72B Instruct",
@@ -85,9 +87,9 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
 
   const handlePromptEnhancement = async () => {
     if (!query.trim() || isEnhancing) return;
-    
+
     setIsEnhancing(true);
-    
+
     try {
       const originalQuery = query;
       const enhancedQuery = await enhancePrompt(query, {
@@ -95,16 +97,16 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
         industry: user?.industry,
         companySize: user?.company?.size
       });
-      
+
       setQueryHistory(prev => [...prev, originalQuery]);
       setCurrentHistoryIndex(queryHistory.length);
       setQuery(enhancedQuery);
-      
+
       toast({
         title: "Prompt enhanced!",
         description: "Your search query has been made more detailed and specific.",
       });
-      
+
     } catch (error) {
       console.error('Prompt enhancement failed:', error);
       toast({
@@ -119,7 +121,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
 
   const handleUndo = () => {
     if (currentHistoryIndex < 0 || queryHistory.length === 0) return;
-    
+
     const previousQuery = queryHistory[currentHistoryIndex];
     if (previousQuery) {
       setQuery(previousQuery);
@@ -144,10 +146,10 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     let currentText = "";
     let isDeleting = false;
     let charIndex = 0;
-    
+
     const typeWriter = () => {
       const currentPhrase = placeholderPhrases[currentPhraseIndex];
-      
+
       if (!isDeleting && charIndex < currentPhrase.length) {
         currentText += currentPhrase.charAt(charIndex);
         setPlaceholder(currentText);
@@ -169,7 +171,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
         timeout = setTimeout(typeWriter, 500);
       }
     };
-    
+
     typeWriter();
     return () => clearTimeout(timeout);
   }, [currentPhraseIndex]);
@@ -198,28 +200,37 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
 
   const handleSearch = () => {
     if (!query.trim()) return;
-    
-    const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).join(',')}` : '';
-    const locationsParam = selectedLocations.length > 0 ? `&locations=${selectedLocations.join(',')}` : '';
-    const webSearchParam = webSearchEnabled ? '&websearch=true' : '&websearch=false';
-    setLocation(`/search-transition?q=${encodeURIComponent(query)}${typesParam}${locationsParam}${webSearchParam}`);
+
+    // Create secure search session and get random ID
+    const searchId = createSearchSession({
+      query: query.trim(),
+      types: Array.from(selectedTypes),
+      locations: selectedLocations,
+      webSearch: webSearchEnabled,
+      model: selectedModel
+    });
+
+    // Navigate to search page with opaque ID (no query in URL)
+    setLocation(`/search/${searchId}`);
   };
+
+
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const isMetaKey = e.metaKey || e.ctrlKey;
-    
+
     if (isMetaKey && e.key === 'e') {
       e.preventDefault();
       handlePromptEnhancement();
       return;
     }
-    
+
     if (isMetaKey && e.key === 'z' && !e.shiftKey) {
       e.preventDefault();
       handleUndo();
       return;
     }
-    
+
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSearch();
@@ -295,16 +306,16 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     "Intelligent note summarizer",
     "Generative audio studio",
   ];
-  
+
   const allSuggestions = [...quickSuggestions, ...extraSuggestions];
   const [visibleCount, setVisibleCount] = useState(quickSuggestions.length);
   const visibleSuggestions = allSuggestions.slice(0, visibleCount);
   const hasMoreSuggestions = visibleCount < allSuggestions.length;
-  
+
   const handleShowMore = () => {
     setVisibleCount(prev => Math.min(prev + 5, allSuggestions.length));
   };
-  
+
   const handleShowLess = () => {
     setVisibleCount(quickSuggestions.length);
   };
@@ -326,7 +337,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
     const handleClickOutside = () => {
       setShowModelDropdown(false);
     };
-    
+
     if (showModelDropdown) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
@@ -347,23 +358,20 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6">
       {/* Welcome Message - Mobile optimized */}
-      <div className={`text-center transition-all duration-1000 ease-out mb-4 xs:mb-6 ${
-        isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
-      }`}>
+      <div className={`text-center transition-all duration-1000 ease-out mb-4 xs:mb-6 ${isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
+        }`}>
         <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight px-2" style={{ fontFamily: 'Instrument Serif, serif' }}>
           <span className="text-white">{greeting}, what are you looking for today?</span>
         </h1>
       </div>
 
       {/* Glassmorphism Search Bar - Mobile optimized */}
-      <div className={`transition-all duration-1500 ease-out w-full max-w-4xl mx-auto mb-4 xs:mb-6 sm:mb-8 px-3 xs:px-4 ${
-        isSearching 
-          ? 'opacity-0 scale-90 pointer-events-none'
-          : 'transform translate-y-0 opacity-100 scale-100'
-      }`}>
-        <div className={`relative rounded-[16px] xs:rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[88px] xs:h-[94px] sm:h-[90px] md:h-[100px] lg:h-[110px] ${
-          isSearching ? 'transform scale-95' : 'transform scale-100'
+      <div className={`transition-all duration-1500 ease-out w-full max-w-4xl mx-auto mb-4 xs:mb-6 sm:mb-8 px-3 xs:px-4 ${isSearching
+        ? 'opacity-0 scale-90 pointer-events-none'
+        : 'transform translate-y-0 opacity-100 scale-100'
         }`}>
+        <div className={`relative rounded-[16px] xs:rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[88px] xs:h-[94px] sm:h-[90px] md:h-[100px] lg:h-[110px] ${isSearching ? 'transform scale-95' : 'transform scale-100'
+          }`}>
           {/* Search input area - mobile optimized */}
           <div className="relative px-3 xs:px-4 sm:px-6 flex items-center h-[53px] xs:h-[55px] sm:h-[55px] md:h-[60px]">
             {/* Undo button (only show if there's history) - Mobile optimized */}
@@ -385,7 +393,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                 </Tooltip>
               </TooltipProvider>
             )}
-            
+
             {/* Prompt enhancer button - Mobile optimized */}
             <TooltipProvider>
               <Tooltip>
@@ -411,7 +419,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             {/* Search button - Mobile optimized */}
             <button
               aria-label="Search"
@@ -451,13 +459,12 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                       e.stopPropagation();
                       setShowModelDropdown(!showModelDropdown);
                     }}
-                    className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors aspect-square touch-manipulation ${
-                      selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
-                    }`}
+                    className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors aspect-square touch-manipulation ${selectedModel && selectedModel !== "GPT-4o Mini" ? 'text-yellow-400' : 'text-white'
+                      }`}
                   >
                     <Brain className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-5.5 sm:w-5.5" />
                   </button>
-                  
+
                   {showModelDropdown && (
                     <>
                       <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10000]" onClick={() => setShowModelDropdown(false)} />
@@ -470,9 +477,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                               setSelectedModel(model);
                               setShowModelDropdown(false);
                             }}
-                            className={`w-full px-2.5 xs:px-3 py-2 xs:py-2.5 text-left text-xs xs:text-sm hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg touch-manipulation ${
-                              selectedModel === model ? 'bg-blue-600/20 text-blue-300' : 'text-white/80'
-                            }`}
+                            className={`w-full px-2.5 xs:px-3 py-2 xs:py-2.5 text-left text-xs xs:text-sm hover:bg-white/10 transition-colors first:rounded-t-lg last:rounded-b-lg touch-manipulation ${selectedModel === model ? 'bg-blue-600/20 text-blue-300' : 'text-white/80'
+                              }`}
                           >
                             {model}
                           </button>
@@ -481,18 +487,19 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                     </>
                   )}
                 </div>
-                
+
                 <span className="text-xs text-white/70 hidden xs:inline sm:inline truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px]">{selectedModel || "Claude 3.5 Haiku"}</span>
-                
+
                 {/* Web Search Toggle - Before Location */}
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                        className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center hover:text-white/80 transition-colors aspect-square touch-manipulation ${
-                          webSearchEnabled ? 'text-green-400' : 'text-white/90'
-                        }`}
+                        className={`flex h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 items-center justify-center transition-all duration-200 aspect-square touch-manipulation ${webSearchEnabled
+                          ? 'text-emerald-400 hover:text-emerald-300'
+                          : 'text-white/40 hover:text-white/70'
+                          }`}
                       >
                         <Globe className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-4.5 sm:w-4.5" />
                       </button>
@@ -500,12 +507,12 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                     <TooltipContent>Web Search {webSearchEnabled ? 'ON' : 'OFF'}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                
-                <LocationSelector 
+
+                <LocationSelector
                   selectedLocations={selectedLocations}
                   onLocationChange={setSelectedLocations}
                 />
-                
+
                 {selectedLocations.length > 0 && (
                   <div className="flex flex-wrap gap-1 ml-2">
                     {selectedLocations.map((location) => (
@@ -534,62 +541,56 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        className={
-                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition hover:text-white/80 aspect-square touch-manipulation ` +
-                          (selectedTypes.has('company')
-                            ? 'text-yellow-300'
-                            : 'text-white/90')
-                        }
+                        className={`h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition-all duration-200 aspect-square touch-manipulation ${selectedTypes.has('company')
+                          ? 'text-amber-400 hover:text-amber-300'
+                          : 'text-white/40 hover:text-white/70'
+                          }`}
                         aria-label="Company"
                         onClick={() => toggleType('company')}
                       >
                         <Building2 className="h-4 w-4 xs:h-4.5 xs:w-4.5 sm:h-4.5 sm:w-4.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent>Company</TooltipContent>
+                    <TooltipContent>Company {selectedTypes.has('company') ? '(Active)' : '(Off)'}</TooltipContent>
                   </Tooltip>
                   {/* Freelancer */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        className={
-                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition hover:text-white/80 aspect-square touch-manipulation ` +
-                          (selectedTypes.has('freelancer')
-                            ? 'text-yellow-300'
-                            : 'text-white/90')
-                        }
+                        className={`h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition-all duration-200 aspect-square touch-manipulation ${selectedTypes.has('freelancer')
+                          ? 'text-amber-400 hover:text-amber-300'
+                          : 'text-white/40 hover:text-white/70'
+                          }`}
                         aria-label="Freelancer"
                         onClick={() => toggleType('freelancer')}
                       >
                         <User className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-5.5 sm:w-5.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent>Freelancer</TooltipContent>
+                    <TooltipContent>Freelancer {selectedTypes.has('freelancer') ? '(Active)' : '(Off)'}</TooltipContent>
                   </Tooltip>
                   {/* Product */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        className={
-                          `h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition hover:text-white/80 aspect-square touch-manipulation ` +
-                          (selectedTypes.has('product')
-                            ? 'text-yellow-300'
-                            : 'text-white/90')
-                        }
+                        className={`h-6 w-6 xs:h-7 xs:w-7 sm:h-7 sm:w-7 flex items-center justify-center transition-all duration-200 aspect-square touch-manipulation ${selectedTypes.has('product')
+                          ? 'text-amber-400 hover:text-amber-300'
+                          : 'text-white/40 hover:text-white/70'
+                          }`}
                         aria-label="Product"
                         onClick={() => toggleType('product')}
                       >
                         <Package className="h-5 w-5 xs:h-5.5 xs:w-5.5 sm:h-5.5 sm:w-5.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent>Product</TooltipContent>
+                    <TooltipContent>Product {selectedTypes.has('product') ? '(Active)' : '(Off)'}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
             </div>
           </div>
         </div>
-        
+
         {/* Enhancement feedback - Mobile optimized */}
         {isEnhancing && (
           <div className="absolute top-full left-0 right-0 mt-2 mx-2 xs:mx-0 p-2.5 xs:p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg backdrop-blur-sm">
@@ -604,9 +605,8 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
       </div>
 
       {/* Quick Suggestions - Mobile optimized */}
-      <div className={`${showScrollSuggestions ? 'flex' : 'hidden md:flex'} flex-wrap justify-center gap-1.5 xs:gap-2 mt-3 xs:mt-4 px-3 xs:px-4 transition-all duration-1000 ease-out ${
-        isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
-      }`}>
+      <div className={`${showScrollSuggestions ? 'flex' : 'hidden md:flex'} flex-wrap justify-center gap-1.5 xs:gap-2 mt-3 xs:mt-4 px-3 xs:px-4 transition-all duration-1000 ease-out ${isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
+        }`}>
         {visibleSuggestions.map((suggestion, index) => (
           <Button
             key={index}
@@ -619,42 +619,23 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
             <span className="truncate max-w-[120px] xs:max-w-none">{suggestion}</span>
           </Button>
         ))}
-        {hasMoreSuggestions && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleShowMore}
-            className="text-xs xs:text-sm rounded-lg px-2.5 xs:px-3 py-2 min-h-[32px] xs:min-h-[36px] text-black bg-white hover:bg-gray-100 border border-white touch-manipulation"
-          >
-            See more
-          </Button>
-        )}
-        {visibleCount > quickSuggestions.length && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleShowLess}
-            className="text-xs xs:text-sm rounded-lg px-2.5 xs:px-3 py-2 min-h-[32px] xs:min-h-[36px] text-black bg-white hover:bg-gray-100 border border-white touch-manipulation"
-          >
-            See less
-          </Button>
-        )}
+
       </div>
-      
+
       {/* Loading State - Mobile optimized */}
       {isSearching && (
         <div className="fixed inset-0 flex flex-col items-center justify-center z-30 animate-fade-in px-4">
           <div className="relative mb-6 xs:mb-8">
-            <div className="w-20 h-20 xs:w-24 xs:h-24 border-4 border-white/20 border-t-white/60 border-r-white/40 rounded-full animate-spin" style={{animationDuration: '1s'}}></div>
-            <div className="absolute inset-0 w-20 h-20 xs:w-24 xs:h-24 border-4 border-transparent border-b-white/50 border-l-white/30 rounded-full animate-spin" style={{animationDirection: 'reverse', animationDuration: '1.5s'}}></div>
+            <div className="w-20 h-20 xs:w-24 xs:h-24 border-4 border-white/20 border-t-white/60 border-r-white/40 rounded-full animate-spin" style={{ animationDuration: '1s' }}></div>
+            <div className="absolute inset-0 w-20 h-20 xs:w-24 xs:h-24 border-4 border-transparent border-b-white/50 border-l-white/30 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
           </div>
           <div className="text-center max-w-sm xs:max-w-md">
             <p className="text-white text-lg xs:text-xl sm:text-2xl font-semibold mb-2 xs:mb-3 leading-tight">Searching for "{query}"...</p>
             <p className="text-white/70 text-sm xs:text-base sm:text-lg mb-4 xs:mb-6">Finding the best AI solutions for you</p>
             <div className="flex items-center justify-center space-x-2">
-              <div className="w-2.5 h-2.5 xs:w-3 xs:h-3 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-              <div className="w-2.5 h-2.5 xs:w-3 xs:h-3 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
-              <div className="w-2.5 h-2.5 xs:w-3 xs:h-3 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '400ms'}}></div>
+              <div className="w-2.5 h-2.5 xs:w-3 xs:h-3 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2.5 h-2.5 xs:w-3 xs:h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
+              <div className="w-2.5 h-2.5 xs:w-3 xs:h-3 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '400ms' }}></div>
             </div>
           </div>
         </div>

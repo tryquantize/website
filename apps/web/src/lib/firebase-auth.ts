@@ -1,18 +1,6 @@
-// Independent Firebase authentication - completely separate from other auth systems
-import { initializeApp } from 'firebase/app';
+import { app } from './firebase-init';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, User, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAy882-yKs41YpCDKrNOqEgB1iKDQcJqak",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "firequest-auth.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "firequest-auth",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "firequest-auth.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1065297438861",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1065297438861:web:d746c00a59e9c8eebfdac4",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-64FEYVFBNJ"
-};
-
-const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
@@ -28,7 +16,7 @@ export class FirebaseAuthService {
       return { success: true, user: userCredential.user, error: null };
     } catch (error: any) {
       let errorMessage = error.message;
-      
+
       // Handle specific Firebase auth errors
       switch (error.code) {
         case 'auth/email-already-in-use':
@@ -46,7 +34,7 @@ export class FirebaseAuthService {
         default:
           errorMessage = 'Failed to create account. Please try again.';
       }
-      
+
       return { success: false, user: null, error: errorMessage };
     }
   }
@@ -57,7 +45,7 @@ export class FirebaseAuthService {
       return { success: true, user: userCredential.user, error: null };
     } catch (error: any) {
       let errorMessage = error.message;
-      
+
       // Handle specific Firebase auth errors
       switch (error.code) {
         case 'auth/user-not-found':
@@ -78,7 +66,7 @@ export class FirebaseAuthService {
         default:
           errorMessage = 'Failed to sign in. Please check your credentials.';
       }
-      
+
       return { success: false, user: null, error: errorMessage };
     }
   }
@@ -97,9 +85,9 @@ export class FirebaseAuthService {
       const result = await signInWithPopup(auth, googleProvider);
       return { success: true, user: result.user, error: null };
     } catch (error: any) {
-      
+
       let errorMessage = error.message;
-      
+
       // Handle specific error cases
       if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = 'Sign-in was cancelled. Please try again.';
@@ -108,7 +96,7 @@ export class FirebaseAuthService {
       } else if (error.code === 'auth/unauthorized-domain') {
         errorMessage = 'This domain is not authorized for Google sign-in.';
       }
-      
+
       return { success: false, user: null, error: errorMessage };
     }
   }

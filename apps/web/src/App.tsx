@@ -37,22 +37,55 @@ import AddCompanyPage from "@/pages/add-company";
 
 function Router() {
   const [location] = useLocation();
-  
+
   // Scroll to top on route change
+  // Scroll to top on route change, unless hash is present
   useEffect(() => {
     const mainElement = document.querySelector('main');
     if (mainElement) {
-      mainElement.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!window.location.hash) {
+        mainElement.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Handle hash scroll
+        const id = window.location.hash.slice(1);
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          // Retry after a short delay for lazy loaded content
+          setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 500);
+        }
+      }
     }
   }, [location]);
-  
+
+  // Handle hash change for same-page navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const id = hash.slice(1);
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   return (
     <>
       <LoadingTransition />
       <AnimatedLayout>
         <div className="relative z-10 h-screen flex flex-col">
           {location !== '/dashboard' && location !== '/results' && <Header />}
-          <main className={`flex-1 overflow-y-auto ${location !== '/dashboard' && location !== '/results' ? 'pt-12 md:pt-24' : ''}`}>
+          <main className={`flex-1 ${location === '/add-company' ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto'} ${location !== '/dashboard' && location !== '/results' && location !== '/' && location !== '/add-company' ? 'pt-12 md:pt-24' : ''}`}>
             <div className="min-h-full flex flex-col">
               <div className="flex-1">
                 <Switch>
@@ -72,7 +105,8 @@ function Router() {
                   <Route path="/auth/register" component={Register} />
 
                   <Route path="/onboarding" component={OnboardingPage} />
-                  <Route path="/search-transition" component={SearchTransition} />
+                  <Route path="/search/:id" component={SearchTransition} />
+                  <Route path="/results/:id" component={ResultsPage} />
                   <Route path="/results" component={ResultsPage} />
                   <Route path="/favorites" component={FavoritesPage} />
                   <Route path="/glowing-search-demo" component={GlowingSearchDemoPage} />
@@ -80,10 +114,16 @@ function Router() {
                   <Route path="/contact" component={ContactPage} />
                   <Route path="/pricing" component={PricingPage} />
                   <Route path="/add-company" component={AddCompanyPage} />
+                  <Route path="/features">
+                    {() => {
+                      window.location.href = "/#features";
+                      return null;
+                    }}
+                  </Route>
                   <Route component={NotFound} />
                 </Switch>
               </div>
-              {location !== '/results' && location !== '/loggedinhome' && location !== '/welcome-transition' && location !== '/search-transition' && location !== '/glowing-search-demo' && location !== '/home' && location !== '/dashboard' && <Footer />}
+              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/dashboard' && location !== '/add-company' && <Footer />}
             </div>
           </main>
         </div>

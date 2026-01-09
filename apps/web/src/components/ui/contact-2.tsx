@@ -1,88 +1,95 @@
 import React from "react";
-import { Phone, Mail, Globe, Linkedin } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-interface Contact2Props {
-  title?: string;
-  description?: string;
-  phone?: string;
-  email?: string;
-  web?: { label: string; url: string };
-  linkedin?: { label: string; url: string };
-}
-
-export const Contact2 = ({
-  title = "Contact Us",
-  description = "We are available for questions, feedback, or collaboration opportunities. Let us know how we can help!",
-  phone = "(123) 34567890",
-  email = "email@example.com",
-  web = { label: "shadcnblocks.com", url: "https://shadcnblocks.com" },
-  linkedin,
-}: Contact2Props) => {
+export const Contact2 = () => {
   return (
-    <section className="py-8">
-      <div className="container">
-        <div className="mx-auto flex max-w-screen-xl flex-col justify-between gap-10 lg:flex-row lg:gap-20">
-          <div className="mx-auto flex max-w-sm flex-col justify-between gap-10">
-            <div className="text-center lg:text-left">
-              <h1 className="mb-2 text-5xl font-semibold lg:mb-1 lg:text-6xl text-white">
-                {title}
-              </h1>
-              <p className="text-white/80">{description}</p>
-            </div>
-            <div className="mx-auto w-fit lg:mx-0">
-              <h3 className="mb-6 text-center text-2xl font-semibold lg:text-left text-white">
-                Contact Details
-              </h3>
-              <div className="flex gap-4">
-                <a href={`tel:${phone}`} className="w-12 h-12 rounded-full bg-white/10 border border-white/30 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 group">
-                  <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </a>
-                <a href={`mailto:${email}`} className="w-12 h-12 rounded-full bg-white/10 border border-white/30 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 group">
-                  <Mail className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </a>
-                <a href={web.url} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white/10 border border-white/30 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 group">
-                  <Globe className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </a>
-                {linkedin && (
-                  <a href={linkedin.url} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white/10 border border-white/30 flex items-center justify-center text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 group">
-                    <Linkedin className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="mx-auto flex max-w-screen-md flex-col gap-6 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-10">
-            <div className="flex gap-4">
-              <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="firstname" className="text-white">First Name</Label>
-                <Input type="text" id="firstname" placeholder="First Name" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
-              </div>
-              <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="lastname" className="text-white">Last Name</Label>
-                <Input type="text" id="lastname" placeholder="Last Name" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
-              </div>
-            </div>
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="email" className="text-white">Email</Label>
-              <Input type="email" id="email" placeholder="Email" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
-            </div>
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="subject" className="text-white">Subject</Label>
-              <Input type="text" id="subject" placeholder="Subject" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
-            </div>
-            <div className="grid w-full gap-1.5">
-              <Label htmlFor="message" className="text-white">Message</Label>
-              <Textarea placeholder="Type your message here." id="message" className="bg-white/10 border-white/20 text-white placeholder:text-white/50" />
-            </div>
-            <Button className="w-full bg-white hover:bg-gray-100 text-black">Send Message</Button>
-          </div>
+    <form className="bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 sm:p-10 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+      {/* Name Fields Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+        <div className="space-y-2">
+          <Label htmlFor="firstname" className="text-sm font-medium text-white">
+            First Name
+          </Label>
+          <Input
+            type="text"
+            id="firstname"
+            placeholder="John"
+            className="h-12 bg-white/10 border border-white/20 text-white placeholder:text-white/50 
+                     focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 
+                     transition-all duration-200"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lastname" className="text-sm font-medium text-white">
+            Last Name
+          </Label>
+          <Input
+            type="text"
+            id="lastname"
+            placeholder="Doe"
+            className="h-12 bg-white/10 border border-white/20 text-white placeholder:text-white/50 
+                     focus:bg-white/15 focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3]/30 
+                     transition-all duration-200"
+          />
         </div>
       </div>
-    </section>
+
+      {/* Email Field */}
+      <div className="space-y-2 mb-6">
+        <Label htmlFor="email" className="text-sm font-medium text-[#f5f5f7]">
+          Email
+        </Label>
+        <Input
+          type="email"
+          id="email"
+          placeholder="john@example.com"
+          className="h-12 bg-white/10 border border-white/10 text-[#f5f5f7] placeholder:text-[#86868b] 
+                   focus:bg-white/15 focus:border-[#0071e3]/50 focus:ring-2 focus:ring-[#0071e3]/50 
+                   transition-all duration-200"
+        />
+      </div>
+
+      {/* Subject Field */}
+      <div className="space-y-2 mb-6">
+        <Label htmlFor="subject" className="text-sm font-medium text-[#f5f5f7]">
+          Subject
+        </Label>
+        <Input
+          type="text"
+          id="subject"
+          placeholder="How can we help?"
+          className="h-12 bg-white/10 border border-white/10 text-[#f5f5f7] placeholder:text-[#86868b] 
+                   focus:bg-white/15 focus:border-[#0071e3]/50 focus:ring-2 focus:ring-[#0071e3]/50 
+                   transition-all duration-200"
+        />
+      </div>
+
+      {/* Message Field */}
+      <div className="space-y-2 mb-8">
+        <Label htmlFor="message" className="text-sm font-medium text-[#f5f5f7]">
+          Message
+        </Label>
+        <Textarea
+          id="message"
+          placeholder="Tell us more about your inquiry..."
+          rows={6}
+          className="bg-white/10 border border-white/10 text-[#f5f5f7] placeholder:text-[#86868b] 
+                   focus:bg-white/15 focus:border-[#0071e3]/50 focus:ring-2 focus:ring-[#0071e3]/50 
+                   transition-all duration-200 resize-none"
+        />
+      </div>
+
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        className="w-full h-14 bg-white text-black font-semibold text-base hover:bg-gray-100 
+                 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5"
+      >
+        Send Message
+      </Button>
+    </form>
   );
 };

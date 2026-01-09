@@ -1,5 +1,12 @@
 import { TestimonialsColumn } from "@/components/ui/testimonials-columns-1";
 import { motion } from "motion/react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const testimonials = [
   {
@@ -64,31 +71,40 @@ const thirdColumn = testimonials.slice(6, 9);
 
 const TestimonialsColumns = () => {
   return (
-    <section className="my-20 relative">
+    <section className="relative">
       <div className="container z-10 mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          viewport={{ once: true }}
-          className="flex flex-col items-center justify-center max-w-[540px] mx-auto"
-        >
-          <div className="flex justify-center">
-            <div className="border py-1 px-4 rounded-lg text-white/70 border-white/20">Testimonials</div>
-          </div>
-
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tighter mt-5 text-white">
-            What our users say
-          </h2>
-          <p className="text-center mt-5 opacity-75 text-white/70">
-            See what our customers have to say about us.
-          </p>
-        </motion.div>
-
-        <div className="flex justify-center gap-6 mt-10 [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)] max-h-[740px] overflow-hidden">
+        <div className="hidden md:flex justify-center gap-6 [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)] max-h-[740px] overflow-hidden">
           <TestimonialsColumn testimonials={firstColumn} duration={15} />
           <TestimonialsColumn testimonials={secondColumn} className="hidden md:block" duration={19} />
           <TestimonialsColumn testimonials={thirdColumn} className="hidden lg:block" duration={17} />
+        </div>
+
+        {/* Mobile Carousel View */}
+        <div className="md:hidden mt-10 px-4">
+          <Carousel className="w-full max-w-sm mx-auto" opts={{ align: "start", loop: true }}>
+            <CarouselContent>
+              {testimonials.map((testimonial, index) => (
+                <CarouselItem key={index} className="basis-[85%]">
+                  <div className="h-full p-1">
+                    <div className="h-full flex flex-col p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
+                      <p className="text-white/90 text-sm leading-relaxed mb-6">"{testimonial.text}"</p>
+                      <div className="flex items-center gap-3 mt-auto">
+                        <img src={testimonial.image} alt={testimonial.name} className="w-10 h-10 rounded-full object-cover" />
+                        <div>
+                          <div className="text-white font-medium text-sm">{testimonial.name}</div>
+                          <div className="text-white/50 text-xs">{testimonial.role}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <div className="flex justify-end gap-2 mt-4 pr-4">
+              <CarouselPrevious className="static translate-y-0 bg-white/10 border-white/20 text-white hover:bg-white/20" />
+              <CarouselNext className="static translate-y-0 bg-white text-black hover:bg-white/90" />
+            </div>
+          </Carousel>
         </div>
       </div>
     </section>

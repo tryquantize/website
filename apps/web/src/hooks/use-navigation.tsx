@@ -29,9 +29,9 @@ export function useNavigation() {
   const navigateWithLoading = (to: string) => {
     const fromPage = getPageName(location);
     const toPage = getPageName(to);
-    
+
     startLoading(fromPage, toPage);
-    
+
     setTimeout(() => {
       setLocation(to);
       stopLoading();

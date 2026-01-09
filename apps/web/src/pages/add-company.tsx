@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,11 +6,12 @@ import '@/styles/custom-input.css';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
-import { ArrowLeft, Building2, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, X, ChevronLeft, ChevronRight, Sparkles, Check, Loader2 } from 'lucide-react';
 import { useLocation } from 'wouter';
-import AI_SERVICE_CONFIG from '@/config/ai-service';
+import { motion, AnimatePresence } from 'framer-motion';
 
+import { SectionBadge } from "@/components/ui/section-badge";
+import { cn } from "@/lib/utils";
 
 export default function AddCompanyPage() {
   const [, setLocation] = useLocation();
@@ -18,13 +19,37 @@ export default function AddCompanyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [direction, setDirection] = useState(0);
   const [isEnhancingDescription, setIsEnhancingDescription] = useState(false);
-  
+
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 1000 : -1000,
+      opacity: 0
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 1000 : -1000,
+      opacity: 0
+    })
+  };
+
+  const changeStep = (newStep: number) => {
+    setDirection(newStep > currentStep ? 1 : -1);
+    setCurrentStep(newStep);
+  };
+
   const [formData, setFormData] = useState({
     companyName: '',
     website: '',
     linkedinPage: '',
     phoneNumber: '',
+    email: '',
     founded: '',
     headquarters: '',
     products: [] as string[],
@@ -46,13 +71,18 @@ export default function AddCompanyPage() {
     customerSegments: [] as string[],
     uspTagline: '',
     deploymentType: [] as string[],
-    idealScenarios: [] as string[]
+    idealScenarios: [] as string[],
+    // VC Event Interest
+    vcEventInterested: false,
+    // Founders
+    founders: [] as Array<{ name: string; phone: string; email: string }>
   });
 
   const [newProduct, setNewProduct] = useState('');
   const [newFeature, setNewFeature] = useState('');
   const [newUseCase, setNewUseCase] = useState('');
   const [newClient, setNewClient] = useState('');
+  const [newFounder, setNewFounder] = useState({ name: '', phone: '', email: '' });
   const [isEnhancing, setIsEnhancing] = useState({
     product: false,
     feature: false,
@@ -61,15 +91,7 @@ export default function AddCompanyPage() {
   });
 
   const employeeOptions = [
-    '0-1',
-    '2-10',
-    '10-50',
-    '50-200',
-    '200-500',
-    '500-1000',
-    '1000-5000',
-    '5000-10000',
-    '10000+'
+    '0-1', '2-10', '10-50', '50-200', '200-500', '500-1000', '1000-5000', '5000-10000', '10000+'
   ];
 
   const industryOptions = [
@@ -85,67 +107,29 @@ export default function AddCompanyPage() {
   ];
 
   const pricingModelOptions = [
-    'Subscription',
-    'Usage-based',
-    'Freemium',
-    'Custom Quote',
-    'One-time Purchase',
-    'Tiered Pricing'
+    'Subscription', 'Usage-based', 'Freemium', 'Custom Quote', 'One-time Purchase', 'Tiered Pricing'
   ];
 
   const companyStageOptions = [
-    'Pre-seed',
-    'Seed',
-    'Series A',
-    'Series B',
-    'Series C+',
-    'Bootstrapped',
-    'Public',
-    'Acquired'
+    'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C+', 'Bootstrapped', 'Public', 'Acquired'
   ];
 
   const customerSegmentOptions = [
-    'B2B',
-    'B2C',
-    'D2C',
-    'B2B2C'
+    'B2B', 'B2C', 'D2C', 'B2B2C'
   ];
 
   const deploymentTypeOptions = [
-    'Cloud',
-    'On-premise',
-    'Hybrid',
-    'SaaS',
-    'API'
+    'Cloud', 'On-premise', 'Hybrid', 'SaaS', 'API'
   ];
 
   const idealScenarioOptions = [
-    'SMBs',
-    'Enterprises',
-    'Startups',
-    'Mid-market',
-    'Fortune 500',
-    'Government',
-    'Non-profit',
-    'Educational'
+    'SMBs', 'Enterprises', 'Startups', 'Mid-market', 'Fortune 500', 'Government', 'Non-profit', 'Educational'
   ];
 
   const pricingOptions = [
-    '<$100',
-    '$100-$500',
-    '$500-$1,000',
-    '$1,000-$2,500',
-    '$2,500-$5,000',
-    '$5,000-$10,000',
-    '$10,000-$25,000',
-    '$25,000-$50,000',
-    '$50,000-$100,000',
-    '$100,000-$250,000',
-    '$250,000-$500,000',
-    '$500,000-$1,000,000',
-    '$1,000,000-$2,500,000',
-    '$2,500,000+',
-    'Contact for pricing'
+    '<$100', '$100-$500', '$500-$1,000', '$1,000-$2,500', '$2,500-$5,000', '$5,000-$10,000',
+    '$10,000-$25,000', '$25,000-$50,000', '$50,000-$100,000', '$100,000-$250,000',
+    '$250,000-$500,000', '$500,000-$1,000,000', '$1,000,000-$2,500,000', '$2,500,000+', 'Contact for pricing'
   ];
 
   const handleInputChange = (field: string, value: string) => {
@@ -154,20 +138,29 @@ export default function AddCompanyPage() {
 
   const addItem = (type: 'products' | 'features' | 'useCases' | 'topClients', value: string) => {
     if (!value.trim()) return;
-    setFormData(prev => ({
-      ...prev,
-      [type]: [...prev[type], value.trim()]
-    }));
+
+    if (type === 'features' || type === 'useCases') {
+      setFormData(prev => ({
+        ...prev,
+        [type]: prev[type] ? `${prev[type]}\n${value.trim()}` : value.trim()
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [type]: [...(prev[type] as string[]), value.trim()]
+      }));
+    }
+
     if (type === 'products') setNewProduct('');
     if (type === 'features') setNewFeature('');
     if (type === 'useCases') setNewUseCase('');
     if (type === 'topClients') setNewClient('');
   };
 
-  const removeItem = (type: 'products' | 'features' | 'useCases' | 'topClients', index: number) => {
+  const removeItem = (type: 'products' | 'topClients', index: number) => {
     setFormData(prev => ({
       ...prev,
-      [type]: prev[type].filter((_, i) => i !== index)
+      [type]: (prev[type] as string[]).filter((_, i) => i !== index)
     }));
   };
 
@@ -267,6 +260,23 @@ export default function AddCompanyPage() {
     }));
   };
 
+  const addFounder = () => {
+    if (!newFounder.name.trim() || !newFounder.email.trim()) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      founders: [...prev.founders, { ...newFounder }]
+    }));
+    setNewFounder({ name: '', phone: '', email: '' });
+  };
+
+  const removeFounder = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      founders: prev.founders.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -276,11 +286,10 @@ export default function AddCompanyPage() {
 
   const enhanceText = async (text: string, type: 'product' | 'feature' | 'useCase' | 'client') => {
     if (!text.trim()) return;
-    
+
     setIsEnhancing(prev => ({ ...prev, [type]: true }));
-    
+
     try {
-      // Use production service directly for reliability
       const response = await fetch('https://website-ocrz.onrender.com/enhance-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -294,7 +303,7 @@ export default function AddCompanyPage() {
           }
         })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.enhancedText) {
@@ -306,7 +315,7 @@ export default function AddCompanyPage() {
             setFormData(prev => ({ ...prev, useCases: result.enhancedText }));
           }
           if (type === 'client') setNewClient(result.enhancedText);
-          
+
           toast({
             title: 'Text Enhanced!',
             description: 'Your text has been improved with AI assistance.',
@@ -340,9 +349,8 @@ export default function AddCompanyPage() {
     }
 
     setIsEnhancingDescription(true);
-    
+
     try {
-      // Use production service directly for reliability
       const response = await fetch('https://website-ocrz.onrender.com/enhance-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -356,7 +364,7 @@ export default function AddCompanyPage() {
           }
         })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.enhancedText) {
@@ -380,7 +388,7 @@ export default function AddCompanyPage() {
 
   const steps = [
     { title: 'Basic Info', fields: ['companyName', 'website', 'linkedinPage'] },
-    { title: 'Company Details', fields: ['phoneNumber', 'founded', 'headquarters', 'category', 'employees', 'tagline', 'uspTagline'] },
+    { title: 'Company Details', fields: ['phoneNumber', 'email', 'founded', 'headquarters', 'category', 'employees', 'tagline', 'uspTagline'] },
     { title: 'Products & Description', fields: ['products', 'description'] },
     { title: 'Features & Use Cases', fields: ['features', 'useCases'] },
     { title: 'Business Details', fields: ['industriesServed', 'pricingRanges', 'pricingModel', 'companyStage'] },
@@ -399,11 +407,8 @@ export default function AddCompanyPage() {
     }
 
     setIsAutoFilling(true);
-    
+
     try {
-      console.log('Starting auto-fill for:', formData.companyName, formData.website);
-      
-      // Use production service directly for reliability
       const response = await fetch('https://website-ocrz.onrender.com/auto-fill-company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -413,34 +418,27 @@ export default function AddCompanyPage() {
           linkedinPage: formData.linkedinPage || ''
         })
       });
-      
-      console.log('Auto-fill response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Auto-fill error:', errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
-      console.log('Auto-fill response:', result);
-      
+
       if (result.success && result.data) {
-        console.log('Processing auto-fill data:', result.data);
         setFormData(prev => {
-          // Handle products array - convert from objects to strings if needed
           let productsArray = prev.products;
           if (result.data.products && Array.isArray(result.data.products)) {
-            productsArray = result.data.products.map(product => 
-              typeof product === 'string' ? product : 
-              (product.name && product.description ? `${product.name}: ${product.description}` : 
-               product.name || product.description || product)
+            productsArray = result.data.products.map((product: any) =>
+              typeof product === 'string' ? product :
+                (product.name && product.description ? `${product.name}: ${product.description}` :
+                  product.name || product.description || product)
             );
           } else if (result.data.productsServices && Array.isArray(result.data.productsServices)) {
             productsArray = result.data.productsServices;
           }
-          
-          // Handle features - convert array to string if needed
+
           let featuresText = prev.features;
           if (result.data.features) {
             if (Array.isArray(result.data.features)) {
@@ -449,8 +447,7 @@ export default function AddCompanyPage() {
               featuresText = result.data.features;
             }
           }
-          
-          // Handle use cases - convert array to string if needed
+
           let useCasesText = prev.useCases;
           if (result.data.useCases) {
             if (Array.isArray(result.data.useCases)) {
@@ -459,7 +456,7 @@ export default function AddCompanyPage() {
               useCasesText = result.data.useCases;
             }
           }
-          
+
           return {
             ...prev,
             description: result.data.description || prev.description,
@@ -484,25 +481,22 @@ export default function AddCompanyPage() {
             companyStage: result.data.companyStage || prev.companyStage
           };
         });
-        
+
         toast({
           title: 'Success!',
           description: `Company details auto-filled successfully from ${result.sources_used?.join(', ') || 'available sources'}. Please review and modify as needed.`,
         });
-        
-        // Only proceed to next step after successful auto-fill
+
         setCurrentStep(1);
       } else {
         throw new Error(result.error || result.message || 'Auto-fill returned no data');
       }
     } catch (error) {
-      console.error('Auto-fill error:', error);
       toast({
         title: 'Auto-fill Failed',
         description: error instanceof Error ? error.message : 'Please fill the form manually.',
         variant: 'destructive'
       });
-      // Don't proceed to next step on failure
     } finally {
       setIsAutoFilling(false);
     }
@@ -510,21 +504,20 @@ export default function AddCompanyPage() {
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      changeStep(currentStep + 1);
     }
   };
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      changeStep(currentStep - 1);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      // Validate required fields
       if (!formData.companyName || !formData.website || !formData.description || !formData.category) {
         toast({
           title: 'Missing Required Fields',
@@ -533,7 +526,7 @@ export default function AddCompanyPage() {
         });
         return;
       }
-      
+
       if (formData.products.length === 0) {
         toast({
           title: 'Products Required',
@@ -542,42 +535,31 @@ export default function AddCompanyPage() {
         });
         return;
       }
-      
+
       setIsSubmitting(true);
 
-      // Remove logo from submission data (can't serialize File objects)
       const { logo, ...submissionData } = formData;
-      
-      console.log('Submitting company data:', submissionData);
-      
-      // Use production service directly for reliability
+
       const response = await fetch('https://website-ocrz.onrender.com/add-company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData)
       });
-      
-      console.log('Response status:', response.status);
-      
+
       if (response.ok) {
-        const result = await response.json();
-        console.log('Submission result:', result);
         toast({
           title: 'Success!',
           description: 'Your company has been submitted for review.',
         });
-        
-        // Add small delay before navigation to ensure toast is shown
+
         setTimeout(() => {
           setLocation('/');
         }, 1000);
       } else {
         const errorText = await response.text();
-        console.error('Submission error:', errorText);
         throw new Error(`Submission failed: ${response.status}`);
       }
     } catch (error) {
-      console.error('Form submission error:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to submit company. Please try again.',
@@ -588,766 +570,996 @@ export default function AddCompanyPage() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // If it's a textarea, we might want to allow newlines, but for now let's just prevent submit
+      // If we are in an input field that adds items (like products), that logic is handled in the specific input's onKeyDown
+
+      // If we are not on the last step, we could optionally go to next step, 
+      // but let's just prevent submission for now to be safe and avoid accidental skips.
+      // If the user wants to go next, they should click next. 
+      // OR we can make it go next if it's not a multiline text area.
+
+      if (currentStep < steps.length - 1) {
+        // Optional: nextStep(); 
+        // But for "7/7" auto submit issue, preventing default is key.
+      }
+    }
+  };
+
+  // Scroll Indicators Logic - REMOVED per user request
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const isStepComplete = (stepIdx: number) => {
+    switch (stepIdx) {
+      case 0: // Basic Info
+        return !!formData.companyName && !!formData.website;
+      case 1: // Company Details
+        return !!formData.category && !!formData.email;
+      case 2: // Products
+        return formData.products.length > 0 && !!formData.description;
+      case 3: // Features
+        return !!formData.features || !!formData.useCases; // At least one
+      case 4: // Business Details
+        return formData.industriesServed.length > 0 || formData.pricingModel.length > 0 || !!formData.companyStage;
+      case 5: // Market
+        return formData.customerSegments.length > 0 || formData.deploymentType.length > 0;
+      case 6: // Final
+        return !!formData.logo || formData.topClients.length > 0 || !!formData.testimonialPage;
+      default:
+        return false;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black p-4">
-      <div className="relative z-10">
-      <div className="max-w-4xl mx-auto">
-        <div>
-          <Button
-            variant="ghost"
-            onClick={() => setLocation('/')}
-            className="text-white hover:text-gray-300"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
-          </Button>
-        </div>
+    <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen bg-black text-white selection:bg-blue-500/30 pt-[72px] lg:overflow-hidden">
+      {/* Fixed Progress Bar (Header - Mobile Only) - REMOVED per user request to move to bottom */}
+      {/* Left Panel - Sticky Info (Hidden on mobile to focus on form, or could be a summary) */}
+      <div className="hidden lg:flex w-full lg:w-[35%] xl:w-[30%] relative flex-col px-8 lg:px-12 py-12 h-full bg-zinc-950 border-r border-white/5 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent pointer-events-none" />
 
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg">
-          <div className="w-full p-6">
-            <div className="text-center">
-              <div className="inline-flex items-center gap-3 mb-4">
-                <div className="p-3 bg-black rounded-full">
-                  <Building2 className="w-8 h-8 text-white" />
-                </div>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-black mb-4">
-                Add Your Company
-              </h1>
-              <p className="text-lg font-medium text-black mb-3">
-                Get Featured in Our Directory
-              </p>
-              <p className="text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                Complete all sections carefully to ensure your company is properly represented in our directory.
-              </p>
-            </div>
-            
-            <div className="grid gap-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Progress Indicator */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-black flex items-center gap-2">
-                    <span className="w-2 h-8 bg-black rounded-full"></span>
-                    {steps[currentStep].title}
-                  </h2>
-                  <div className="text-gray-600 text-sm">
-                    Step {currentStep + 1} of {steps.length}
-                  </div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-black h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
+        <div className="relative z-10 flex flex-col h-full">
+          <div className="flex-none pb-8">
+            <SectionBadge>PARTNER WITH US</SectionBadge>
+            <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mt-4 mb-4">Add Your Company</h1>
+            <p className="text-white/60 text-lg leading-relaxed">
+              Join our directory of innovative AI companies.
+            </p>
+          </div>
 
-              {/* Step 0: Basic Information */}
-              {currentStep === 0 && (
-                <div className="space-y-6">
-                  <div className="p-3 bg-gray-50 rounded border">
-                    <p className="text-xs text-gray-700">
-                      <strong>Instructions:</strong> Enter your company's basic information accurately. This data will be used to auto-populate other fields and ensure proper listing in our directory.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="input-group">
-                      <label className="label">Company Name *</label>
-                      <Input
-                        required
-                        value={formData.companyName}
-                        onChange={(e) => handleInputChange('companyName', e.target.value)}
-                        className="input"
-                        placeholder="e.g., OpenAI"
-                      />
-                    </div>
-                    
-                    <div className="input-group">
-                      <label className="label">Website *</label>
-                      <Input
-                        required
-                        type="url"
-                        value={formData.website}
-                        onChange={(e) => handleInputChange('website', e.target.value)}
-                        className="input"
-                        placeholder="https://yourcompany.com"
-                      />
-                    </div>
-                    
-                    <div className="md:col-span-2 input-group">
-                      <label className="label">LinkedIn Page</label>
-                      <Input
-                        type="url"
-                        value={formData.linkedinPage}
-                        onChange={(e) => handleInputChange('linkedinPage', e.target.value)}
-                        className="input"
-                        placeholder="https://linkedin.com/company/yourcompany"
-                      />
-                    </div>
-                  </div>
+          {/* Vertical Stepper (Scrollable) */}
+          <div className="flex-1 overflow-y-auto scrollbar-hide flex flex-col">
+            <div className="py-12 space-y-6">
+              {steps.map((step, idx) => {
+                const isCompleted = isStepComplete(idx);
+                const isActive = currentStep === idx;
 
-                  {/* Auto-fill Button */}
-                  {formData.companyName && formData.website && (
-                    <div className="text-center py-6">
-                      <div className="flex gap-4 justify-center">
-                        <Button
-                          type="button"
-                          onClick={handleAutoFill}
-                          disabled={isAutoFilling}
-                          className="bg-black hover:bg-gray-800 text-white font-medium px-6 py-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isAutoFilling ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              Auto-filling...
-                            </>
-                          ) : (
-                            "Auto-fill Company Details"
-                          )}
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => setCurrentStep(1)}
-                          variant="outline"
-                          className="bg-white border-gray-300 text-black hover:bg-gray-50 px-6 py-3"
-                        >
-                          Skip & Continue Manually
-                        </Button>
-                      </div>
-                      <p className="text-gray-600 text-sm mt-3">
-                        Automatically populate remaining fields using your website and LinkedIn page
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Step 1: Company Details */}
-              {currentStep === 1 && (
-                <div className="flex-1 flex flex-col justify-center space-y-6">
-                  <div className="mb-4 p-3 bg-gray-50 rounded border">
-                    <p className="text-xs text-gray-700">
-                      <strong>Instructions:</strong> Provide detailed company information. Fill in all available fields to improve your listing's visibility and credibility.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                    <div className="input-group">
-                      <label className="label">Phone Number (Sales Team)</label>
-                      <Input
-                        type="tel"
-                        value={formData.phoneNumber}
-                        onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                        className="input"
-                        placeholder="+1 (555) 123-4567"
-                      />
-                    </div>
-                    
-                    <div className="input-group">
-                      <label className="label">Founded Year</label>
-                      <Input
-                        value={formData.founded}
-                        onChange={(e) => handleInputChange('founded', e.target.value)}
-                        className="input"
-                        placeholder="2023"
-                      />
-                    </div>
-                    
-                    <div className="input-group">
-                      <label className="label">Headquarters</label>
-                      <Input
-                        value={formData.headquarters}
-                        onChange={(e) => handleInputChange('headquarters', e.target.value)}
-                        className="input"
-                        placeholder="San Francisco, CA"
-                      />
-                    </div>
-                    
-                    <div className="input-group">
-                      <label className="label">Category *</label>
-                      <Input
-                        required
-                        value={formData.category}
-                        onChange={(e) => handleInputChange('category', e.target.value)}
-                        className="input"
-                        placeholder="AI Platform, AI Writing, AI Image, etc."
-                      />
-                    </div>
-                    
-                    <div className="input-group">
-                      <label className="label">Employees</label>
-                      <Input
-                        value={formData.employees}
-                        onChange={(e) => handleInputChange('employees', e.target.value)}
-                        className="input"
-                        placeholder="50-100, 500+, etc."
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="input-group">
-                    <label className="label">
-                      Company Tagline
-                      <span className="block text-xs text-gray-600 mt-1">
-                        A short, catchy phrase that describes what your company does
-                      </span>
-                    </label>
-                    <Input
-                      value={formData.tagline}
-                      onChange={(e) => handleInputChange('tagline', e.target.value)}
-                      className="input"
-                      placeholder="e.g., 'AI for everyone', 'Building the future of work'"
-                    />
-                  </div>
-                  
-                  <div className="input-group">
-                    <label className="label">
-                      USP / Differentiator Tagline
-                      <span className="block text-xs text-gray-600 mt-1">
-                        What makes you unique? (e.g., "Fastest API for Voice AI")
-                      </span>
-                    </label>
-                    <Input
-                      value={formData.uspTagline}
-                      onChange={(e) => handleInputChange('uspTagline', e.target.value)}
-                      className="input"
-                      placeholder="e.g., 'Fastest API for Voice AI', '10x faster than competitors'"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Products & Description */}
-              {currentStep === 2 && (
-                <div className="flex-1 flex flex-col justify-center space-y-6">
-                  <div className="mb-4 p-3 bg-gray-50 rounded border">
-                    <p className="text-xs text-gray-700">
-                      <strong>Instructions:</strong> Describe your products/services and company in detail. Be specific about features, benefits, and what makes your offerings unique.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-black font-medium text-sm mb-3">
-                      Products/Services *
-                      <span className="block text-xs text-gray-600 mt-1">
-                        Add detailed information about each product/service you offer
-                      </span>
-                    </label>
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <div className="relative flex-1 input-group">
-                          <Input
-                            value={newProduct}
-                            onChange={(e) => setNewProduct(e.target.value)}
-                            className="input pr-20"
-                            placeholder="Enter detailed product/service information..."
-                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('products', newProduct))}
-                          />
-                          {newProduct.trim() && (
-                            <button
-                              type="button"
-                              onClick={() => enhanceText(newProduct, 'product')}
-                              disabled={isEnhancing.product}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 text-lg hover:scale-110 transition-transform disabled:opacity-50"
-                            >
-                              {isEnhancing.product ? '⏳' : '✨'}
-                            </button>
-                          )}
-                        </div>
-                        <Button
-                          type="button"
-                          onClick={() => addItem('products', newProduct)}
-                          className="bg-black hover:bg-gray-800 text-white"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {formData.products.map((product, index) => (
-                          <div key={index} className="bg-gray-100 rounded-md px-3 py-1 flex items-center gap-2">
-                            <span className="text-black text-sm">{product}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeItem('products', index)}
-                              className="text-gray-600 hover:text-black"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="input-group">
-                    <label className="label">About Your Company *</label>
-                    <div className="relative">
-                      <Textarea
-                        required
-                        value={formData.description}
-                        onChange={(e) => handleInputChange('description', e.target.value)}
-                        className="input textarea pr-12"
-                        placeholder="Provide a comprehensive description of your company, mission, vision, and what makes you unique in the AI space..."
-                        rows={4}
-                      />
-                      {formData.description.trim() && (
-                        <button
-                          type="button"
-                          onClick={enhanceDescription}
-                          disabled={isEnhancingDescription}
-                          className="absolute right-3 top-3 text-lg hover:scale-110 transition-transform disabled:opacity-50"
-                          title="Enhance description with AI"
-                        >
-                          {isEnhancingDescription ? '⏳' : '✨'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Features & Use Cases */}
-              {currentStep === 3 && (
-                <div className="flex-1 flex flex-col justify-center space-y-6">
-                  <div className="mb-4 p-3 bg-gray-50 rounded border">
-                    <p className="text-xs text-gray-700">
-                      <strong>Instructions:</strong> Detail your key features and use cases. Focus on specific capabilities and real-world applications that demonstrate value to potential customers.
-                    </p>
-                  </div>
-
-                  <div className="input-group">
-                    <label className="label">
-                      Key Features *
-                      <span className="block text-xs text-gray-600 mt-1">
-                        Describe all key features of your products/services in detail
-                      </span>
-                    </label>
-                    <div className="relative">
-                      <Textarea
-                        value={formData.features}
-                        onChange={(e) => handleInputChange('features', e.target.value)}
-                        className="input textarea pr-12"
-                        placeholder="Describe your key features and capabilities in detail..."
-                        rows={6}
-                      />
-                      {formData.features.trim() && (
-                        <button
-                          type="button"
-                          onClick={() => enhanceText(formData.features, 'feature')}
-                          disabled={isEnhancing.feature}
-                          className="absolute right-3 top-3 text-lg hover:scale-110 transition-transform disabled:opacity-50"
-                        >
-                          {isEnhancing.feature ? '⏳' : '✨'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="input-group">
-                    <label className="label">
-                      Use Cases *
-                      <span className="block text-xs text-gray-600 mt-1">
-                        Describe specific use cases and applications for your products/services
-                      </span>
-                    </label>
-                    <div className="relative">
-                      <Textarea
-                        value={formData.useCases}
-                        onChange={(e) => handleInputChange('useCases', e.target.value)}
-                        className="input textarea pr-12"
-                        placeholder="Describe your use cases and applications in detail..."
-                        rows={6}
-                      />
-                      {formData.useCases.trim() && (
-                        <button
-                          type="button"
-                          onClick={() => enhanceText(formData.useCases, 'useCase')}
-                          disabled={isEnhancing.useCase}
-                          className="absolute right-3 top-3 text-lg hover:scale-110 transition-transform disabled:opacity-50"
-                        >
-                          {isEnhancing.useCase ? '⏳' : '✨'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Business Details */}
-              {currentStep === 4 && (
-                <div className="flex-1 flex flex-col justify-center space-y-6">
-                  <div className="mb-4 p-3 bg-gray-50 rounded border">
-                    <p className="text-xs text-gray-700">
-                      <strong>Instructions:</strong> Select your business model details carefully. Choose all applicable industries, pricing ranges, and models to help customers find you more easily.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Company Stage</label>
-                      <Select value={formData.companyStage} onValueChange={(value) => handleInputChange('companyStage', value)}>
-                        <SelectTrigger className="bg-white border-gray-300 text-black">
-                          <SelectValue placeholder="Select company stage" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-300">
-                          {companyStageOptions.map((option) => (
-                            <SelectItem key={option} value={option} className="text-black hover:bg-gray-100">
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Industries Served</label>
-                      <Select onValueChange={addIndustry}>
-                        <SelectTrigger className="bg-white border-gray-300 text-black">
-                          <SelectValue placeholder="Select industries" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-300 max-h-60">
-                          {industryOptions.filter(option => !formData.industriesServed.includes(option)).map((option) => (
-                            <SelectItem key={option} value={option} className="text-black hover:bg-gray-100">
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  {formData.industriesServed.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {formData.industriesServed.map((industry) => (
-                        <div key={industry} className="bg-gray-100 rounded-md px-3 py-1 flex items-center gap-2">
-                          <span className="text-black text-sm">{industry}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeIndustry(industry)}
-                            className="text-gray-600 hover:text-black"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Pricing Ranges</label>
-                      <Select onValueChange={addPricingRange}>
-                        <SelectTrigger className="bg-white border-gray-300 text-black">
-                          <SelectValue placeholder="Select pricing ranges" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-300">
-                          {pricingOptions.filter(option => !formData.pricingRanges.includes(option)).map((option) => (
-                            <SelectItem key={option} value={option} className="text-black hover:bg-gray-100">
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {formData.pricingRanges.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {formData.pricingRanges.map((range) => (
-                            <div key={range} className="bg-gray-100 rounded-md px-3 py-1 flex items-center gap-2">
-                              <span className="text-black text-sm">{range}</span>
-                              <button
-                                type="button"
-                                onClick={() => removePricingRange(range)}
-                                className="text-gray-600 hover:text-black"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Pricing Model</label>
-                      <Select onValueChange={addPricingModel}>
-                        <SelectTrigger className="bg-white border-gray-300 text-black">
-                          <SelectValue placeholder="Select pricing model" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-300">
-                          {pricingModelOptions.filter(option => !formData.pricingModel.includes(option)).map((option) => (
-                            <SelectItem key={option} value={option} className="text-black hover:bg-gray-100">
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {formData.pricingModel.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {formData.pricingModel.map((model) => (
-                            <div key={model} className="bg-gray-100 rounded-md px-3 py-1 flex items-center gap-2">
-                              <span className="text-black text-sm">{model}</span>
-                              <button
-                                type="button"
-                                onClick={() => removePricingModel(model)}
-                                className="text-gray-600 hover:text-black"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 5: Market & Deployment */}
-              {currentStep === 5 && (
-                <div className="flex-1 flex flex-col justify-center space-y-6">
-                  <div className="mb-4 p-3 bg-gray-50 rounded border">
-                    <p className="text-xs text-gray-700">
-                      <strong>Instructions:</strong> Define your target market and deployment options. This helps potential customers understand if your solution fits their needs and technical requirements.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Customer Segments</label>
-                      <Select onValueChange={addCustomerSegment}>
-                        <SelectTrigger className="bg-white border-gray-300 text-black">
-                          <SelectValue placeholder="Select customer segments" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-300">
-                          {customerSegmentOptions.filter(option => !formData.customerSegments.includes(option)).map((option) => (
-                            <SelectItem key={option} value={option} className="text-black hover:bg-gray-100">
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {formData.customerSegments.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {formData.customerSegments.map((segment) => (
-                            <div key={segment} className="bg-gray-100 rounded-md px-3 py-1 flex items-center gap-2">
-                              <span className="text-black text-sm">{segment}</span>
-                              <button
-                                type="button"
-                                onClick={() => removeCustomerSegment(segment)}
-                                className="text-gray-600 hover:text-black"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-black font-medium text-sm mb-3">Deployment Type</label>
-                      <Select onValueChange={addDeploymentType}>
-                        <SelectTrigger className="bg-white border-gray-300 text-black">
-                          <SelectValue placeholder="Select deployment types" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-300">
-                          {deploymentTypeOptions.filter(option => !formData.deploymentType.includes(option)).map((option) => (
-                            <SelectItem key={option} value={option} className="text-black hover:bg-gray-100">
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {formData.deploymentType.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {formData.deploymentType.map((type) => (
-                            <div key={type} className="bg-gray-100 rounded-md px-3 py-1 flex items-center gap-2">
-                              <span className="text-black text-sm">{type}</span>
-                              <button
-                                type="button"
-                                onClick={() => removeDeploymentType(type)}
-                                className="text-gray-600 hover:text-black"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-black font-medium text-sm mb-3">Ideal Scenarios</label>
-                    <Select onValueChange={addIdealScenario}>
-                      <SelectTrigger className="bg-white border-gray-300 text-black">
-                        <SelectValue placeholder="Select ideal customer scenarios" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300">
-                        {idealScenarioOptions.filter(option => !formData.idealScenarios.includes(option)).map((option) => (
-                          <SelectItem key={option} value={option} className="text-black hover:bg-gray-100">
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {formData.idealScenarios.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {formData.idealScenarios.map((scenario) => (
-                          <div key={scenario} className="bg-gray-100 rounded-md px-3 py-1 flex items-center gap-2">
-                            <span className="text-black text-sm">{scenario}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeIdealScenario(scenario)}
-                              className="text-gray-600 hover:text-black"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="flex items-center gap-3 text-black font-medium text-sm">
-                      <input
-                        type="checkbox"
-                        checked={formData.trialAvailable}
-                        onChange={(e) => setFormData(prev => ({ ...prev, trialAvailable: e.target.checked }))}
-                        className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                      />
-                      <span>Trial / Demo Available</span>
-                    </label>
-                    <p className="text-xs text-gray-600 mt-1 ml-7">
-                      Check this if you offer a free trial, demo, or freemium version
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 6: Additional Info */}
-              {currentStep === 6 && (
-                <div className="flex-1 flex flex-col justify-center space-y-6">
-                  <div className="mb-4 p-3 bg-gray-50 rounded border">
-                    <p className="text-xs text-gray-700">
-                      <strong>Instructions:</strong> Add supporting information to build credibility. Include notable clients, testimonials, and your company logo to enhance your listing's professional appearance.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-black font-medium text-sm mb-3">
-                      Top Clients / Partners (Optional)
-                      <span className="block text-xs text-gray-600 mt-1">
-                        Add your notable clients or partners
-                      </span>
-                    </label>
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          value={newClient}
-                          onChange={(e) => setNewClient(e.target.value)}
-                          className="input"
-                          placeholder="Enter client/partner information..."
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addItem('topClients', newClient))}
-                        />
-                        <Button
-                          type="button"
-                          onClick={() => addItem('topClients', newClient)}
-                          className="bg-black hover:bg-gray-800 text-white"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {formData.topClients.map((client, index) => (
-                          <div key={index} className="bg-gray-100 rounded-md px-3 py-1 flex items-center gap-2">
-                            <span className="text-black text-sm">{client}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeItem('topClients', index)}
-                              className="text-gray-600 hover:text-black"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="input-group">
-                    <label className="label">Testimonial Page (Optional)</label>
-                    <Input
-                      type="url"
-                      value={formData.testimonialPage}
-                      onChange={(e) => handleInputChange('testimonialPage', e.target.value)}
-                      className="input"
-                      placeholder="https://yourcompany.com/testimonials"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-black font-medium text-sm mb-3">Company Logo</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                      className="bg-white border border-gray-300 rounded text-black file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-gray-100 file:text-black hover:file:bg-gray-200 w-full"
-                    />
-                    {formData.logo && (
-                      <p className="text-gray-600 text-sm mt-1">Selected: {formData.logo.name}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation Buttons */}
-              {currentStep > 0 && (
-                <div className="flex justify-between items-center pt-6">
-                  <Button
-                    type="button"
-                    onClick={prevStep}
-                    disabled={currentStep === 0}
-                    variant="outline"
-                    className="bg-white border-gray-300 text-black hover:bg-gray-50 disabled:opacity-50"
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => changeStep(idx)}
+                    className="relative flex items-center gap-4 group text-left w-full hover:bg-white/5 p-2 rounded-xl transition-all duration-300"
                   >
-                    <ChevronLeft className="w-4 h-4 mr-2" />
-                    Previous
-                  </Button>
-
-                  {currentStep < steps.length - 1 ? (
-                    <Button
-                      type="button"
-                      onClick={nextStep}
-                      className="bg-black hover:bg-gray-800 text-white"
-                    >
-                      Next
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="bg-black text-white font-bold py-3 px-8 hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Submitting...
-                        </>
-                      ) : (
-                        'Submit Application'
-                      )}
-                    </Button>
-                  )}
-                </div>
-              )}
-              </form>
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 z-10 border",
+                      isActive ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-110" :
+                        isCompleted ? "bg-zinc-800 border-zinc-700 text-green-400" :
+                          "bg-transparent border-white/10 text-white/30 group-hover:border-white/30 group-hover:text-white/50"
+                    )}>
+                      {isCompleted ? <Check className="w-4 h-4" /> : idx + 1}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className={cn(
+                        "text-sm font-medium transition-colors duration-300",
+                        isActive ? "text-white" :
+                          isCompleted ? "text-white/80" :
+                            "text-white/30 group-hover:text-white/50"
+                      )}>
+                        {step.title}
+                      </span>
+                    </div>
+                    {idx !== steps.length - 1 && (
+                      <div className={cn(
+                        "absolute left-6 top-10 w-px h-6 -ml-px transition-colors duration-300",
+                        isCompleted ? "bg-zinc-800" : "bg-white/5"
+                      )} />
+                    )}
+                  </button>
+                );
+              })}
             </div>
-            
 
           </div>
         </div>
       </div>
+
+      {/* Right Panel - Scrollable Form + Fixed Bottom Bar */}
+      <div className="flex-1 relative bg-black h-auto lg:h-full flex flex-col lg:overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-soft-light"></div>
+
+        {/* Scrollable Content */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 lg:overflow-y-auto scrollbar-hide relative z-10 overflow-x-hidden"
+        >
+          <div className="max-w-3xl mx-auto p-6 lg:p-12 pb-32">
+            <form onKeyDown={handleKeyDown} className="grid grid-cols-1">
+              <AnimatePresence mode="popLayout" custom={direction}>
+                {/* Step 0: Basic Information */}
+                {currentStep === 0 && (
+                  <motion.div
+                    key="step0"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                      <p className="text-sm text-blue-200 flex gap-2">
+                        <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <span>
+                          <strong>Pro Tip:</strong> Enter your company name and website, then use our AI Auto-fill feature to populate the rest of the form automatically!
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* VC Gathering Event Section */}
+                    <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-xl">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          <span className="text-xs font-medium text-blue-400 uppercase tracking-wider">Exclusive Opportunity</span>
+                        </div>
+                        
+                        <h3 className="text-lg font-semibold text-white mb-3">
+                          🚀 VC Gathering - Bangalore
+                        </h3>
+                        
+                        <div className="space-y-3 text-sm text-white/70 leading-relaxed">
+                          <p>
+                            We are curating a small, invitation-only gathering of <strong className="text-white">~10 deep-tech and AI startups</strong> for an in-person interaction with global VCs from <strong className="text-blue-300">Accel</strong> and a few other leading funds.
+                          </p>
+                          
+                          <p>
+                            The participating investors are US-based global VCs, several of whom are former serial entrepreneurs with successful technology exits. They are specifically interested in <strong className="text-white">deep-tech and AI startups</strong> working on hard-to-replicate, original ideas, with strong technical depth and long-term defensibility.
+                          </p>
+                          
+                          <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                            <div className="grid grid-cols-1 gap-2 text-xs">
+                              <div>
+                                <span className="text-blue-300 font-medium">📍 Location:</span>
+                                <span className="text-white ml-1">Jayanagar, Bangalore</span>
+                              </div>
+                              <div>
+                                <span className="text-blue-300 font-medium">📅 Dates:</span>
+                                <span className="text-white ml-1">Between March 26 and April 13, 2026</span>
+                                <span className="text-white/60 block text-xs">(exact date to be confirmed)</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs">
+                            This is not a symposium or demo day. The format is informal and conversational, focused on direct interaction, idea discussion, and relationship-building with VCs. Where there is strong alignment, conversations may naturally progress toward potential investment.
+                          </p>
+                          
+                          <p className="text-xs">
+                            Participation will be selective to ensure meaningful engagement. Startups across institutes and ecosystems are welcome. <strong className="text-white">Shortlisted teams will be contacted with further details.</strong>
+                          </p>
+                          
+                          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                            <p className="text-xs text-blue-200">
+                              <strong>Contact for queries:</strong><br/>
+                              📞 +91 80906 72982
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 pt-2">
+                          <input
+                            type="checkbox"
+                            id="vcEventInterested"
+                            checked={formData.vcEventInterested}
+                            onChange={(e) => setFormData(prev => ({ ...prev, vcEventInterested: e.target.checked }))}
+                            className="w-4 h-4 rounded border-white/30 bg-white/10 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                          />
+                          <label htmlFor="vcEventInterested" className="text-sm text-white font-medium cursor-pointer">
+                            Yes, I'm interested
+                          </label>
+                        </div>
+                        
+                        {formData.vcEventInterested && (
+                          <p className="text-xs text-green-400 text-center">
+                            ✓ We'll contact shortlisted teams with details
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Company Name <span className="text-red-400">*</span></label>
+                        <Input
+                          required
+                          value={formData.companyName}
+                          onChange={(e) => handleInputChange('companyName', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="e.g., OpenAI"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Website <span className="text-red-400">*</span></label>
+                        <Input
+                          required
+                          type="url"
+                          value={formData.website}
+                          onChange={(e) => handleInputChange('website', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="https://yourcompany.com"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2 space-y-2">
+                        <label className="text-sm font-medium text-white">LinkedIn Page</label>
+                        <Input
+                          type="url"
+                          value={formData.linkedinPage}
+                          onChange={(e) => handleInputChange('linkedinPage', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="https://linkedin.com/company/yourcompany"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Auto-fill Button */}
+                    {formData.companyName && formData.website && (
+                      <div className="flex flex-col items-center gap-4 pt-4">
+                        <Button
+                          type="button"
+                          onClick={handleAutoFill}
+                          disabled={isAutoFilling}
+                          className="relative h-14 px-8 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-2xl shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden group"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                          {isAutoFilling ? (
+                            <>
+                              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                              Analyzing Company Data...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-5 h-5 mr-2" />
+                              Auto-fill with AI
+                            </>
+                          )}
+                        </Button>
+                        <div className="flex items-center gap-2 text-sm text-zinc-400">
+                          <span>or</span>
+                          <button
+                            type="button"
+                            onClick={() => changeStep(1)}
+                            className="text-zinc-300 hover:text-white font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-0 after:h-px after:bg-white after:transition-all after:duration-300 hover:after:w-full"
+                          >
+                            continue manually
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* Step 1: Company Details */}
+                {currentStep === 1 && (
+                  <motion.div
+                    key="step1"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Phone Number</label>
+                        <Input
+                          type="tel"
+                          value={formData.phoneNumber}
+                          onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="+1 (555) 123-4567"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Email Address <span className="text-red-400">*</span></label>
+                        <Input
+                          required
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="contact@company.com"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Founded Year</label>
+                        <Input
+                          value={formData.founded}
+                          onChange={(e) => handleInputChange('founded', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="2023"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Headquarters</label>
+                        <Input
+                          value={formData.headquarters}
+                          onChange={(e) => handleInputChange('headquarters', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="San Francisco, CA"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Category <span className="text-red-400">*</span></label>
+                        <Input
+                          required
+                          value={formData.category}
+                          onChange={(e) => handleInputChange('category', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="AI Platform, SaaS, etc."
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white">Employees</label>
+                        <Select value={formData.employees} onValueChange={(val) => handleInputChange('employees', val)}>
+                          <SelectTrigger className="h-14 bg-zinc-900/50 border-white/10 text-white rounded-xl focus:border-white/30 transition-colors duration-200 focus:outline-none focus:ring-0">
+                            <SelectValue placeholder="Select size" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-black/90 border-white/20 text-white backdrop-blur-xl">
+                            {employeeOptions.map(opt => (
+                              <SelectItem key={opt} value={opt} className="focus:bg-white/10 focus:text-white">{opt}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">
+                        Company Tagline
+                        <span className="block text-xs text-white/60 font-normal mt-1">A short, catchy phrase describing what you do</span>
+                      </label>
+                      <Input
+                        value={formData.tagline}
+                        onChange={(e) => handleInputChange('tagline', e.target.value)}
+                        className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                        placeholder="e.g., 'AI for everyone'"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">
+                        USP Tagline
+                        <span className="block text-xs text-white/60 font-normal mt-1">What makes you unique?</span>
+                      </label>
+                      <Input
+                        value={formData.uspTagline}
+                        onChange={(e) => handleInputChange('uspTagline', e.target.value)}
+                        className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                        placeholder="e.g., 'The fastest AI engine on the market'"
+                      />
+                    </div>
+
+                    {/* Founders Section */}
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Founders</label>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Input
+                          value={newFounder.name}
+                          onChange={(e) => setNewFounder(prev => ({ ...prev, name: e.target.value }))}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Founder name"
+                        />
+                        <Input
+                          value={newFounder.phone}
+                          onChange={(e) => setNewFounder(prev => ({ ...prev, phone: e.target.value }))}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Phone number"
+                        />
+                        <div className="flex gap-3">
+                          <Input
+                            value={newFounder.email}
+                            onChange={(e) => setNewFounder(prev => ({ ...prev, email: e.target.value }))}
+                            className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                            placeholder="Email address"
+                          />
+                          <Button
+                            type="button"
+                            onClick={addFounder}
+                            className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        {formData.founders.length === 0 && (
+                          <p className="text-white/50 text-sm italic p-4 bg-white/5 rounded-xl border border-white/10">No founders added yet</p>
+                        )}
+                        {formData.founders.map((founder, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                            <div className="flex-1">
+                              <p className="text-white font-medium">{founder.name}</p>
+                              <p className="text-white/60 text-sm">{founder.email} • {founder.phone}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeFounder(idx)}
+                              className="text-white/60 hover:text-white transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 2: Products & Description */}
+                {currentStep === 2 && (
+                  <motion.div
+                    key="step2"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Products / Services <span className="text-red-400">*</span></label>
+                      <div className="flex gap-3">
+                        <Input
+                          value={newProduct}
+                          onChange={(e) => setNewProduct(e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Add a product..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addItem('products', newProduct);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => addItem('products', newProduct)}
+                          className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 min-h-[40px] p-4 bg-white/10 border border-white/20 rounded-xl">
+                        {formData.products.length === 0 && (
+                          <span className="text-white/50 text-sm italic">No products added yet</span>
+                        )}
+                        {formData.products.map((item, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0071e3]/20 text-blue-200 text-sm border border-[#0071e3]/30">
+                            {item}
+                            <button
+                              type="button"
+                              onClick={() => removeItem('products', idx)}
+                              className="hover:text-white transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <label className="text-sm font-medium text-white">Description <span className="text-red-400">*</span></label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={enhanceDescription}
+                          disabled={isEnhancingDescription || !formData.description}
+                          className="relative overflow-hidden group bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-white/10 hover:border-white/20 transition-all duration-300"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                          <span className="relative flex items-center gap-2 bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent font-medium">
+                            {isEnhancingDescription ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-300" />
+                            ) : (
+                              <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                            )}
+                            Enhance with AI
+                          </span>
+                        </Button>
+                      </div>
+                      <Textarea
+                        required
+                        value={formData.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        className="min-h-[200px] bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 resize-none rounded-xl focus:outline-none focus:ring-0"
+                        placeholder="Describe your company, mission, and what makes you special..."
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 3: Features & Use Cases */}
+                {currentStep === 3 && (
+                  <motion.div
+                    key="step3"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <label className="text-sm font-medium text-white">Key Features</label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => enhanceText(formData.features, 'feature')}
+                          disabled={isEnhancing.feature || !formData.features}
+                          className="relative overflow-hidden group bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-white/10 hover:border-white/20 transition-all duration-300"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                          <span className="relative flex items-center gap-2 bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent font-medium">
+                            {isEnhancing.feature ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-300" />
+                            ) : (
+                              <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                            )}
+                            Enhance with AI
+                          </span>
+                        </Button>
+                      </div>
+                      <div className="flex gap-3">
+                        <Input
+                          value={newFeature}
+                          onChange={(e) => setNewFeature(e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Add a feature..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addItem('features', newFeature);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => addItem('features', newFeature)}
+                          className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      <div className="p-4 bg-white/10 border border-white/20 rounded-xl">
+                        <Textarea
+                          value={formData.features}
+                          onChange={(e) => handleInputChange('features', e.target.value)}
+                          className="min-h-[100px] bg-transparent border-none text-white placeholder:text-white/50 focus:ring-0 resize-none p-0"
+                          placeholder="Or paste a list of features here..."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <label className="text-sm font-medium text-white">Use Cases</label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => enhanceText(formData.useCases, 'useCase')}
+                          disabled={isEnhancing.useCase || !formData.useCases}
+                          className="relative overflow-hidden group bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-white/10 hover:border-white/20 transition-all duration-300"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:animate-[shimmer_1.5s_infinite]" />
+                          <span className="relative flex items-center gap-2 bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent font-medium">
+                            {isEnhancing.useCase ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-300" />
+                            ) : (
+                              <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+                            )}
+                            Enhance with AI
+                          </span>
+                        </Button>
+                      </div>
+                      <div className="flex gap-3">
+                        <Input
+                          value={newUseCase}
+                          onChange={(e) => setNewUseCase(e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Add a use case..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addItem('useCases', newUseCase);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => addItem('useCases', newUseCase)}
+                          className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      <div className="p-4 bg-white/10 border border-white/20 rounded-xl">
+                        <Textarea
+                          value={formData.useCases}
+                          onChange={(e) => handleInputChange('useCases', e.target.value)}
+                          className="min-h-[100px] bg-transparent border-none text-white placeholder:text-white/50 focus:ring-0 resize-none p-0"
+                          placeholder="Or paste a list of use cases here..."
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 4: Business Details */}
+                {currentStep === 4 && (
+                  <motion.div
+                    key="step4"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Industries Served</label>
+                      <div className="flex flex-wrap gap-2">
+                        {industryOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.industriesServed.includes(option) ? removeIndustry(option) : addIndustry(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.industriesServed.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Pricing Model</label>
+                      <div className="flex flex-wrap gap-2">
+                        {pricingModelOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.pricingModel.includes(option) ? removePricingModel(option) : addPricingModel(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.pricingModel.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Pricing Range</label>
+                      <div className="flex flex-wrap gap-2">
+                        {pricingOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.pricingRanges.includes(option) ? removePricingRange(option) : addPricingRange(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.pricingRanges.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">Company Stage</label>
+                      <Select value={formData.companyStage} onValueChange={(val) => handleInputChange('companyStage', val)}>
+                        <SelectTrigger className="h-14 bg-zinc-900/50 border-white/10 text-white rounded-xl focus:border-white/30 transition-colors duration-200 focus:outline-none focus:ring-0">
+                          <SelectValue placeholder="Select stage" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-black/90 border-white/20 text-white backdrop-blur-xl">
+                          {companyStageOptions.map(opt => (
+                            <SelectItem key={opt} value={opt} className="focus:bg-white/10 focus:text-white">{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 5: Market & Deployment */}
+                {currentStep === 5 && (
+                  <motion.div
+                    key="step5"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Customer Segments</label>
+                      <div className="flex flex-wrap gap-2">
+                        {customerSegmentOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.customerSegments.includes(option) ? removeCustomerSegment(option) : addCustomerSegment(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.customerSegments.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Deployment Type</label>
+                      <div className="flex flex-wrap gap-2">
+                        {deploymentTypeOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.deploymentType.includes(option) ? removeDeploymentType(option) : addDeploymentType(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.deploymentType.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Ideal Scenarios</label>
+                      <div className="flex flex-wrap gap-2">
+                        {idealScenarioOptions.map(option => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => formData.idealScenarios.includes(option) ? removeIdealScenario(option) : addIdealScenario(option)}
+                            className={cn(
+                              "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                              formData.idealScenarios.includes(option)
+                                ? "bg-white border-white text-black shadow-sm"
+                                : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                            )}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 bg-white/10 border border-white/20 rounded-xl">
+                      <input
+                        type="checkbox"
+                        id="trialAvailable"
+                        checked={formData.trialAvailable}
+                        onChange={(e) => setFormData(prev => ({ ...prev, trialAvailable: e.target.checked }))}
+                        className="w-5 h-5 rounded border-white/30 bg-white/10 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                      />
+                      <label htmlFor="trialAvailable" className="text-white font-medium cursor-pointer">
+                        Free Trial / Demo Available
+                      </label>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 6: Additional Info */}
+                {currentStep === 6 && (
+                  <motion.div
+                    key="step6"
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="space-y-8 col-start-1 row-start-1 w-full"
+                  >
+                    <div className="space-y-4">
+                      <label className="text-sm font-medium text-white">Top Clients</label>
+                      <div className="flex gap-3">
+                        <Input
+                          value={newClient}
+                          onChange={(e) => setNewClient(e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="Add a client..."
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addItem('topClients', newClient);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => addItem('topClients', newClient)}
+                          className="h-14 w-14 bg-white text-black hover:bg-gray-200 rounded-lg flex-shrink-0"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 min-h-[40px] p-4 bg-white/10 border border-white/20 rounded-xl">
+                        {formData.topClients.length === 0 && (
+                          <span className="text-white/50 text-sm italic">No clients added yet</span>
+                        )}
+                        {formData.topClients.map((item, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 text-white text-sm border border-white/20">
+                            {item}
+                            <button
+                              type="button"
+                              onClick={() => removeItem('topClients', idx)}
+                              className="hover:text-white transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">Testimonial Page URL</label>
+                      <Input
+                        type="url"
+                        value={formData.testimonialPage}
+                        onChange={(e) => handleInputChange('testimonialPage', e.target.value)}
+                        className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                        placeholder="https://yourcompany.com/testimonials"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">Company Logo</label>
+                      <div className="p-8 border-2 border-dashed border-white/10 bg-zinc-900/30 rounded-xl text-center hover:bg-zinc-900/50 hover:border-white/20 transition-all cursor-pointer relative group">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
+                            <Plus className="w-6 h-6 text-white" />
+                          </div>
+                          <p className="text-white font-medium">Click to upload logo</p>
+                          <p className="text-white/60 text-sm">SVG, PNG, JPG (max 2MB)</p>
+                          {formData.logo && (
+                            <p className="text-green-400 text-sm mt-2 font-medium flex items-center gap-1">
+                              <Check className="w-4 h-4" /> {formData.logo.name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+            </form>
+          </div>
+        </div>
+
+        {/* Fixed Bottom Bar */}
+        <div className="fixed bottom-0 left-0 right-0 lg:relative p-6 lg:px-12 border-t border-white/10 bg-black/80 backdrop-blur-xl z-50">
+          {/* Minimalist Section Progress Bar */}
+          <div
+            className="absolute top-0 left-0 h-[2px] bg-white transition-all duration-500 ease-out z-30"
+            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+          />
+
+          <div className="max-w-3xl mx-auto flex justify-between items-center">
+            <Button
+              type="button"
+              onClick={prevStep}
+              disabled={currentStep === 0}
+              variant="ghost"
+              className="group h-14 px-8 text-zinc-500 hover:text-white hover:bg-white/5 disabled:opacity-30 rounded-2xl transition-all duration-200"
+            >
+              <ChevronLeft className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1" />
+              Back
+            </Button>
+
+            {currentStep < steps.length - 1 ? (
+              <Button
+                type="button"
+                onClick={nextStep}
+                className="group h-14 px-10 bg-white text-black hover:bg-zinc-100 font-semibold tracking-tight rounded-2xl shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              >
+                Next Step
+                <ChevronRight className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={(e) => handleSubmit(e)}
+                disabled={isSubmitting}
+                className="group h-14 px-10 bg-[#0071e3] text-white hover:bg-[#0077ED] font-semibold tracking-tight rounded-2xl shadow-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+              >
+                <div className="relative flex items-center">
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      Submit Company
+                      <Check className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:scale-110" />
+                    </>
+                  )}
+                </div>
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

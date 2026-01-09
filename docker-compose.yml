@@ -5,6 +5,8 @@ services:
       - "5002:5002"
     env_file:
       - .env.local
+    volumes:
+      - ./apps/ai-service:/app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
       interval: 10s
@@ -19,6 +21,10 @@ services:
       - .env.local
     environment:
       - AI_SERVICE_URL=http://ai-service:5002
+      - NODE_ENV=development
+    volumes:
+      - .:/app
+      - /app/node_modules
     depends_on:
       ai-service:
         condition: service_healthy

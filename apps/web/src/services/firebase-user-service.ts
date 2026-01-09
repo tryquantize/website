@@ -1,18 +1,7 @@
-import { initializeApp } from 'firebase/app';
+import { app } from '../lib/firebase-init';
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAy882-yKs41YpCDKrNOqEgB1iKDQcJqak",
-  authDomain: "firequest-auth.firebaseapp.com",
-  projectId: "firequest-auth",
-  storageBucket: "firequest-auth.firebasestorage.app",
-  messagingSenderId: "1065297438861",
-  appId: "1:1065297438861:web:d746c00a59e9c8eebfdac4",
-  measurementId: "G-64FEYVFBNJ"
-};
-
-const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
@@ -32,7 +21,7 @@ export interface OnboardingSubmission {
   id?: string;
   userId: string;
   userEmail: string;
-  
+
   // Basic Information
   profileType?: string;
   listType?: string;
@@ -41,7 +30,7 @@ export interface OnboardingSubmission {
   contactEmail: string;
   websiteUrl: string;
   socialLink?: string;
-  
+
   // Product Details
   productName: string;
   tagline: string;
@@ -50,7 +39,7 @@ export interface OnboardingSubmission {
   primaryUseCases?: string[];
   industriesServed?: string;
   targetAudience?: string;
-  
+
   // Pricing & Access
   pricingModels?: string[];
   priceTiers?: string;
@@ -58,18 +47,18 @@ export interface OnboardingSubmission {
   freeTrialDuration?: string;
   demoAvailable?: 'Yes' | 'No';
   demoLink?: string;
-  
+
   // Media & Links
   demoVideo?: string;
   caseStudies?: string;
-  
+
   // Additional Information
   usp?: string;
   launchDate?: string;
   achievements?: string;
   aiTechUsed?: string;
   roadmap?: string;
-  
+
   // Status
   status: 'pending' | 'approved' | 'rejected';
   createdAt: Date;
@@ -97,16 +86,16 @@ export class FirebaseUserService {
     try {
       const userRef = doc(db, 'users', uid);
       const userSnap = await getDoc(userRef);
-      
+
       if (userSnap.exists()) {
         const data = userSnap.data();
-        return { 
-          success: true, 
+        return {
+          success: true,
           profile: {
             ...data,
             createdAt: data.createdAt.toDate(),
             updatedAt: data.updatedAt.toDate()
-          } as UserProfile 
+          } as UserProfile
         };
       } else {
         return { success: false, error: 'User profile not found' };
@@ -140,7 +129,7 @@ export class FirebaseUserService {
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      
+
       const docRef = await addDoc(collection(db, 'onboarding_submissions'), submissionData);
       return { success: true, id: docRef.id };
     } catch (error: any) {
@@ -153,7 +142,7 @@ export class FirebaseUserService {
     try {
       const q = query(collection(db, 'onboarding_submissions'), where('userId', '==', userId));
       const querySnapshot = await getDocs(q);
-      
+
       const submissions: OnboardingSubmission[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
@@ -164,7 +153,7 @@ export class FirebaseUserService {
           updatedAt: data.updatedAt.toDate()
         } as OnboardingSubmission);
       });
-      
+
       return { success: true, submissions };
     } catch (error: any) {
       console.error('Error getting user submissions:', error);
@@ -200,7 +189,7 @@ export class FirebaseUserService {
   static async getAllSubmissions(): Promise<{ success: boolean; submissions?: OnboardingSubmission[]; error?: string }> {
     try {
       const querySnapshot = await getDocs(collection(db, 'onboarding_submissions'));
-      
+
       const submissions: OnboardingSubmission[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
@@ -211,7 +200,7 @@ export class FirebaseUserService {
           updatedAt: data.updatedAt.toDate()
         } as OnboardingSubmission);
       });
-      
+
       return { success: true, submissions };
     } catch (error: any) {
       console.error('Error getting all submissions:', error);
