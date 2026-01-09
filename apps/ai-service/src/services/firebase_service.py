@@ -198,13 +198,18 @@ class FirebaseService:
             
             # If company is interested in VC event, also add to VC collection
             if company_data.get('vcEventInterested', False):
-                vc_ref = self.db.collection('vc-event-interested-companies')
-                vc_ref.add({
-                    **company_data,
-                    'originalCompanyId': company_id,
-                    'vcEventTimestamp': firestore.SERVER_TIMESTAMP
-                })
-                logger.info(f"Added VC-interested company {company_data.get('companyName')} to VC collection")
+                try:
+                    vc_ref = self.db.collection('vc_event_interested_companies')
+                    vc_doc_ref = vc_ref.add({
+                        **company_data,
+                        'originalCompanyId': company_id,
+                        'vcEventTimestamp': firestore.SERVER_TIMESTAMP
+                    })
+                    vc_doc_id = vc_doc_ref[1].id
+                    logger.info(f"✅ Added VC-interested company {company_data.get('companyName')} to VC collection with ID: {vc_doc_id}")
+                except Exception as vc_error:
+                    logger.error(f"❌ Failed to add to VC collection: {vc_error}")
+                    # Don't fail the main operation if VC collection fails
             
             logger.info(f"Added company {company_data.get('companyName')} to Firebase")
             
