@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Linkedin, Twitter } from "lucide-react";
 import { QuantizeLogo } from "@/components/quantize-logo";
+import { ProductHuntBadge } from "@/components/product-hunt-badge";
 
 
 export function Footer() {
@@ -87,9 +88,16 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-8 pt-8 text-center text-sm text-white/70">
-          <p>&copy; 2025 Quantize. All rights reserved.</p>
-          <p className="mt-2">Made by Aditya Surana </p>
+        <div className="border-t border-white/10 mt-8 pt-8">
+          {/* Product Hunt Badge */}
+          <div className="flex justify-center mb-6">
+            <ProductHuntBadge />
+          </div>
+          
+          <div className="text-center text-sm text-white/70">
+            <p>&copy; 2025 Quantize. All rights reserved.</p>
+            <p className="mt-2">Made by Aditya Surana </p>
+          </div>
         </div>
       </div>
     </footer>

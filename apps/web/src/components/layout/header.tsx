@@ -14,6 +14,7 @@ import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { Heart, Menu, X, MoveRight, PanelLeftOpen, Search, Sparkles, Globe, Shield, Zap, MessageSquare } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { QuantizeLogo } from "@/components/quantize-logo";
+import { ProductHuntBadge } from "@/components/product-hunt-badge";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -191,6 +192,11 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
 
           {/* Right Actions */}
           <div className="flex items-center gap-3">
+            {/* Product Hunt Badge */}
+            <div className="hidden lg:block">
+              <ProductHuntBadge className="scale-75" />
+            </div>
+            
             {currentUser || (isAuthenticated && user) ? (
               <>
                 <span className="hidden md:block text-sm text-white/60 mr-2">
