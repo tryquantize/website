@@ -6,8 +6,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
+import { FirebaseAuthService } from "@/lib/firebase-auth";
 import { handleIndependentGoogleAuth } from "@/lib/independent-google-auth";
 import { Eye, EyeOff, AlertCircle, Mail, Lock, User, Check } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
@@ -104,8 +104,12 @@ export default function AuthPage() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
-      return response.json();
+      // Use Firebase Auth directly instead of API call
+      const result = await FirebaseAuthService.signIn(data.email, data.password);
+      if (!result.success) {
+        throw new Error(result.error || 'Login failed');
+      }
+      return result;
     },
     onSuccess: (data) => {
       login(data.user);
@@ -118,14 +122,13 @@ export default function AuthPage() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterFormData) => {
-      const payload = {
-        name: `${data.firstName}${data.lastName ? ` ${data.lastName}` : ""}`.trim(),
-        email: data.email,
-        password: data.password,
-        role: "client" as const,
-      };
-      const response = await apiRequest("POST", "/api/auth/register", payload);
-      return response.json();
+      const fullName = `${data.firstName}${data.lastName ? ` ${data.lastName}` : ""}`.trim();
+      // Use Firebase Auth directly instead of API call
+      const result = await FirebaseAuthService.signUp(data.email, data.password, fullName);
+      if (!result.success) {
+        throw new Error(result.error || 'Registration failed');
+      }
+      return result;
     },
     onSuccess: (data) => {
       login(data.user);
