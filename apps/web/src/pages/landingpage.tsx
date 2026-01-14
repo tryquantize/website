@@ -13,7 +13,6 @@ import { Search, Bot, Megaphone, Zap, Target, Scale, Sparkles, Brain, Trophy } f
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Lazy load heavy components below the fold
-const TestimonialsColumns = lazy(() => import("@/components/ui/testimonials-demo"));
 const Featured_05 = lazy(() => import("@/components/ui/globe-feature-section"));
 const FeaturesSection = lazy(() => import("@/components/ui/features-section"));
 const FeatureCarousel = lazy(() => import("@/components/ui/animated-feature-carousel").then(module => ({ default: module.FeatureCarousel })));
@@ -24,6 +23,7 @@ const StorySection = lazy(() => import("@/components/ui/story-section").then(mod
 import { FaqSection } from "@/components/ui/faq-section";
 import { SectionBadge } from "@/components/ui/section-badge";
 import { VCEventNotification } from "@/components/ui/vc-event-notification";
+import { CompanyNotifications } from "@/components/ui/company-notifications";
 
 export default function LandingPage() {
   const [startVisible, setStartVisible] = useState(false);
@@ -59,8 +59,9 @@ export default function LandingPage() {
 
   return (
     <div className="relative w-full min-h-screen bg-black overflow-hidden">
-      {/* VC Event Notification */}
+      {/* Notifications */}
       <VCEventNotification />
+      <CompanyNotifications />
       
       {/* Optimized Raycast Background - pauses when scrolled for performance */}
       <div className="fixed inset-0 w-full h-full z-0">
@@ -163,18 +164,6 @@ export default function LandingPage() {
               <p className="text-white/70 max-w-2xl mx-auto px-4 text-sm sm:text-base">Find answers to common questions about our platform, how we curate tools, and what's coming next.</p>
             </div>
             <FaqSection />
-          </section>
-
-          {/* Testimonials Section */}
-          <section className="my-24 sm:my-32 md:my-40 px-4">
-            <div className="text-center mb-20">
-              <SectionBadge>TESTIMONIALS</SectionBadge>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#f5f5f7] mb-6 tracking-tight">Trusted by Industry Leaders</h2>
-              <p className="text-[#86868b] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">See what our users are saying about Quantize</p>
-            </div>
-            <Suspense fallback={<div className="grid grid-cols-1 md:grid-cols-3 gap-4"><Skeleton className="h-64 bg-white/5" /><Skeleton className="h-64 bg-white/5" /><Skeleton className="h-64 bg-white/5" /></div>}>
-              <TestimonialsColumns />
-            </Suspense>
           </section>
 
           {/* Why Choose Quantize Section */}
