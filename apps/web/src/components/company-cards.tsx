@@ -128,6 +128,7 @@ interface CompanyCardsProps {
   onCardIndexChange?: (index: number) => void;
   onSwipe?: (direction: 'left' | 'right') => void;
   onReset?: () => void;
+  onWebsiteEmbed?: (url: string, title: string) => void;
 }
 
 export function CompanyCards({ 
@@ -140,7 +141,8 @@ export function CompanyCards({
   currentCardIndex = 0,
   onCardIndexChange,
   onSwipe,
-  onReset
+  onReset,
+  onWebsiteEmbed
 }: CompanyCardsProps) {
   // Filter companies based on search query and selected locations
   const filteredCompanies = filterCompanies(companies, searchQuery, selectedLocations);
@@ -238,7 +240,19 @@ export function CompanyCards({
   const handleVisitWebsite = (website: string, companyName: string) => {
     if (website && website !== "#") {
       trackEngagement(companyName, 'click');
-      window.open(website, "_blank", "noopener,noreferrer");
+      if (onWebsiteEmbed) {
+        onWebsiteEmbed(website, companyName);
+      } else {
+        window.open(website, "_blank", "noopener,noreferrer");
+      }
+    }
+  };
+
+  const handleLinkedInClick = (linkedinUrl: string, companyName: string) => {
+    if (linkedinUrl && onWebsiteEmbed) {
+      onWebsiteEmbed(linkedinUrl, `${companyName} - LinkedIn`);
+    } else if (linkedinUrl) {
+      window.open(linkedinUrl, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -957,7 +971,7 @@ export function CompanyCards({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(company.linkedin_url, "_blank", "noopener,noreferrer");
+                                handleLinkedInClick(company.linkedin_url!, company.name);
                               }}
                               className="text-white/60 hover:text-blue-400 transition-colors flex-shrink-0"
                               title="View LinkedIn Profile"
@@ -1106,7 +1120,7 @@ export function CompanyCards({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              window.open(company.linkedin_url, "_blank", "noopener,noreferrer");
+                              handleLinkedInClick(company.linkedin_url!, company.name);
                             }}
                             className="text-white/60 hover:text-blue-400 transition-colors p-1"
                             title="View LinkedIn Profile"
@@ -1541,7 +1555,7 @@ export function CompanyCards({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(company.linkedin_url, "_blank", "noopener,noreferrer");
+                                handleLinkedInClick(company.linkedin_url!, company.name);
                               }}
                               className="text-white/60 hover:text-blue-400 transition-colors flex-shrink-0"
                               title="View LinkedIn Profile"
@@ -1690,7 +1704,7 @@ export function CompanyCards({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              window.open(company.linkedin_url, "_blank", "noopener,noreferrer");
+                              handleLinkedInClick(company.linkedin_url!, company.name);
                             }}
                             className="text-white/60 hover:text-blue-400 transition-colors p-1"
                             title="View LinkedIn Profile"

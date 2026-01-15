@@ -9,6 +9,7 @@ import { UserLogo } from "@/components/user-logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CompanyCards } from "@/components/company-cards";
+import { MultiWebsiteEmbed } from "@/components/ui/MultiWebsiteEmbed";
 import { FreelancerCards } from "@/components/freelancer-cards";
 import { ProductCards } from "@/components/product-cards";
 import { ProductToolCards } from "@/components/product-tool-cards";
@@ -123,6 +124,8 @@ export default function ResultsPage() {
   const [favoritesNotification, setFavoritesNotification] = useState({ show: false, itemName: '' });
   const [tinderMode, setTinderMode] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [embeddedWebsite, setEmbeddedWebsite] = useState<{url: string, title: string} | null>(null);
+  const [embeddedWebsites, setEmbeddedWebsites] = useState<Array<{id: string, url: string, title: string}>>([]);
 
 
   // WEB SEARCH STATE
@@ -775,6 +778,15 @@ export default function ResultsPage() {
 
 
 
+  const handleWebsiteEmbed = (url: string, title: string) => {
+    const id = Date.now().toString();
+    setEmbeddedWebsites(prev => [...prev, { id, url, title }]);
+  };
+
+  const closeWebsiteEmbed = (id: string) => {
+    setEmbeddedWebsites(prev => prev.filter(site => site.id !== id));
+  };
+
   const handleSelectConversation = (conversationId: string) => {
     loadConversation(conversationId);
     setCurrentConversationId(conversationId);
@@ -917,6 +929,17 @@ export default function ResultsPage() {
       {/* Main Content */}
       <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} pl-0 pr-0 md:px-6 lg:px-8 pb-8 pt-4 md:pt-6`} style={{ marginTop: typeof window !== 'undefined' && window.innerWidth < 768 && (showSuppliersSection || allCompanies.length > 0) ? '120px' : '0' }}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
+          {/* Website Embed Section */}
+          {embeddedWebsites.length > 0 && (
+            <div className="mb-6">
+              <MultiWebsiteEmbed
+                websites={embeddedWebsites}
+                onClose={closeWebsiteEmbed}
+                height="600px"
+              />
+            </div>
+          )}
+          
           <div className="space-y-4">
             {contentItems.map((item) => (
               <div key={item.id}>
@@ -1086,6 +1109,7 @@ export default function ResultsPage() {
                   tinderMode={tinderMode}
                   currentCardIndex={currentCardIndex}
                   onCardIndexChange={setCurrentCardIndex}
+                  onWebsiteEmbed={handleWebsiteEmbed}
                 />
               );
             } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
@@ -1109,6 +1133,7 @@ export default function ResultsPage() {
                     tinderMode={tinderMode}
                     currentCardIndex={currentCardIndex}
                     onCardIndexChange={setCurrentCardIndex}
+                    onWebsiteEmbed={handleWebsiteEmbed}
                   />
                   {products.length > 0 && <ProductToolCards products={products} />}
                 </div>

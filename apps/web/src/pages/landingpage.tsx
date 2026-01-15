@@ -24,9 +24,11 @@ import { FaqSection } from "@/components/ui/faq-section";
 import { SectionBadge } from "@/components/ui/section-badge";
 import { VCEventNotification } from "@/components/ui/vc-event-notification";
 import { CompanyNotifications } from "@/components/ui/company-notifications";
+import { MultiWebsiteEmbed } from "@/components/ui/MultiWebsiteEmbed";
 
 export default function LandingPage() {
   const [startVisible, setStartVisible] = useState(false);
+  const [embeddedWebsites, setEmbeddedWebsites] = useState<Array<{id: string, url: string, title: string}>>([]);
 
   // Handle navigation to home page
   const navigateToHomePage = () => {
@@ -38,9 +40,14 @@ export default function LandingPage() {
     window.location.href = "/auth?redirect=/home";
   };
 
-  // Handle navigation to onboarding page
-  const navigateToOnboarding = () => {
-    window.location.href = "/onboarding";
+  // Handle website embedding from company notifications
+  const handleWebsiteEmbed = (url: string, title: string) => {
+    const id = Date.now().toString();
+    setEmbeddedWebsites(prev => [...prev, { id, url, title }]);
+  };
+
+  const closeWebsiteEmbed = (id: string) => {
+    setEmbeddedWebsites(prev => prev.filter(site => site.id !== id));
   };
 
 
@@ -61,7 +68,7 @@ export default function LandingPage() {
     <div className="relative w-full min-h-screen bg-black overflow-hidden">
       {/* Notifications */}
       <VCEventNotification />
-      <CompanyNotifications />
+      <CompanyNotifications onWebsiteEmbed={handleWebsiteEmbed} />
       
       {/* Optimized Raycast Background - pauses when scrolled for performance */}
       <div className="fixed inset-0 w-full h-full z-0">
@@ -77,6 +84,17 @@ export default function LandingPage() {
 
       {/* Content Sections - no background, pure Raycast */}
       <div className="relative z-10">
+        {/* Website Embed Section */}
+        {embeddedWebsites.length > 0 && (
+          <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8">
+            <MultiWebsiteEmbed
+              websites={embeddedWebsites}
+              onClose={closeWebsiteEmbed}
+              height="600px"
+            />
+          </div>
+        )}
+        
         <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pb-0">
 
 

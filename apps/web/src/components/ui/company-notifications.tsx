@@ -2,8 +2,13 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink } from 'lucide-react';
 import { getCompanyNotifications, type CompanyNotification } from '@/services/company-notifications';
+import { InlineWebsiteEmbed } from './InlineWebsiteEmbed';
 
-export function CompanyNotifications() {
+interface CompanyNotificationsProps {
+  onWebsiteEmbed?: (url: string, title: string) => void;
+}
+
+export function CompanyNotifications({ onWebsiteEmbed }: CompanyNotificationsProps) {
   const [companies, setCompanies] = useState<CompanyNotification[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
@@ -37,8 +42,10 @@ export function CompanyNotifications() {
     return () => clearInterval(interval);
   }, [isVisible, companies.length]);
 
-  const handleVisitWebsite = (website: string) => {
-    if (website) {
+  const handleVisitWebsite = (website: string, companyName: string) => {
+    if (website && onWebsiteEmbed) {
+      onWebsiteEmbed(website, companyName);
+    } else if (website) {
       window.open(website, '_blank', 'noopener,noreferrer');
     }
   };
@@ -77,7 +84,7 @@ export function CompanyNotifications() {
               
               {currentCompany.website && (
                 <button
-                  onClick={() => handleVisitWebsite(currentCompany.website!)}
+                  onClick={() => handleVisitWebsite(currentCompany.website!, currentCompany.name)}
                   className="flex items-center gap-2 px-3 py-2 bg-white/15 hover:bg-white/25 text-white text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105 w-full justify-center"
                 >
                   <ExternalLink className="w-4 h-4" />
