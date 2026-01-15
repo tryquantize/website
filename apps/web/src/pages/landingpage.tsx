@@ -134,32 +134,34 @@ export default function LandingPage() {
 
       {/* Content Sections - no background, pure Raycast */}
       <div className="relative z-10">
-        {/* Website Embed Section - Always visible with paginated websites */}
-        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-white">Featured Companies ({allWebsites.length})</h2>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                disabled={currentPage === 0}
-                variant="outline"
-                size="sm"
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                Previous
-              </Button>
-              <span className="px-3 py-1 text-sm text-white/70">
-                {currentPage + 1} / {totalPages}
-              </span>
-              <Button
-                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-                disabled={currentPage === totalPages - 1}
-                variant="outline"
-                size="sm"
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                Next
-              </Button>
+        {/* Website Embed Section - Full width with vertical padding */}
+        <div className="w-full px-0 py-16">
+          <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 mb-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-white">Featured Companies ({allWebsites.length})</h2>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                  disabled={currentPage === 0}
+                  variant="outline"
+                  size="sm"
+                  className="border-white/20 text-white hover:bg-white/10"
+                >
+                  Previous
+                </Button>
+                <span className="px-3 py-1 text-sm text-white/70">
+                  {currentPage + 1} / {totalPages}
+                </span>
+                <Button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={currentPage === totalPages - 1}
+                  variant="outline"
+                  size="sm"
+                  className="border-white/20 text-white hover:bg-white/10"
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           </div>
           <MultiWebsiteEmbed
