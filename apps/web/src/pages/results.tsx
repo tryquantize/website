@@ -929,17 +929,6 @@ export default function ResultsPage() {
       {/* Main Content */}
       <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} pl-0 pr-0 md:px-6 lg:px-8 pb-8 pt-4 md:pt-6`} style={{ marginTop: typeof window !== 'undefined' && window.innerWidth < 768 && (showSuppliersSection || allCompanies.length > 0) ? '120px' : '0' }}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
-          {/* Website Embed Section */}
-          {embeddedWebsites.length > 0 && (
-            <div className="mb-6">
-              <MultiWebsiteEmbed
-                websites={embeddedWebsites}
-                onClose={closeWebsiteEmbed}
-                height="600px"
-              />
-            </div>
-          )}
-          
           <div className="space-y-4">
             {contentItems.map((item) => (
               <div key={item.id}>
@@ -1101,16 +1090,28 @@ export default function ResultsPage() {
               return <ProductCards products={allCompanies} />;
             } else if (currentTypes.has('company') && currentTypes.size === 1) {
               return (
-                <CompanyCards
-                  companies={allCompanies}
-                  webSearchEnabled={webSearchEnabled}
-                  searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
-                  selectedLocations={currentLocations}
-                  tinderMode={tinderMode}
-                  currentCardIndex={currentCardIndex}
-                  onCardIndexChange={setCurrentCardIndex}
-                  onWebsiteEmbed={handleWebsiteEmbed}
-                />
+                <div>
+                  <CompanyCards
+                    companies={allCompanies}
+                    webSearchEnabled={webSearchEnabled}
+                    searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+                    selectedLocations={currentLocations}
+                    tinderMode={tinderMode}
+                    currentCardIndex={currentCardIndex}
+                    onCardIndexChange={setCurrentCardIndex}
+                    onWebsiteEmbed={handleWebsiteEmbed}
+                  />
+                  {/* Website Embed Section - Below Company Cards */}
+                  {embeddedWebsites.length > 0 && (
+                    <div className="mt-6">
+                      <MultiWebsiteEmbed
+                        websites={embeddedWebsites}
+                        onClose={closeWebsiteEmbed}
+                        height="600px"
+                      />
+                    </div>
+                  )}
+                </div>
               );
             } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
               return <FreelancerCards freelancers={allCompanies} />;
@@ -1135,6 +1136,16 @@ export default function ResultsPage() {
                     onCardIndexChange={setCurrentCardIndex}
                     onWebsiteEmbed={handleWebsiteEmbed}
                   />
+                  {/* Website Embed Section - Below Company Cards */}
+                  {embeddedWebsites.length > 0 && (
+                    <div className="mt-6">
+                      <MultiWebsiteEmbed
+                        websites={embeddedWebsites}
+                        onClose={closeWebsiteEmbed}
+                        height="600px"
+                      />
+                    </div>
+                  )}
                   {products.length > 0 && <ProductToolCards products={products} />}
                 </div>
               );
