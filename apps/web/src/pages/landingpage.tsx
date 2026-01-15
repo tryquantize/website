@@ -26,7 +26,6 @@ const StorySection = lazy(() => import("@/components/ui/story-section").then(mod
 import { FaqSection } from "@/components/ui/faq-section";
 import { SectionBadge } from "@/components/ui/section-badge";
 import { VCEventNotification } from "@/components/ui/vc-event-notification";
-import { CompanyNotifications } from "@/components/ui/company-notifications";
 import { MultiWebsiteEmbed } from "@/components/ui/MultiWebsiteEmbed";
 
 export default function LandingPage() {
@@ -34,7 +33,7 @@ export default function LandingPage() {
   const [firestoreCompanies, setFirestoreCompanies] = useState<Company[]>([]);
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
   
-  // Default websites to display on page load
+  // Default websites to display on page load (limit to 4-6 for performance)
   const defaultWebsites = [
     { id: 'clarus', url: 'https://clarus.so', title: 'Clarus' },
     { id: 'openfoundry', url: 'https://openfoundry.ai', title: 'OpenFoundry' },
@@ -43,6 +42,8 @@ export default function LandingPage() {
   ];
   
   const [embeddedWebsites, setEmbeddedWebsites] = useState<Array<{id: string, url: string, title: string}>>(defaultWebsites);
+  const [currentPage, setCurrentPage] = useState(0);
+  const websitesPerPage = 4;
 
   // Handle navigation to home page
   const navigateToHomePage = () => {
@@ -54,16 +55,14 @@ export default function LandingPage() {
     window.location.href = "/auth?redirect=/home";
   };
 
-  // Handle website embedding from company notifications
+  // Handle website embedding from popup notifications
   const handleWebsiteEmbed = (url: string, title: string) => {
     const id = Date.now().toString();
     const newWebsite = { id, url, title };
     
-    // Add new website to the beginning and remove if it already exists
-    setEmbeddedWebsites(prev => {
-      const filtered = prev.filter(site => site.url !== url);
-      return [newWebsite, ...filtered];
-    });
+    // Add new website to current page, remove if exists
+    const filtered = currentWebsites.filter(site => site.url !== url);
+    setEmbeddedWebsites([newWebsite, ...filtered.slice(0, websitesPerPage - 1)]);
   };
 
   const closeWebsiteEmbed = (id: string) => {
@@ -85,12 +84,9 @@ export default function LandingPage() {
             title: company.companyName
           }));
         
-        // Combine default websites with Firestore companies
-        setEmbeddedWebsites([...defaultWebsites, ...companyWebsites]);
-        setFirestoreCompanies(companies);
+        setFirestoreCompanies(companyWebsites);
       } catch (error) {
         console.error('Failed to fetch companies:', error);
-        // Keep default websites if Firestore fails
       } finally {
         setIsLoadingCompanies(false);
       }
@@ -98,6 +94,14 @@ export default function LandingPage() {
 
     fetchCompanies();
   }, []);
+
+  // Get current page websites
+  const allWebsites = [...defaultWebsites, ...firestoreCompanies];
+  const totalPages = Math.ceil(allWebsites.length / websitesPerPage);
+  const currentWebsites = allWebsites.slice(
+    currentPage * websitesPerPage,
+    (currentPage + 1) * websitesPerPage
+  );
 
   // Fade in the buttons after page loads
   useEffect(() => {
@@ -115,7 +119,6 @@ export default function LandingPage() {
     <div className="relative w-full min-h-screen bg-black overflow-hidden">
       {/* Notifications */}
       <VCEventNotification />
-      <CompanyNotifications onWebsiteEmbed={handleWebsiteEmbed} />
       
       {/* Optimized Raycast Background - pauses when scrolled for performance */}
       <div className="fixed inset-0 w-full h-full z-0">
@@ -131,10 +134,36 @@ export default function LandingPage() {
 
       {/* Content Sections - no background, pure Raycast */}
       <div className="relative z-10">
-        {/* Website Embed Section - Always visible with default websites */}
+        {/* Website Embed Section - Always visible with paginated websites */}
         <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-white">Featured Companies ({allWebsites.length})</h2>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                variant="outline"
+                size="sm"
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                Previous
+              </Button>
+              <span className="px-3 py-1 text-sm text-white/70">
+                {currentPage + 1} / {totalPages}
+              </span>
+              <Button
+                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={currentPage === totalPages - 1}
+                variant="outline"
+                size="sm"
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
           <MultiWebsiteEmbed
-            websites={embeddedWebsites}
+            websites={currentWebsites}
             onClose={closeWebsiteEmbed}
             height="600px"
           />
