@@ -28,7 +28,16 @@ import { MultiWebsiteEmbed } from "@/components/ui/MultiWebsiteEmbed";
 
 export default function LandingPage() {
   const [startVisible, setStartVisible] = useState(false);
-  const [embeddedWebsites, setEmbeddedWebsites] = useState<Array<{id: string, url: string, title: string}>>([]);
+  
+  // Default websites to display on page load
+  const defaultWebsites = [
+    { id: 'zelos', url: 'https://zelos.cloud', title: 'Zelos Cloud' },
+    { id: 'openfoundry', url: 'https://openfoundry.ai', title: 'OpenFoundry' },
+    { id: 'smallest', url: 'https://smallest.ai', title: 'Smallest.ai' },
+    { id: 'raycaster', url: 'https://www.raycaster.ai', title: 'Raycaster' }
+  ];
+  
+  const [embeddedWebsites, setEmbeddedWebsites] = useState<Array<{id: string, url: string, title: string}>>(defaultWebsites);
 
   // Handle navigation to home page
   const navigateToHomePage = () => {
@@ -43,7 +52,13 @@ export default function LandingPage() {
   // Handle website embedding from company notifications
   const handleWebsiteEmbed = (url: string, title: string) => {
     const id = Date.now().toString();
-    setEmbeddedWebsites(prev => [...prev, { id, url, title }]);
+    const newWebsite = { id, url, title };
+    
+    // Add new website to the beginning and remove if it already exists
+    setEmbeddedWebsites(prev => {
+      const filtered = prev.filter(site => site.url !== url);
+      return [newWebsite, ...filtered];
+    });
   };
 
   const closeWebsiteEmbed = (id: string) => {
@@ -84,16 +99,14 @@ export default function LandingPage() {
 
       {/* Content Sections - no background, pure Raycast */}
       <div className="relative z-10">
-        {/* Website Embed Section */}
-        {embeddedWebsites.length > 0 && (
-          <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8">
-            <MultiWebsiteEmbed
-              websites={embeddedWebsites}
-              onClose={closeWebsiteEmbed}
-              height="600px"
-            />
-          </div>
-        )}
+        {/* Website Embed Section - Always visible with default websites */}
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8">
+          <MultiWebsiteEmbed
+            websites={embeddedWebsites}
+            onClose={closeWebsiteEmbed}
+            height="600px"
+          />
+        </div>
         
         <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pb-0">
 
