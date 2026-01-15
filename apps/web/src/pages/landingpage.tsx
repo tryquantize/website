@@ -135,7 +135,7 @@ export default function LandingPage() {
       {/* Content Sections - no background, pure Raycast */}
       <div className="relative z-10">
         {/* Website Embed Section - Full width with vertical padding */}
-        <div className="w-full px-0 py-16">
+        <div className="w-full px-0 py-24">
           <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 mb-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold text-white">Featured Companies ({allWebsites.length})</h2>
