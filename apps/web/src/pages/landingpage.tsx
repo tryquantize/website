@@ -31,7 +31,7 @@ export default function LandingPage() {
   
   // Default websites to display on page load
   const defaultWebsites = [
-    { id: 'zelos', url: 'https://zelos.cloud', title: 'Zelos Cloud' },
+    { id: 'clarus', url: 'https://clarus.so', title: 'Clarus' },
     { id: 'openfoundry', url: 'https://openfoundry.ai', title: 'OpenFoundry' },
     { id: 'smallest', url: 'https://smallest.ai', title: 'Smallest.ai' },
     { id: 'raycaster', url: 'https://www.raycaster.ai', title: 'Raycaster' }
