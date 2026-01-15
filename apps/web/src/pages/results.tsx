@@ -1116,18 +1116,11 @@ export default function ResultsPage() {
             } else if (currentTypes.has('freelancer') && currentTypes.size === 1) {
               return <FreelancerCards freelancers={allCompanies} />;
             } else {
-              // Show exactly 5 company cards + remaining as product cards when no specific type is selected
-              const companies = allCompanies.slice(0, 5);
-              const products = allCompanies.slice(5, 10).map(companyItem => ({
-                name: companyItem.name,
-                description: companyItem.description,
-                pricing: companyItem.pricing,
-                website: companyItem.website
-              }));
+              // Show all companies as company cards when no specific type is selected
               return (
                 <div className="mt-6">
                   <CompanyCards
-                    companies={companies}
+                    companies={allCompanies}
                     webSearchEnabled={webSearchEnabled}
                     searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
                     selectedLocations={currentLocations}
@@ -1146,7 +1139,6 @@ export default function ResultsPage() {
                       />
                     </div>
                   )}
-                  {products.length > 0 && <ProductToolCards products={products} />}
                 </div>
               );
             }
