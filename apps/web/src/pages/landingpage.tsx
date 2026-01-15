@@ -5,7 +5,7 @@ import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/ui/animated-hero";
-import { OptimizedRaycastBackground } from "@/components/ui/raycast-animated-background";
+import { GeometricBackground } from "@/components/ui/geometric-background";
 
 // Components
 import { motion, useInView } from "framer-motion";
@@ -120,12 +120,8 @@ export default function LandingPage() {
       {/* Notifications */}
       <VCEventNotification />
       
-      {/* Optimized Raycast Background - pauses when scrolled for performance */}
-      <div className="fixed inset-0 w-full h-full z-0">
-        <OptimizedRaycastBackground />
-        {/* Dark vignette overlay for better text visibility */}
-        <div className="absolute inset-0 bg-gradient-radial from-transparent via-black/20 to-black/60" />
-      </div>
+      {/* New Geometric Background */}
+      <GeometricBackground />
 
       {/* Hero Section */}
       <section className="relative w-full min-h-[80vh] sm:h-[85vh] flex items-center justify-center z-10 px-4 pt-20 md:pt-24">
@@ -174,24 +170,24 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pb-0">
 
 
-          {/* Video Section */}
-          <section className="my-24 sm:my-32 md:my-40 relative">
-            <div className="text-center mb-20">
+          {/* Video Section - Full Width */}
+          <section className="my-24 sm:my-32 md:my-40 relative -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-12">
+            <div className="text-center mb-20 px-4 sm:px-6 md:px-8 lg:px-12">
               <SectionBadge>SEE IT IN ACTION</SectionBadge>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#f5f5f7] mb-6 tracking-tight">Experience Quantize</h2>
               <p className="text-[#86868b] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">Watch how Quantize transforms complex searches into instant, accurate results</p>
             </div>
-            <div className="container mx-auto px-4">
-              <div className="max-w-15xl mx-auto">
+            <div className="w-full">
+              <div className="w-full">
                 <motion.div
-                  className="bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20 rounded-2xl p-6 shadow-2xl"
+                  className="bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border-y border-white/20 shadow-2xl"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
                   viewport={{ once: true, amount: 0.3 }}
                 >
                   <video
-                    className="w-full h-auto rounded-xl"
+                    className="w-full h-auto"
                     autoPlay
                     loop
                     muted
