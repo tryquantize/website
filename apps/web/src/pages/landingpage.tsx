@@ -43,7 +43,7 @@ export default function LandingPage() {
   
   const [embeddedWebsites, setEmbeddedWebsites] = useState<Array<{id: string, url: string, title: string}>>(defaultWebsites);
   const [currentPage, setCurrentPage] = useState(0);
-  const websitesPerPage = 4;
+  const websitesPerPage = 6;
 
   // Handle navigation to home page
   const navigateToHomePage = () => {
