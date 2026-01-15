@@ -12,6 +12,9 @@ import { motion, useInView } from "framer-motion";
 import { Search, Bot, Megaphone, Zap, Target, Scale, Sparkles, Brain, Trophy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Services
+import { CompanyService, type Company } from "@/services/company-service";
+
 // Lazy load heavy components below the fold
 const Featured_05 = lazy(() => import("@/components/ui/globe-feature-section"));
 const FeaturesSection = lazy(() => import("@/components/ui/features-section"));
@@ -28,6 +31,8 @@ import { MultiWebsiteEmbed } from "@/components/ui/MultiWebsiteEmbed";
 
 export default function LandingPage() {
   const [startVisible, setStartVisible] = useState(false);
+  const [firestoreCompanies, setFirestoreCompanies] = useState<Company[]>([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(true);
   
   // Default websites to display on page load
   const defaultWebsites = [
@@ -66,6 +71,33 @@ export default function LandingPage() {
   };
 
 
+
+  // Fetch companies from Firestore
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const companies = await CompanyService.getAllCompanies();
+        const companyWebsites = companies
+          .filter(company => company.website)
+          .map(company => ({
+            id: company.id,
+            url: company.website,
+            title: company.companyName
+          }));
+        
+        // Combine default websites with Firestore companies
+        setEmbeddedWebsites([...defaultWebsites, ...companyWebsites]);
+        setFirestoreCompanies(companies);
+      } catch (error) {
+        console.error('Failed to fetch companies:', error);
+        // Keep default websites if Firestore fails
+      } finally {
+        setIsLoadingCompanies(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
 
   // Fade in the buttons after page loads
   useEffect(() => {
