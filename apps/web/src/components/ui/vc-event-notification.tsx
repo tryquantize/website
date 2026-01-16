@@ -9,6 +9,9 @@ export function VCEventNotification() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
+    // Clear localStorage to show notification again
+    localStorage.removeItem('vc-event-dismissed');
+    
     const dismissed = localStorage.getItem('vc-event-dismissed');
     if (dismissed) {
       setIsDismissed(true);
@@ -17,7 +20,7 @@ export function VCEventNotification() {
 
     const timer = setTimeout(() => {
       setIsVisible(true);
-    }, 3000);
+    }, 500); // Show after 500ms
 
     return () => clearTimeout(timer);
   }, []);
