@@ -39,34 +39,18 @@ export default function EsummitRegistrationPage() {
   const fetchEcellCompanies = async () => {
     try {
       console.log('Fetching E-Cell companies...');
-      // Fetch all companies and filter for ecellEventInterested = true
-      const response = await fetch('https://website-ocrz.onrender.com/firebase-test');
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Firebase test response:', data);
-        
-        // For now, fetch from main companies collection and filter
-        const companiesResponse = await fetch('https://website-ocrz.onrender.com/search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: '', webSearchEnabled: false })
-        });
-        
-        if (companiesResponse.ok) {
-          const searchData = await companiesResponse.json();
-          // Filter companies where ecellEventInterested is true
-          const ecellCompanies = searchData.companies?.filter(company => 
-            company.ecellEventInterested === true
-          ) || [];
-          console.log('E-Cell interested companies:', ecellCompanies);
-          setCompanies(ecellCompanies);
-        } else {
-          setCompanies([]);
-        }
-      } else {
-        console.error('Failed to fetch companies');
-        setCompanies([]);
-      }
+      // Use CompanyService to get all companies and filter
+      const { CompanyService } = await import('@/services/company-service');
+      const allCompanies = await CompanyService.getAllCompanies();
+      
+      // Filter for companies with ecellEventInterested = true
+      const ecellCompanies = allCompanies.filter(company => 
+        company.ecellEventInterested === true
+      );
+      
+      console.log('All companies:', allCompanies.length);
+      console.log('E-Cell interested companies:', ecellCompanies);
+      setCompanies(ecellCompanies);
     } catch (error) {
       console.error('Error fetching companies:', error);
       setCompanies([]);
