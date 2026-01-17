@@ -31,6 +31,18 @@ import { insertUserSchema, insertAiToolSchema, insertContactRequestSchema, inser
 import { z } from "zod";
 import fetch from 'node-fetch';
 
+// Partner request validation schema
+const partnerRequestSchema = z.object({
+  userName: z.string().min(1, "Name is required"),
+  userEmail: z.string().email("Invalid email format"),
+  userPhone: z.string().min(1, "Phone number is required"),
+  companyName: z.string().min(1, "Company name is required"),
+  companyEmail: z.string().email().optional().or(z.literal("")),
+  companyWebsite: z.string().url().optional().or(z.literal("")),
+  companyLinkedIn: z.string().url().optional().or(z.literal("")),
+  searchQuery: z.string().optional()
+});
+
 /**
  * Register all API routes with the Express application
  * 
@@ -623,6 +635,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Click recorded" });
     } catch (error) {
       res.status(500).json({ message: "Failed to record click" });
+    }
+  });
+
+  // Partner request route
+  app.post("/api/partner-requests", async (req, res) => {
+    try {
+      // Validate the request data using Zod schema
+      const validatedData = partnerRequestSchema.parse(req.body);
+      
+      // Store partner request (using storage service for now)
+      const partnerRequest = {
+        ...validatedData,
+        timestamp: new Date().toISOString(),
+        status: 'pending'
+      };
+      
+      // For now, we'll log it and return success
+      // In production, you'd want to store this in Firestore
+      console.log('Partner request received:', partnerRequest);
+      
+      // Generate a unique request ID
+      const requestId = `pr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      res.json({ 
+        success: true, 
+        message: "Partner request submitted successfully",
+        requestId
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid request data",
+          errors: error.errors
+        });
+      }
+      
+      console.error('Partner request error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to submit partner request" 
+      });
     }
   });
 

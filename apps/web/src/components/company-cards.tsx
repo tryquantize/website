@@ -9,6 +9,7 @@ import { PartnerPopup } from "@/components/partner-popup";
 import { PartnerSuccessNotification } from "@/components/partner-success-notification";
 
 import { motion } from "framer-motion";
+import { extractCompanyContactInfo, CompanyContactInfo } from "@/utils/company-contact-utils";
 import { apiRequest } from "@/lib/queryClient";
 import "@/styles/company-card.css";
 
@@ -159,7 +160,7 @@ export function CompanyCards({
   const [isLoadingComparison, setIsLoadingComparison] = useState(false);
   const [engagementData, setEngagementData] = useState<{[key: string]: {views: number, clicks: number, saves: number}}>({});
   const [swipedCards, setSwipedCards] = useState<Set<number>>(new Set());
-  const [partnerPopup, setPartnerPopup] = useState<{isOpen: boolean, companyName: string}>({isOpen: false, companyName: ""});
+  const [partnerPopup, setPartnerPopup] = useState<{isOpen: boolean, companyContactInfo: CompanyContactInfo}>({isOpen: false, companyContactInfo: {companyName: ""}});
   const [showSuccessNotification, setShowSuccessNotification] = useState<{isVisible: boolean, companyName: string}>({isVisible: false, companyName: ""});
 
   const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
@@ -258,27 +259,57 @@ export function CompanyCards({
 
   const handlePartnerRequest = (companyName: string) => {
     trackEngagement(companyName, 'click');
-    setPartnerPopup({isOpen: true, companyName});
+    const company = filteredCompanies.find(c => c.name === companyName);
+    if (company) {
+      const contactInfo = extractCompanyContactInfo(company);
+      setPartnerPopup({isOpen: true, companyContactInfo: contactInfo});
+    }
   };
 
-  const handlePartnerSubmit = (formData: {name: string, phone: string, email: string}) => {
-    // Close popup
-    setPartnerPopup({isOpen: false, companyName: ""});
-    
-    // Show success notification
-    setShowSuccessNotification({isVisible: true, companyName: partnerPopup.companyName});
-    
-    // Hide notification after 4 seconds
-    setTimeout(() => {
-      setShowSuccessNotification({isVisible: false, companyName: ""});
-    }, 4000);
-    
-    // Here you could also send the data to your backend
-    console.log('Partnership request submitted:', {
-      company: partnerPopup.companyName,
-      searchQuery,
-      ...formData
-    });
+  const handlePartnerSubmit = async (formData: {
+    name: string;
+    phone: string;
+    email: string;
+    companyEmail?: string;
+    companyWebsite?: string;
+    companyLinkedIn?: string;
+  }) => {
+    try {
+      // Submit to API
+      const response = await apiRequest('POST', '/api/partner-requests', {
+        userName: formData.name,
+        userEmail: formData.email,
+        userPhone: formData.phone,
+        companyName: partnerPopup.companyContactInfo.companyName,
+        companyEmail: formData.companyEmail,
+        companyWebsite: formData.companyWebsite,
+        companyLinkedIn: formData.companyLinkedIn,
+        searchQuery
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Close popup
+        setPartnerPopup({isOpen: false, companyContactInfo: {companyName: ""}});
+        
+        // Show success notification
+        setShowSuccessNotification({isVisible: true, companyName: partnerPopup.companyContactInfo.companyName});
+        
+        // Hide notification after 4 seconds
+        setTimeout(() => {
+          setShowSuccessNotification({isVisible: false, companyName: ""});
+        }, 4000);
+        
+        console.log('Partnership request submitted successfully:', result.requestId);
+      } else {
+        console.error('Partner request failed:', result.message);
+        alert('Failed to submit partner request. Please try again.');
+      }
+    } catch (error) {
+      console.error('Partner request error:', error);
+      alert('Failed to submit partner request. Please try again.');
+    }
   };
 
   const handleSwipe = (direction: 'left' | 'right') => {
@@ -2121,8 +2152,11 @@ export function CompanyCards({
       {/* Partner Popup */}
       <PartnerPopup
         isOpen={partnerPopup.isOpen}
-        onClose={() => setPartnerPopup({isOpen: false, companyName: ""})}
-        companyName={partnerPopup.companyName}
+        onClose={() => setPartnerPopup({isOpen: false, companyContactInfo: {companyName: ""}})}
+        companyName={partnerPopup.companyContactInfo.companyName}
+        companyEmail={partnerPopup.companyContactInfo.companyEmail}
+        companyWebsite={partnerPopup.companyContactInfo.companyWebsite}
+        companyLinkedIn={partnerPopup.companyContactInfo.companyLinkedIn}
         searchQuery={searchQuery}
         onSubmit={handlePartnerSubmit}
       />

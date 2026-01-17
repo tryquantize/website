@@ -8,11 +8,30 @@ interface PartnerPopupProps {
   isOpen: boolean;
   onClose: () => void;
   companyName: string;
+  companyEmail?: string;
+  companyWebsite?: string;
+  companyLinkedIn?: string;
   searchQuery?: string;
-  onSubmit: (formData: { name: string; phone: string; email: string }) => void;
+  onSubmit: (formData: { 
+    name: string; 
+    phone: string; 
+    email: string;
+    companyEmail?: string;
+    companyWebsite?: string;
+    companyLinkedIn?: string;
+  }) => void;
 }
 
-export function PartnerPopup({ isOpen, onClose, companyName, searchQuery, onSubmit }: PartnerPopupProps) {
+export function PartnerPopup({ 
+  isOpen, 
+  onClose, 
+  companyName, 
+  companyEmail,
+  companyWebsite,
+  companyLinkedIn,
+  searchQuery, 
+  onSubmit 
+}: PartnerPopupProps) {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -22,7 +41,12 @@ export function PartnerPopup({ isOpen, onClose, companyName, searchQuery, onSubm
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name && formData.phone && formData.email) {
-      onSubmit(formData);
+      onSubmit({
+        ...formData,
+        companyEmail,
+        companyWebsite,
+        companyLinkedIn
+      });
       setFormData({ name: "", phone: "", email: "" });
     }
   };
@@ -64,12 +88,39 @@ export function PartnerPopup({ isOpen, onClose, companyName, searchQuery, onSubm
             </div>
 
             <div className="mb-4">
-              <p className="text-white/80 text-sm">
+              <p className="text-white/80 text-sm mb-2">
                 Request partnership with <span className="font-semibold text-white">{companyName}</span>
                 {searchQuery && (
                   <span className="text-white/60"> for "{searchQuery}"</span>
                 )}
               </p>
+              
+              {/* Show available company contact information */}
+              {(companyEmail || companyWebsite || companyLinkedIn) && (
+                <div className="bg-white/5 rounded-lg p-3 mt-2">
+                  <p className="text-xs text-white/60 mb-2">Company Contact Information:</p>
+                  <div className="space-y-1 text-xs">
+                    {companyEmail && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/60">Email:</span>
+                        <span className="text-white/80">{companyEmail}</span>
+                      </div>
+                    )}
+                    {companyWebsite && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/60">Website:</span>
+                        <span className="text-white/80 truncate">{companyWebsite}</span>
+                      </div>
+                    )}
+                    {companyLinkedIn && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/60">LinkedIn:</span>
+                        <span className="text-white/80 truncate">{companyLinkedIn}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
