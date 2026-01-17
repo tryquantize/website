@@ -107,20 +107,20 @@ export function DragDropResults({ companies }: DragDropResultsProps) {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          {/* Drop Zone Indicator */}
-          <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 z-10 ${
-            draggedIndex !== null ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}>
-            <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg p-8 text-center">
-              <Plus className="w-12 h-12 text-blue-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">
-                Drop here to expand
-              </h3>
-              <p className="text-white/60">
-                Release to view company details with website
-              </p>
+          {/* Drop Zone Indicator - Only show when dragging AND no expanded companies */}
+          {draggedIndex !== null && expandedCompanies.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg p-8 text-center">
+                <Plus className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  Drop here to expand
+                </h3>
+                <p className="text-white/60">
+                  Release to view company details with website
+                </p>
+              </div>
             </div>
-          </div>
+          )}
           {expandedCompanies.length === 0 ? (
             <div className={`flex items-center justify-center h-full transition-all duration-300 ${
               draggedIndex !== null ? 'blur-sm' : ''
@@ -136,9 +136,7 @@ export function DragDropResults({ companies }: DragDropResultsProps) {
               </div>
             </div>
           ) : (
-            <div className={`p-4 space-y-6 h-full overflow-y-auto transition-all duration-300 ${
-              draggedIndex !== null ? 'blur-sm' : ''
-            }`}>
+            <div className="p-4 space-y-6 h-full overflow-y-auto">
               <AnimatePresence>
                 {expandedCompanies.map((expanded) => (
                   <ExpandedCompanyPair
