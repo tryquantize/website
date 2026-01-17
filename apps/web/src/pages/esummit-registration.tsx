@@ -251,6 +251,42 @@ export default function EsummitRegistrationPage() {
                   {company.uspTagline && (
                     <div><span className="text-white/60">USP:</span> <span className="text-white/80">{company.uspTagline}</span></div>
                   )}
+                  {company.customerSegments && company.customerSegments.length > 0 && (
+                    <div>
+                      <span className="text-white/60">Customer Segments:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {company.customerSegments.map((segment, idx) => (
+                          <span key={idx} className="bg-cyan-600/20 text-cyan-300 px-2 py-1 rounded text-xs">
+                            {segment}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {company.deploymentType && company.deploymentType.length > 0 && (
+                    <div>
+                      <span className="text-white/60">Deployment:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {company.deploymentType.map((type, idx) => (
+                          <span key={idx} className="bg-orange-600/20 text-orange-300 px-2 py-1 rounded text-xs">
+                            {type}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {company.idealScenarios && company.idealScenarios.length > 0 && (
+                    <div>
+                      <span className="text-white/60">Ideal For:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {company.idealScenarios.map((scenario, idx) => (
+                          <span key={idx} className="bg-pink-600/20 text-pink-300 px-2 py-1 rounded text-xs">
+                            {scenario}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {company.industriesServed && company.industriesServed.length > 0 && (
                     <div>
                       <span className="text-white/60">Industries:</span>
@@ -265,7 +301,7 @@ export default function EsummitRegistrationPage() {
                   )}
                   {company.pricingModel && company.pricingModel.length > 0 && (
                     <div>
-                      <span className="text-white/60">Pricing:</span>
+                      <span className="text-white/60">Pricing Model:</span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {company.pricingModel.map((model, idx) => (
                           <span key={idx} className="bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded text-xs">
@@ -273,6 +309,46 @@ export default function EsummitRegistrationPage() {
                           </span>
                         ))}
                       </div>
+                    </div>
+                  )}
+                  {company.pricingRanges && company.pricingRanges.length > 0 && (
+                    <div>
+                      <span className="text-white/60">Pricing Range:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {company.pricingRanges.map((range, idx) => (
+                          <span key={idx} className="bg-green-600/20 text-green-300 px-2 py-1 rounded text-xs">
+                            {range}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {company.trialAvailable && (
+                    <div><span className="text-white/60">Trial:</span> <span className="text-green-300">Available</span></div>
+                  )}
+                  {company.topClients && company.topClients.length > 0 && (
+                    <div>
+                      <span className="text-white/60">Top Clients:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {company.topClients.map((client, idx) => (
+                          <span key={idx} className="bg-indigo-600/20 text-indigo-300 px-2 py-1 rounded text-xs">
+                            {client}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {company.testimonialPage && (
+                    <div>
+                      <span className="text-white/60">Testimonials:</span>
+                      <a 
+                        href={company.testimonialPage} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 transition-colors ml-2"
+                      >
+                        View Testimonials
+                      </a>
                     </div>
                   )}
                 </div>
