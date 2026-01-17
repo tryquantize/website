@@ -91,6 +91,7 @@ export function AdminDashboard() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [showAddCompanyPopup, setShowAddCompanyPopup] = useState(false);
   const [logs, setLogs] = useState<Array<{id: string, timestamp: string, type: string, message: string, details?: any}>>([]);
+  const [wsConnected, setWsConnected] = useState(false);
 
   useEffect(() => {
     loadRequests();
@@ -107,6 +108,42 @@ export function AdminDashboard() {
       return;
     }
   }, []);
+
+  // WebSocket connection for real-time logs
+  useEffect(() => {
+    if (activeTab === 'logs') {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const ws = new WebSocket(`${protocol}//${window.location.host}/api/logs`);
+      
+      ws.onopen = () => {
+        setWsConnected(true);
+        console.log('Connected to debug logs');
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const logEntry = JSON.parse(event.data);
+          setLogs(prev => [...prev.slice(-99), logEntry]); // Keep last 100 logs
+        } catch (error) {
+          console.error('Error parsing log message:', error);
+        }
+      };
+      
+      ws.onclose = () => {
+        setWsConnected(false);
+        console.log('Disconnected from debug logs');
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setWsConnected(false);
+      };
+      
+      return () => {
+        ws.close();
+      };
+    }
+  }, [activeTab]);
 
   const loadRequests = async () => {
     try {
@@ -417,10 +454,10 @@ export function AdminDashboard() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-semibold text-white">System Debug Logs</h3>
                     <div className="flex gap-2">
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                      <Button size="sm" className="bg-white text-black hover:bg-gray-200">
                         Clear Logs
                       </Button>
-                      <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                      <Button size="sm" className="bg-white text-black hover:bg-gray-200">
                         Export Logs
                       </Button>
                     </div>
@@ -446,54 +483,49 @@ export function AdminDashboard() {
                   {/* Logs Display */}
                   <div className="bg-gray-900 rounded-lg p-4 h-96 overflow-y-auto font-mono text-sm">
                     <div className="space-y-2">
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-500 text-xs">2025-01-17 15:30:45</span>
-                        <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs">API</span>
-                        <span className="text-green-400">GET /api/analytics/companies - 200 OK (245ms)</span>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-500 text-xs">2025-01-17 15:30:44</span>
-                        <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs">DB</span>
-                        <span className="text-blue-400">Firebase: getDocs(companies) - 276 documents retrieved</span>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-500 text-xs">2025-01-17 15:30:42</span>
-                        <span className="bg-green-600 text-white px-2 py-1 rounded text-xs">AUTH</span>
-                        <span className="text-yellow-400">Admin login successful: admin@quantize.site</span>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-500 text-xs">2025-01-17 15:30:40</span>
-                        <span className="bg-orange-600 text-white px-2 py-1 rounded text-xs">AI</span>
-                        <span className="text-cyan-400">AI Service: POST /search - GPT-4o Mini (1.2s)</span>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-500 text-xs">2025-01-17 15:30:38</span>
-                        <span className="bg-red-600 text-white px-2 py-1 rounded text-xs">ERROR</span>
-                        <span className="text-red-400">Failed to increment analytics: Company not found</span>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-500 text-xs">2025-01-17 15:30:35</span>
-                        <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs">API</span>
-                        <span className="text-green-400">POST /api/analytics/company/openai - 200 OK (156ms)</span>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-500 text-xs">2025-01-17 15:30:33</span>
-                        <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs">DB</span>
-                        <span className="text-blue-400">Firebase: getDoc(companies/openai) - Document found</span>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <span className="text-gray-500 text-xs">2025-01-17 15:30:30</span>
-                        <span className="bg-yellow-600 text-white px-2 py-1 rounded text-xs">PERF</span>
-                        <span className="text-orange-400">Slow query detected: Analytics aggregation (3.4s)</span>
-                      </div>
+                      {logs.length === 0 ? (
+                        <div className="text-gray-500 text-center py-8">
+                          {wsConnected ? 'Waiting for logs...' : 'Connecting to log stream...'}
+                        </div>
+                      ) : (
+                        logs.map((log) => (
+                          <div key={log.id} className="flex items-start gap-3">
+                            <span className="text-gray-500 text-xs">
+                              {new Date(log.timestamp).toLocaleTimeString()}
+                            </span>
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              log.type === 'API' ? 'bg-blue-600 text-white' :
+                              log.type === 'DB' ? 'bg-purple-600 text-white' :
+                              log.type === 'AUTH' ? 'bg-green-600 text-white' :
+                              log.type === 'AI' ? 'bg-orange-600 text-white' :
+                              log.type === 'ERROR' ? 'bg-red-600 text-white' :
+                              'bg-yellow-600 text-white'
+                            }`}>
+                              {log.type}
+                            </span>
+                            <span className={`${
+                              log.type === 'ERROR' ? 'text-red-400' :
+                              log.type === 'API' ? 'text-green-400' :
+                              log.type === 'DB' ? 'text-blue-400' :
+                              log.type === 'AUTH' ? 'text-yellow-400' :
+                              log.type === 'AI' ? 'text-cyan-400' :
+                              'text-orange-400'
+                            }`}>
+                              {log.message}
+                            </span>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                   
                   {/* Live Status */}
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-green-400 text-sm">Live monitoring active</span>
+                      <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
+                      <span className={`text-sm ${wsConnected ? 'text-green-400' : 'text-red-400'}`}>
+                        {wsConnected ? 'Live monitoring active' : 'Disconnected'}
+                      </span>
                     </div>
                     <span className="text-gray-400 text-sm">Last updated: 2 seconds ago</span>
                   </div>
@@ -590,20 +622,20 @@ export function AdminDashboard() {
                     <div>
                       <h4 className="text-lg font-medium text-white mb-4">System Maintenance</h4>
                       <div className="space-y-4">
-                        <Button className="bg-blue-600 hover:bg-blue-700">
+                        <Button className="bg-white text-black hover:bg-gray-200">
                           Clear Analytics Cache
                         </Button>
-                        <Button className="bg-yellow-600 hover:bg-yellow-700">
+                        <Button className="bg-white text-black hover:bg-gray-200">
                           Rebuild Search Index
                         </Button>
-                        <Button className="bg-red-600 hover:bg-red-700">
+                        <Button className="bg-white text-black hover:bg-gray-200">
                           Export All Data
                         </Button>
                       </div>
                     </div>
                     
                     <div className="pt-4">
-                      <Button className="bg-green-600 hover:bg-green-700">
+                      <Button className="bg-white text-black hover:bg-gray-200">
                         Save Settings
                       </Button>
                     </div>
@@ -764,7 +796,7 @@ export function AdminDashboard() {
                                   <Button
                                     onClick={saveEdit}
                                     size="sm"
-                                    className="bg-green-600 hover:bg-green-700"
+                                    className="bg-white text-black hover:bg-gray-200"
                                   >
                                     <Save className="w-4 h-4" />
                                   </Button>
@@ -931,7 +963,7 @@ export function AdminDashboard() {
                         <Button
                           onClick={() => updateRequestStatus(request.id, 'contacted')}
                           size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-xs"
+                          className="bg-white text-black hover:bg-gray-200 text-xs"
                           disabled={request.status === 'contacted'}
                         >
                           Mark Contacted
@@ -939,7 +971,7 @@ export function AdminDashboard() {
                         <Button
                           onClick={() => updateRequestStatus(request.id, 'completed')}
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-xs"
+                          className="bg-white text-black hover:bg-gray-200 text-xs"
                           disabled={request.status === 'completed'}
                         >
                           Complete
@@ -1100,7 +1132,7 @@ export function AdminDashboard() {
                         <Button
                           onClick={() => updateOutreachStatus(request.id, 'contacted')}
                           size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-xs"
+                          className="bg-white text-black hover:bg-gray-200 text-xs"
                           disabled={request.status === 'contacted'}
                         >
                           Mark Contacted
@@ -1108,7 +1140,7 @@ export function AdminDashboard() {
                         <Button
                           onClick={() => updateOutreachStatus(request.id, 'completed')}
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-xs"
+                          className="bg-white text-black hover:bg-gray-200 text-xs"
                           disabled={request.status === 'completed'}
                         >
                           Complete

@@ -24,6 +24,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./src/routes/routes";
 import { setupVite, serveStatic, log } from "./src/utils/vite";
+import { logManager } from "./src/utils/logger";
 
 const app = express();
 
@@ -67,6 +68,15 @@ app.use((req, res, next) => {
       }
 
       log(logLine);
+      
+      // Send to real-time logs
+      logManager.log('API', `${req.method} ${path} - ${res.statusCode} (${duration}ms)`, {
+        method: req.method,
+        path,
+        statusCode: res.statusCode,
+        duration,
+        response: capturedJsonResponse
+      });
     }
   });
 
@@ -76,6 +86,9 @@ app.use((req, res, next) => {
 (async () => {
   // Attach all application routes (auth, tools, admin, analytics)
   const server = await registerRoutes(app);
+  
+  // Initialize WebSocket logger
+  logManager.init(server);
 
   // Central error handler converts thrown errors into JSON responses
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

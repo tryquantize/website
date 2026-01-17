@@ -3,8 +3,6 @@
  * Handles company analytics operations including view tracking, clicks, and favorites
  */
 
-const API_BASE = '/api/analytics';
-
 export interface CompanyAnalytics {
   id: string;
   name: string;
@@ -20,11 +18,12 @@ class AnalyticsService {
    */
   async incrementMetric(companyId: string, metric: 'views' | 'clicks' | 'favourites'): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE}/increment/${companyId}/${metric}`, {
+      const response = await fetch('/api/analytics/increment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ companyId, metric }),
       });
 
       if (!response.ok) {
@@ -41,7 +40,7 @@ class AnalyticsService {
    */
   async getCompanies(): Promise<CompanyAnalytics[]> {
     try {
-      const response = await fetch(`${API_BASE}/companies`);
+      const response = await fetch('/api/analytics/companies');
       
       if (!response.ok) {
         throw new Error('Failed to fetch companies');
@@ -59,7 +58,7 @@ class AnalyticsService {
    */
   async getCompany(companyId: string): Promise<CompanyAnalytics | null> {
     try {
-      const response = await fetch(`${API_BASE}/company/${companyId}`);
+      const response = await fetch(`/api/analytics/company/${companyId}`);
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -80,12 +79,12 @@ class AnalyticsService {
    */
   async updateCompany(companyId: string, updateData: Partial<CompanyAnalytics>): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE}/company/${companyId}`, {
-        method: 'PUT',
+      const response = await fetch('/api/analytics/update-company', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify({ companyId, updateData }),
       });
 
       if (!response.ok) {
