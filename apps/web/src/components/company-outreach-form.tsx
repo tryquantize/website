@@ -5,6 +5,7 @@ import { X, Users, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { app } from '@/lib/firebase-init';
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { companyLeadsService } from '@/services/company-leads';
 
 interface Company {
   name: string;
@@ -56,6 +57,18 @@ export function CompanyOutreachForm({ isOpen, onClose, companies, searchQuery }:
         companiesCount: companies.length,
         timestamp: serverTimestamp(),
         status: 'pending'
+      });
+
+      // Also submit to the new company leads system
+      await companyLeadsService.submitLead({
+        userName: formData.name,
+        userEmail: formData.email,
+        userPhone: formData.phone,
+        searchQuery,
+        searchResults: companies.map(company => ({
+          name: company.name,
+          companyName: company.name
+        }))
       });
 
       console.log('Company outreach request submitted successfully');

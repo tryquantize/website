@@ -24,6 +24,9 @@ import Register from "@/pages/auth/register";
 import ResultsPage from "@/pages/results";
 import { AdminDashboard } from "@/pages/AdminDashboard";
 import { AdminLogin } from "@/pages/AdminLogin";
+import { CompanyDashboard } from "@/pages/CompanyDashboard";
+import { CompanyLogin } from "@/pages/CompanyLogin";
+import { CompanyDashboardTest } from "@/pages/CompanyDashboardTest";
 
 import OnboardingPage from "@/pages/onboarding";
 import LoggedInHome from "@/pages/loggedinhome";
@@ -86,8 +89,8 @@ function Router() {
       <LoadingTransition />
       <AnimatedLayout>
         <div className="relative z-10 h-screen flex flex-col">
-          {location !== '/results' && location !== '/admindashboard' && <Header />}
-          <main className={`flex-1 ${location === '/add-company' ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto'} ${location !== '/results' && location !== '/' && location !== '/add-company' && location !== '/admindashboard' && location !== '/adminlogin' ? 'pt-12 md:pt-24' : ''}`}>
+          {location !== '/results' && location !== '/admindashboard' && !location.startsWith('/admindashboard/') && !location.startsWith('/company-login/') && <Header />}
+          <main className={`flex-1 ${location === '/add-company' ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto'} ${location !== '/results' && location !== '/' && location !== '/add-company' && location !== '/admindashboard' && !location.startsWith('/admindashboard/') && location !== '/adminlogin' && !location.startsWith('/company-login/') ? 'pt-12 md:pt-24' : ''}`}>
             <div className="min-h-full flex flex-col">
               <div className="flex-1">
                 <Switch>
@@ -105,6 +108,9 @@ function Router() {
                   <Route path="/admin" component={Admin} />
                   <Route path="/adminlogin" component={AdminLogin} />
                   <Route path="/admindashboard" component={AdminDashboard} />
+                  <Route path="/admindashboard/:companyId" component={CompanyDashboard} />
+                  <Route path="/company-login/:companyId" component={CompanyLogin} />
+                  <Route path="/company-dashboard-test" component={CompanyDashboardTest} />
                   <Route path="/auth" component={Register} />
                   <Route path="/auth/register" component={Register} />
 
@@ -127,7 +133,7 @@ function Router() {
                   <Route component={NotFound} />
                 </Switch>
               </div>
-              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/add-company' && location !== '/admindashboard' && location !== '/adminlogin' && <Footer />}
+              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/add-company' && location !== '/admindashboard' && !location.startsWith('/admindashboard/') && location !== '/adminlogin' && !location.startsWith('/company-login/') && <Footer />}
             </div>
           </main>
         </div>
