@@ -286,7 +286,14 @@ export default function AddCompanyPage() {
   };
 
   const addFounder = () => {
-    if (!newFounder.name.trim() || !newFounder.email.trim()) return;
+    if (!newFounder.name.trim() || !newFounder.email.trim() || !newFounder.phone.trim()) {
+      toast({
+        title: 'Missing Founder Details',
+        description: 'Please fill in all founder fields (name, email, and phone).',
+        variant: 'destructive'
+      });
+      return;
+    }
     
     setFormData(prev => ({
       ...prev,
@@ -556,6 +563,15 @@ export default function AddCompanyPage() {
         toast({
           title: 'Products Required',
           description: 'Please add at least one product or service.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      if (formData.founders.length === 0) {
+        toast({
+          title: 'Founders Required',
+          description: 'Please add at least one founder with complete details.',
           variant: 'destructive'
         });
         return;
@@ -1101,27 +1117,30 @@ export default function AddCompanyPage() {
 
                     {/* Founders Section */}
                     <div className="space-y-4">
-                      <label className="text-sm font-medium text-white">Founders</label>
+                      <label className="text-sm font-medium text-white">Founders <span className="text-red-400">*</span></label>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <Input
+                          required
                           value={newFounder.name}
                           onChange={(e) => setNewFounder(prev => ({ ...prev, name: e.target.value }))}
                           className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
-                          placeholder="Founder name"
+                          placeholder="Founder name *"
                         />
                         <Input
+                          required
                           value={newFounder.phone}
                           onChange={(e) => setNewFounder(prev => ({ ...prev, phone: e.target.value }))}
                           className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
-                          placeholder="Phone number"
+                          placeholder="Phone number *"
                         />
                         <div className="flex gap-3">
                           <Input
+                            required
                             value={newFounder.email}
                             onChange={(e) => setNewFounder(prev => ({ ...prev, email: e.target.value }))}
                             className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
-                            placeholder="Email address"
+                            placeholder="Email address *"
                           />
                           <Button
                             type="button"
@@ -1135,7 +1154,7 @@ export default function AddCompanyPage() {
 
                       <div className="space-y-2">
                         {formData.founders.length === 0 && (
-                          <p className="text-white/50 text-sm italic p-4 bg-white/5 rounded-xl border border-white/10">No founders added yet</p>
+                          <p className="text-red-400 text-sm p-4 bg-red-500/10 rounded-xl border border-red-500/20">Please add at least one founder</p>
                         )}
                         {formData.founders.map((founder, idx) => (
                           <div key={idx} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
