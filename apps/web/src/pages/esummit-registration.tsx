@@ -379,10 +379,22 @@ export default function EsummitRegistrationPage() {
               {company.founders && company.founders.length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-sm font-medium mb-2 text-white/80">Founders:</h4>
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {company.founders.map((founder, idx) => (
-                      <div key={idx} className="text-sm text-white/60">
-                        {founder.name} • {founder.email}
+                      <div key={idx} className="bg-white/5 p-3 rounded-lg">
+                        <div className="text-sm font-medium text-white">{founder.name}</div>
+                        <div className="text-xs text-white/60 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-3 h-3" />
+                            {founder.email}
+                          </div>
+                          {founder.phone && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-3 h-3" />
+                              {founder.phone}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
