@@ -25,7 +25,10 @@ import {
   X,
   MapPin,
   TrendingUp,
-  LogOut
+  LogOut,
+  Plus,
+  Settings,
+  Terminal
 } from 'lucide-react';
 import { app } from '@/lib/firebase-init';
 import { 
@@ -78,7 +81,7 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'partner' | 'outreach' | 'analytics'>('partner');
+  const [activeTab, setActiveTab] = useState<'partner' | 'outreach' | 'analytics' | 'settings' | 'logs'>('partner');
   
   // Analytics state
   const [companies, setCompanies] = useState<CompanyAnalytics[]>([]);
@@ -86,6 +89,8 @@ export function AdminDashboard() {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [showAddCompanyPopup, setShowAddCompanyPopup] = useState(false);
+  const [logs, setLogs] = useState<Array<{id: string, timestamp: string, type: string, message: string, details?: any}>>([]);
 
   useEffect(() => {
     loadRequests();
@@ -199,10 +204,7 @@ export function AdminDashboard() {
     window.location.href = '/';
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminAuth');
-    window.location.href = '/';
-  };
+  const updateRequestStatus = async (requestId: string, newStatus: PartnerRequest['status']) => {
     try {
       const db = getFirestore(app);
       await updateDoc(doc(db, 'partnerRequests', requestId), {
@@ -358,6 +360,38 @@ export function AdminDashboard() {
                 <span>Company Outreach</span>
                 <span className="ml-auto text-sm bg-gray-800 text-white px-2 py-1 rounded">{outreachRequests.length}</span>
               </button>
+              
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-left ${
+                  activeTab === 'settings' 
+                    ? 'bg-white text-black' 
+                    : 'text-white hover:bg-gray-900 hover:text-white'
+                }`}
+              >
+                <Settings className="w-5 h-5" />
+                <span>Settings</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('logs')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-left ${
+                  activeTab === 'logs' 
+                    ? 'bg-white text-black' 
+                    : 'text-white hover:bg-gray-900 hover:text-white'
+                }`}
+              >
+                <Terminal className="w-5 h-5" />
+                <span>Debug Logs</span>
+              </button>
+              
+              <button
+                onClick={() => setShowAddCompanyPopup(true)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-left text-white hover:bg-gray-900 hover:text-white"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Add New Company</span>
+              </button>
             </nav>
           </div>
           
@@ -377,7 +411,206 @@ export function AdminDashboard() {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Content Area */}
           <div className="flex-1 overflow-auto p-6">
-            {activeTab === 'analytics' ? (
+            {activeTab === 'logs' ? (
+              <div className="space-y-6">
+                <div className="bg-black/60 backdrop-blur-sm border border-gray-600 rounded-none p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-semibold text-white">System Debug Logs</h3>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                        Clear Logs
+                      </Button>
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                        Export Logs
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Log Filters */}
+                  <div className="flex gap-4 mb-4">
+                    <select className="px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white text-sm">
+                      <option>All Types</option>
+                      <option>API Requests</option>
+                      <option>Database</option>
+                      <option>AI Service</option>
+                      <option>Authentication</option>
+                      <option>Errors</option>
+                    </select>
+                    <select className="px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white text-sm">
+                      <option>Last Hour</option>
+                      <option>Last 24 Hours</option>
+                      <option>Last Week</option>
+                    </select>
+                  </div>
+                  
+                  {/* Logs Display */}
+                  <div className="bg-gray-900 rounded-lg p-4 h-96 overflow-y-auto font-mono text-sm">
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-3">
+                        <span className="text-gray-500 text-xs">2025-01-17 15:30:45</span>
+                        <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs">API</span>
+                        <span className="text-green-400">GET /api/analytics/companies - 200 OK (245ms)</span>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-gray-500 text-xs">2025-01-17 15:30:44</span>
+                        <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs">DB</span>
+                        <span className="text-blue-400">Firebase: getDocs(companies) - 276 documents retrieved</span>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-gray-500 text-xs">2025-01-17 15:30:42</span>
+                        <span className="bg-green-600 text-white px-2 py-1 rounded text-xs">AUTH</span>
+                        <span className="text-yellow-400">Admin login successful: admin@quantize.site</span>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-gray-500 text-xs">2025-01-17 15:30:40</span>
+                        <span className="bg-orange-600 text-white px-2 py-1 rounded text-xs">AI</span>
+                        <span className="text-cyan-400">AI Service: POST /search - GPT-4o Mini (1.2s)</span>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-gray-500 text-xs">2025-01-17 15:30:38</span>
+                        <span className="bg-red-600 text-white px-2 py-1 rounded text-xs">ERROR</span>
+                        <span className="text-red-400">Failed to increment analytics: Company not found</span>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-gray-500 text-xs">2025-01-17 15:30:35</span>
+                        <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs">API</span>
+                        <span className="text-green-400">POST /api/analytics/company/openai - 200 OK (156ms)</span>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-gray-500 text-xs">2025-01-17 15:30:33</span>
+                        <span className="bg-purple-600 text-white px-2 py-1 rounded text-xs">DB</span>
+                        <span className="text-blue-400">Firebase: getDoc(companies/openai) - Document found</span>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="text-gray-500 text-xs">2025-01-17 15:30:30</span>
+                        <span className="bg-yellow-600 text-white px-2 py-1 rounded text-xs">PERF</span>
+                        <span className="text-orange-400">Slow query detected: Analytics aggregation (3.4s)</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Live Status */}
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-green-400 text-sm">Live monitoring active</span>
+                    </div>
+                    <span className="text-gray-400 text-sm">Last updated: 2 seconds ago</span>
+                  </div>
+                </div>
+              </div>
+            ) : activeTab === 'settings' ? (
+              <div className="space-y-6">
+                <div className="bg-black/60 backdrop-blur-sm border border-gray-600 rounded-none p-6">
+                  <h3 className="text-xl font-semibold text-white mb-6">System Settings</h3>
+                  
+                  {/* API Configuration */}
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-lg font-medium text-white mb-4">API Configuration</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">OpenRouter API Key</label>
+                          <Input className="bg-gray-800 border-gray-600 text-white" placeholder="Enter API key..." type="password" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Exa API Key</label>
+                          <Input className="bg-gray-800 border-gray-600 text-white" placeholder="Enter API key..." type="password" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Firecrawl API Key</label>
+                          <Input className="bg-gray-800 border-gray-600 text-white" placeholder="Enter API key..." type="password" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">AI Service URL</label>
+                          <Input className="bg-gray-800 border-gray-600 text-white" placeholder="http://localhost:5002" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Search Settings */}
+                    <div>
+                      <h4 className="text-lg font-medium text-white mb-4">Search Configuration</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300">Enable Web Search by Default</span>
+                          <input type="checkbox" className="w-4 h-4" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300">Enable RAG Search</span>
+                          <input type="checkbox" className="w-4 h-4" defaultChecked />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Default AI Model</label>
+                          <select className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white">
+                            <option>GPT-4o Mini</option>
+                            <option>Gemini 2.0 Flash</option>
+                            <option>Qwen2.5</option>
+                            <option>Llama 3.1</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Database Settings */}
+                    <div>
+                      <h4 className="text-lg font-medium text-white mb-4">Database Configuration</h4>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Firebase Project ID</label>
+                          <Input className="bg-gray-800 border-gray-600 text-white" placeholder="firequest-auth" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300">Auto-backup Analytics Data</span>
+                          <input type="checkbox" className="w-4 h-4" defaultChecked />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Notification Settings */}
+                    <div>
+                      <h4 className="text-lg font-medium text-white mb-4">Notifications</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300">Email Notifications for New Requests</span>
+                          <input type="checkbox" className="w-4 h-4" defaultChecked />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300">Daily Analytics Reports</span>
+                          <input type="checkbox" className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Admin Email</label>
+                          <Input className="bg-gray-800 border-gray-600 text-white" placeholder="admin@quantize.site" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* System Maintenance */}
+                    <div>
+                      <h4 className="text-lg font-medium text-white mb-4">System Maintenance</h4>
+                      <div className="space-y-4">
+                        <Button className="bg-blue-600 hover:bg-blue-700">
+                          Clear Analytics Cache
+                        </Button>
+                        <Button className="bg-yellow-600 hover:bg-yellow-700">
+                          Rebuild Search Index
+                        </Button>
+                        <Button className="bg-red-600 hover:bg-red-700">
+                          Export All Data
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-4">
+                      <Button className="bg-green-600 hover:bg-green-700">
+                        Save Settings
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : activeTab === 'analytics' ? (
               <div className="space-y-6">
                 {/* Company Selector */}
                 <div className="bg-black/60 backdrop-blur-sm border border-gray-600 rounded-none p-6">
@@ -918,6 +1151,25 @@ export function AdminDashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Add Company Popup */}
+      {showAddCompanyPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-[90vw] h-[90vh] relative">
+            <button
+              onClick={() => setShowAddCompanyPopup(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <iframe
+              src="https://quantize.site/add-company"
+              className="w-full h-full border-0 rounded-lg"
+              title="Add New Company"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

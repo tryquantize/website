@@ -86,8 +86,8 @@ function Router() {
       <LoadingTransition />
       <AnimatedLayout>
         <div className="relative z-10 h-screen flex flex-col">
-          {location !== '/results' && <Header />}
-          <main className={`flex-1 ${location === '/add-company' ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto'} ${location !== '/results' && location !== '/' && location !== '/add-company' ? 'pt-12 md:pt-24' : ''}`}>
+          {location !== '/results' && location !== '/admindashboard' && <Header />}
+          <main className={`flex-1 ${location === '/add-company' ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto'} ${location !== '/results' && location !== '/' && location !== '/add-company' && location !== '/admindashboard' && location !== '/adminlogin' ? 'pt-12 md:pt-24' : ''}`}>
             <div className="min-h-full flex flex-col">
               <div className="flex-1">
                 <Switch>
@@ -127,7 +127,7 @@ function Router() {
                   <Route component={NotFound} />
                 </Switch>
               </div>
-              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/add-company' && location !== '/admindashboard' && <Footer />}
+              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/add-company' && location !== '/admindashboard' && location !== '/adminlogin' && <Footer />}
             </div>
           </main>
         </div>
