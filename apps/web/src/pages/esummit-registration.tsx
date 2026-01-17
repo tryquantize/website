@@ -157,45 +157,50 @@ export default function EsummitRegistrationPage() {
               {/* Company Header */}
               <div className="mb-4">
                 <h3 className="text-xl font-semibold mb-2">{company.companyName}</h3>
-                <p className="text-white/60 text-sm line-clamp-2">{company.description}</p>
+                <p className="text-white/60 text-sm">{company.description}</p>
               </div>
 
-              {/* Company Details */}
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Building className="w-4 h-4 text-white/40" />
-                  <span className="text-white/80">{company.category}</span>
+              {/* Basic Company Info */}
+              <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
+                <h4 className="text-sm font-medium text-white/80 uppercase tracking-wider">Company Details</h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Building className="w-4 h-4 text-white/40" />
+                    <span className="text-white/80">{company.category || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-white/40" />
+                    <span className="text-white/80">{company.headquarters || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-white/40" />
+                    <span className="text-white/80">{company.employees || 'N/A'} employees</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-white/40" />
+                    <span className="text-white/80">Founded {company.founded || 'N/A'}</span>
+                  </div>
                 </div>
-                
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="w-4 h-4 text-white/40" />
-                  <span className="text-white/80">{company.headquarters}</span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <Users className="w-4 h-4 text-white/40" />
-                  <span className="text-white/80">{company.employees} employees</span>
-                </div>
-
                 <div className="flex items-center gap-2 text-sm">
                   <Globe className="w-4 h-4 text-white/40" />
                   <a 
                     href={company.website} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 transition-colors"
+                    className="text-blue-400 hover:text-blue-300 transition-colors truncate"
                   >
                     {company.website}
                   </a>
                 </div>
               </div>
 
-              {/* Contact Info */}
-              <div className="border-t border-white/10 pt-4 mb-4">
+              {/* Contact Information */}
+              <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
+                <h4 className="text-sm font-medium text-white/80 uppercase tracking-wider">Contact Info</h4>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm">
                     <Mail className="w-4 h-4 text-white/40" />
-                    <span className="text-white/80">{company.email}</span>
+                    <span className="text-white/80 truncate">{company.email || 'N/A'}</span>
                   </div>
                   {company.phoneNumber && (
                     <div className="flex items-center gap-2 text-sm">
@@ -203,8 +208,96 @@ export default function EsummitRegistrationPage() {
                       <span className="text-white/80">{company.phoneNumber}</span>
                     </div>
                   )}
+                  {company.linkedinPage && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Globe className="w-4 h-4 text-white/40" />
+                      <a 
+                        href={company.linkedinPage} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 transition-colors truncate"
+                      >
+                        LinkedIn
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Products & Services */}
+              {company.products && company.products.length > 0 && (
+                <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
+                  <h4 className="text-sm font-medium text-white/80 uppercase tracking-wider">Products & Services</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {company.products.map((product, idx) => (
+                      <span key={idx} className="bg-blue-600/20 text-blue-300 px-2 py-1 rounded text-xs">
+                        {product}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Business Details */}
+              <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
+                <h4 className="text-sm font-medium text-white/80 uppercase tracking-wider">Business Info</h4>
+                <div className="space-y-2 text-sm">
+                  {company.companyStage && (
+                    <div><span className="text-white/60">Stage:</span> <span className="text-white/80">{company.companyStage}</span></div>
+                  )}
+                  {company.tagline && (
+                    <div><span className="text-white/60">Tagline:</span> <span className="text-white/80">{company.tagline}</span></div>
+                  )}
+                  {company.uspTagline && (
+                    <div><span className="text-white/60">USP:</span> <span className="text-white/80">{company.uspTagline}</span></div>
+                  )}
+                  {company.industriesServed && company.industriesServed.length > 0 && (
+                    <div>
+                      <span className="text-white/60">Industries:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {company.industriesServed.map((industry, idx) => (
+                          <span key={idx} className="bg-purple-600/20 text-purple-300 px-2 py-1 rounded text-xs">
+                            {industry}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {company.pricingModel && company.pricingModel.length > 0 && (
+                    <div>
+                      <span className="text-white/60">Pricing:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {company.pricingModel.map((model, idx) => (
+                          <span key={idx} className="bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded text-xs">
+                            {model}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Features & Use Cases */}
+              {(company.features || company.useCases) && (
+                <div className="space-y-3 mb-4 pb-4 border-b border-white/10">
+                  <h4 className="text-sm font-medium text-white/80 uppercase tracking-wider">Features & Use Cases</h4>
+                  <div className="space-y-2 text-sm">
+                    {company.features && (
+                      <div>
+                        <span className="text-white/60">Features:</span>
+                        <p className="text-white/80 mt-1">{company.features}</p>
+                      </div>
+                    )}
+                    {company.useCases && (
+                      <div>
+                        <span className="text-white/60">Use Cases:</span>
+                        <p className="text-white/80 mt-1">{company.useCases}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Founders */}
               {company.founders && company.founders.length > 0 && (
