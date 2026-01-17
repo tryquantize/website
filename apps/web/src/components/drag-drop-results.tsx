@@ -417,7 +417,7 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               </p>
             )}
             
-            {company.features && (
+            {company.features && Array.isArray(company.features) && (
               <div>
                 <h6 className="text-white font-medium mb-2">Key Features</h6>
                 <ul className="space-y-1">
