@@ -30,7 +30,8 @@ import { storage } from "../services/storage";
 import { insertUserSchema, insertAiToolSchema, insertContactRequestSchema, insertSearchQuerySchema } from "../../../../packages/shared/schemas/schema";
 import { z } from "zod";
 import fetch from 'node-fetch';
-import analyticsRoutes from './analytics';
+import { getFirestore, doc, updateDoc, increment, getDoc, getDocs, collection } from 'firebase/firestore';
+import { app as firebaseApp } from '../lib/firebase-init';
 
 // Partner request validation schema
 const partnerRequestSchema = z.object({
@@ -53,14 +54,53 @@ const partnerRequestSchema = z.object({
  * @throws {Error} If route registration fails
  */
 export async function registerRoutes(app: Express): Promise<Server> {
+  const db = getFirestore(firebaseApp);
+  
+  // Analytics routes - inline for better reliability
+  app.get('/api/analytics/companies', async (req, res) => {
+    try {
+      const companiesSnapshot = await getDocs(collection(db, 'companies'));
+      const companies = companiesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().companyName || doc.data().name || 'Unknown Company',
+        companyName: doc.data().companyName || doc.data().name || 'Unknown Company',
+        ...doc.data()
+      }));
+      res.json(companies);
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      res.status(500).json({ error: 'Failed to fetch companies' });
+    }
+  });
+  
+  app.get('/api/analytics/company/:companyId', async (req, res) => {
+    try {
+      const { companyId } = req.params;
+      const companyDoc = await getDoc(doc(db, 'companies', companyId));
+      
+      if (!companyDoc.exists()) {
+        return res.status(404).json({ error: 'Company not found' });
+      }
+
+      const companyData = {
+        id: companyDoc.id,
+        ...companyDoc.data(),
+        views: companyDoc.data().views || 0,
+        clicks: companyDoc.data().clicks || 0,
+        favourites: companyDoc.data().favourites || 0
+      };
+
+      res.json(companyData);
+    } catch (error) {
+      console.error('Error fetching company:', error);
+      res.status(500).json({ error: 'Failed to fetch company' });
+    }
+  });
   
   // Health check for analytics
   app.get('/api/analytics/health', (req, res) => {
     res.json({ status: 'ok', message: 'Analytics API is working' });
   });
-  
-  // Register analytics routes
-  app.use('/api/analytics', analyticsRoutes);
   
   /**
    * @route POST /api/auth/register
