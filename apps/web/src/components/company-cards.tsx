@@ -11,6 +11,8 @@ import { PartnerSuccessNotification } from "@/components/partner-success-notific
 import { motion } from "framer-motion";
 import { extractCompanyContactInfo, CompanyContactInfo } from "@/utils/company-contact-utils";
 import { apiRequest } from "@/lib/queryClient";
+import { app } from "@/lib/firebase-init";
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import "@/styles/company-card.css";
 
 // Utility function to format company name in camel case without underscores
@@ -275,7 +277,7 @@ export function CompanyCards({
     companyLinkedIn?: string;
   }) => {
     try {
-      console.log('Submitting partner request:', {
+      console.log('Submitting partner request to Firestore:', {
         userName: formData.name,
         userEmail: formData.email,
         userPhone: formData.phone,
@@ -286,61 +288,37 @@ export function CompanyCards({
         searchQuery
       });
       
-      // Submit to API
-      const response = await apiRequest('POST', '/api/partner-requests', {
+      // Store directly in Firestore
+      const db = getFirestore(app);
+      const docRef = await addDoc(collection(db, 'partnerRequests'), {
         userName: formData.name,
         userEmail: formData.email,
         userPhone: formData.phone,
         companyName: partnerPopup.companyContactInfo.companyName,
-        companyEmail: formData.companyEmail,
-        companyWebsite: formData.companyWebsite,
-        companyLinkedIn: formData.companyLinkedIn,
-        searchQuery
+        companyEmail: formData.companyEmail || null,
+        companyWebsite: formData.companyWebsite || null,
+        companyLinkedIn: formData.companyLinkedIn || null,
+        searchQuery: searchQuery || null,
+        timestamp: serverTimestamp(),
+        status: 'pending'
       });
       
-      console.log('API Response status:', response.status);
+      console.log('Partner request stored in Firestore with ID:', docRef.id);
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log('API Response:', result);
-      
-      if (result.success) {
-        // Close popup
-        setPartnerPopup({isOpen: false, companyContactInfo: {companyName: ""}});
-        
-        // Show success notification
-        setShowSuccessNotification({isVisible: true, companyName: partnerPopup.companyContactInfo.companyName});
-        
-        // Hide notification after 4 seconds
-        setTimeout(() => {
-          setShowSuccessNotification({isVisible: false, companyName: ""});
-        }, 4000);
-        
-        console.log('Partnership request submitted successfully:', result.requestId);
-      } else {
-        console.error('Partner request failed:', result.message);
-        alert(`Failed to submit partner request: ${result.message}`);
-      }
-    } catch (error) {
-      console.error('Partner request error:', error);
-      
-      // For now, show success even if API fails (fallback behavior)
+      // Close popup
       setPartnerPopup({isOpen: false, companyContactInfo: {companyName: ""}});
+      
+      // Show success notification
       setShowSuccessNotification({isVisible: true, companyName: partnerPopup.companyContactInfo.companyName});
+      
+      // Hide notification after 4 seconds
       setTimeout(() => {
         setShowSuccessNotification({isVisible: false, companyName: ""});
       }, 4000);
       
-      console.log('Partner request logged locally (API unavailable):', {
-        userName: formData.name,
-        userEmail: formData.email,
-        userPhone: formData.phone,
-        companyName: partnerPopup.companyContactInfo.companyName,
-        timestamp: new Date().toISOString()
-      });
+    } catch (error) {
+      console.error('Firestore error:', error);
+      alert('Failed to submit partner request. Please try again.');
     }
   };
 
