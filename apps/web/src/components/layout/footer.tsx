@@ -47,11 +47,6 @@ export function Footer() {
                   Pricing
                 </Link>
               </li>
-              <li>
-                <Link href="/onboarding" className="hover:text-white transition-colors">
-                  Get Started
-                </Link>
-              </li>
             </ul>
           </div>
 

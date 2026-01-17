@@ -156,7 +156,7 @@ export default function OnboardingPage() {
     const result = await signIn(email, password);
     if (result.success) {
       toast({ title: "Logged in", description: "Welcome back!" });
-      navigateWithLoading('/dashboard');
+      navigateWithLoading('/home');
     } else {
       toast({ title: "Login failed", description: result.error || "Invalid credentials.", variant: "destructive" });
     }
@@ -174,7 +174,7 @@ export default function OnboardingPage() {
       // remember chosen role in the form for conditional fields
       const mappedProfile: any = role === "Freelancer / Individual Creator" ? "Freelancer / Individual Creator" : "Startup";
       form.setValue("profileType", mappedProfile);
-      navigateWithLoading("/dashboard");
+      navigateWithLoading("/home");
     } else {
       // If email already exists, suggest switching to login
       if (result.error?.includes('already registered')) {
@@ -255,7 +255,7 @@ export default function OnboardingPage() {
       if (submissionResult.success) {
         toast({ title: "Submitted", description: "Thanks! We will review your submission." });
         form.reset();
-        navigateWithLoading("/dashboard");
+        navigateWithLoading("/home");
       } else {
         toast({ title: "Submission failed", description: submissionResult.error || "Please try again.", variant: "destructive" });
       }
@@ -330,7 +330,7 @@ export default function OnboardingPage() {
                         const result = await signInWithGoogle();
                         if (result.success) {
                           toast({ title: "Signed in", description: "Welcome!" });
-                          navigateWithLoading('/dashboard');
+                          navigateWithLoading('/home');
                         } else {
                           toast({ title: "Google sign-in failed", description: result.error || "Please try again.", variant: "destructive" });
                         }

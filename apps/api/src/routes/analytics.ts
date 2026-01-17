@@ -32,7 +32,8 @@ router.get('/companies', async (req, res) => {
     const companiesSnapshot = await getDocs(collection(db, 'companies'));
     const companies = companiesSnapshot.docs.map(doc => ({
       id: doc.id,
-      name: doc.data().name || 'Unknown Company',
+      name: doc.data().companyName || doc.data().name || 'Unknown Company',
+      companyName: doc.data().companyName || doc.data().name || 'Unknown Company',
       ...doc.data()
     }));
 

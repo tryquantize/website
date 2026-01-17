@@ -18,7 +18,7 @@ import { useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import ProductsPage from "@/pages/Products";
-import Dashboard from "@/pages/dashboard";
+
 import Admin from "@/pages/admin";
 import Register from "@/pages/auth/register";
 import ResultsPage from "@/pages/results";
@@ -85,8 +85,8 @@ function Router() {
       <LoadingTransition />
       <AnimatedLayout>
         <div className="relative z-10 h-screen flex flex-col">
-          {location !== '/dashboard' && location !== '/results' && <Header />}
-          <main className={`flex-1 ${location === '/add-company' ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto'} ${location !== '/dashboard' && location !== '/results' && location !== '/' && location !== '/add-company' ? 'pt-12 md:pt-24' : ''}`}>
+          {location !== '/results' && <Header />}
+          <main className={`flex-1 ${location === '/add-company' ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto'} ${location !== '/results' && location !== '/' && location !== '/add-company' ? 'pt-12 md:pt-24' : ''}`}>
             <div className="min-h-full flex flex-col">
               <div className="flex-1">
                 <Switch>
@@ -100,7 +100,7 @@ function Router() {
                   <Route path="/loggedinhome" component={LoggedInHome} />
                   <Route path="/welcome-transition" component={WelcomeTransition} />
                   <Route path="/products" component={ProductsPage} />
-                  <Route path="/dashboard" component={Dashboard} />
+
                   <Route path="/admin" component={Admin} />
                   <Route path="/admindashboard" component={AdminDashboard} />
                   <Route path="/auth" component={Register} />
@@ -125,7 +125,7 @@ function Router() {
                   <Route component={NotFound} />
                 </Switch>
               </div>
-              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/dashboard' && location !== '/add-company' && location !== '/admindashboard' && <Footer />}
+              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/add-company' && location !== '/admindashboard' && <Footer />}
             </div>
           </main>
         </div>

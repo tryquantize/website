@@ -38,7 +38,6 @@ interface SidebarProps {
 
 // Updated navigation items - remove logout from here
 const navigationItems: NavigationItem[] = [
-  { id: "overview", name: "Dashboard", icon: Home, href: "/dashboard" },
   { id: "products", name: "Products", icon: Building2, href: "/products" },
   { id: "services", name: "Service", icon: Zap, href: "/services" },
   { id: "contacts", name: "Inquiries", icon: MessageSquare, href: "/contacts" },
@@ -47,7 +46,7 @@ const navigationItems: NavigationItem[] = [
   { id: "help", name: "Help & Support", icon: HelpCircle, href: "/help" },
 ];
 
-export function Sidebar({ className = "", activeTab = "overview", onTabChange, onSignOut, currentUser }: SidebarProps) {
+export function Sidebar({ className = "", activeTab = "products", onTabChange, onSignOut, currentUser }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
