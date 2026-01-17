@@ -76,6 +76,7 @@ export default function AddCompanyPage() {
     vcEventInterested: false,
     // Ecell Event Interest
     ecellEventInterested: false,
+    ecellPreferredDates: [] as string[],
     // Founders
     founders: [] as Array<{ name: string; phone: string; email: string }>
   });
@@ -259,6 +260,22 @@ export default function AddCompanyPage() {
     setFormData(prev => ({
       ...prev,
       idealScenarios: prev.idealScenarios.filter(s => s !== scenario)
+    }));
+  };
+
+  const addEcellPreferredDate = (date: string) => {
+    if (!formData.ecellPreferredDates.includes(date)) {
+      setFormData(prev => ({
+        ...prev,
+        ecellPreferredDates: [...prev.ecellPreferredDates, date]
+      }));
+    }
+  };
+
+  const removeEcellPreferredDate = (date: string) => {
+    setFormData(prev => ({
+      ...prev,
+      ecellPreferredDates: prev.ecellPreferredDates.filter(d => d !== date)
     }));
   };
 
@@ -712,6 +729,16 @@ export default function AddCompanyPage() {
                     {/* Ecell IIT BHU Event Section */}
                     <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-xl">
                       <div className="space-y-4">
+                        {/* Event Header Image */}
+                        <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
+                          <img 
+                            src="/IIT BHU Varanasi.jpg" 
+                            alt="IIT BHU Varanasi Campus" 
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        </div>
+                        
                         <div className="flex items-center gap-2 mb-4">
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                           <span className="text-xs font-medium text-green-400 uppercase tracking-wider">Exclusive Collaboration</span>
@@ -723,7 +750,7 @@ export default function AddCompanyPage() {
                         
                         <div className="space-y-3 text-sm text-white/70 leading-relaxed">
                           <p>
-                            We are collaborating with <strong className="text-white">Ecell IIT BHU</strong> to host an exclusive founder's meet and greet during their annual fest. This is a unique opportunity for founders to connect, share experiences, and build meaningful relationships within the startup ecosystem.
+                            We are collaborating with <strong className="text-white">E-Cell IIT BHU</strong> to host an exclusive founder's meet and greet during their annual fest i.e E-Summit '26. This is a unique opportunity for founders to connect, share experiences, and build meaningful relationships within the startup ecosystem.
                           </p>
                           
                           <p>
@@ -744,7 +771,7 @@ export default function AddCompanyPage() {
                           </div>
                           
                           <p className="text-xs">
-                            This founder's meet and greet is part of Ecell IIT BHU's annual fest and offers a great opportunity to connect with the vibrant startup community. The event will feature informal networking, experience sharing, and collaborative discussions.
+                            This founder's meet and greet is part of E-Cell IIT BHU's annual fest and offers a great opportunity to connect with the vibrant startup community. The event will feature informal networking, experience sharing, and collaborative discussions.
                           </p>
                           
                           <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
@@ -752,6 +779,31 @@ export default function AddCompanyPage() {
                               <strong>Contact for queries:</strong><br/>
                               📞 +91 80906 72982
                             </p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <label className="text-sm font-medium text-green-300">Preferred Dates (Select all that work for you):</label>
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              '30th Jan (Friday)',
+                              '31st Jan (Saturday)', 
+                              '1st Feb (Sunday)'
+                            ].map(date => (
+                              <button
+                                key={date}
+                                type="button"
+                                onClick={() => formData.ecellPreferredDates.includes(date) ? removeEcellPreferredDate(date) : addEcellPreferredDate(date)}
+                                className={cn(
+                                  "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
+                                  formData.ecellPreferredDates.includes(date)
+                                    ? "bg-green-600 border-green-600 text-white shadow-sm"
+                                    : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                                )}
+                              >
+                                {date}
+                              </button>
+                            ))}
                           </div>
                         </div>
                         
@@ -779,6 +831,16 @@ export default function AddCompanyPage() {
                     {/* VC Gathering Event Section */}
                     <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-xl">
                       <div className="space-y-4">
+                        {/* Event Header Image */}
+                        <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
+                          <img 
+                            src="/blr.png" 
+                            alt="Bangalore City" 
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        </div>
+                        
                         <div className="flex items-center gap-2 mb-4">
                           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                           <span className="text-xs font-medium text-blue-400 uppercase tracking-wider">Exclusive Opportunity</span>

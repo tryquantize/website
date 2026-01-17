@@ -3,16 +3,13 @@ import { X, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
 
-export function VCEventNotification() {
+export function EcellEventNotification() {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Clear localStorage to show notification again
-    localStorage.removeItem('vc-event-dismissed');
-    
-    const dismissed = localStorage.getItem('vc-event-dismissed');
+    const dismissed = localStorage.getItem('ecell-event-dismissed');
     if (dismissed) {
       setIsDismissed(true);
       return;
@@ -20,7 +17,7 @@ export function VCEventNotification() {
 
     const timer = setTimeout(() => {
       setIsVisible(true);
-    }, 500); // Show after 500ms
+    }, 1000); // Show after 1s (after VC notification)
 
     return () => clearTimeout(timer);
   }, []);
@@ -28,7 +25,7 @@ export function VCEventNotification() {
   const handleDismiss = () => {
     setIsVisible(false);
     setIsDismissed(true);
-    localStorage.setItem('vc-event-dismissed', 'true');
+    localStorage.setItem('ecell-event-dismissed', 'true');
   };
 
   const handleJoinEvent = () => {
@@ -45,13 +42,13 @@ export function VCEventNotification() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 400, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-4 right-4 z-50 w-80 bg-black/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden"
+          className="fixed bottom-[22rem] right-4 z-50 w-80 bg-black/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden"
         >
           {/* Event Header Image */}
           <div className="relative h-20 overflow-hidden">
             <img 
-              src="/blr.png" 
-              alt="Bangalore City" 
+              src="/IIT BHU Varanasi.jpg" 
+              alt="IIT BHU Varanasi Campus" 
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
@@ -67,21 +64,21 @@ export function VCEventNotification() {
             
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                <span className="text-xs font-medium text-yellow-200 uppercase tracking-wider">Exclusive Event</span>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-xs font-medium text-green-200 uppercase tracking-wider">Exclusive Collaboration</span>
               </div>
               
               <h3 className="text-white font-semibold text-sm leading-tight">
-                🚀 VC Gathering - Bangalore
+                🎓 Founder's Meet & Greet - E-Cell IIT BHU
               </h3>
               
               <p className="text-white/80 text-xs leading-relaxed">
-                Join ~10 deep-tech AI startups for an exclusive meetup with global VCs from Accel and leading funds.
+                Join us for an exclusive founder's networking event during E-Summit '26 at IIT BHU, Varanasi.
               </p>
               
               <div className="flex items-center justify-between pt-2">
                 <div className="text-xs text-white/60">
-                  📍 Jayanagar • Mar-Apr 2026
+                  📍 IIT BHU • End of Jan
                 </div>
                 
                 <button
