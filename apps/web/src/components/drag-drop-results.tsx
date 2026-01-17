@@ -158,23 +158,30 @@ export function DragDropResults({ companies }: DragDropResultsProps) {
       {/* Right Sidebar - Company Cards Queue */}
       <div className="w-80 bg-black/20 backdrop-blur-xl border-l border-white/10 flex flex-col">
         <div className="p-4 border-b border-white/10">
-          <h4 className="text-white font-semibold mb-1">Companies ({companies.length})</h4>
+          <h4 className="text-white font-semibold mb-1">
+            Companies ({companies.length - expandedCompanies.length}/{companies.length})
+          </h4>
           <p className="text-white/60 text-sm">Drag cards to explore with websites</p>
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {companies.map((company, index) => (
-            <CompactCompanyCard
-              key={index}
-              company={company}
-              index={index}
-              isDragging={draggedIndex === index}
-              isExpanded={expandedCompanies.some(exp => exp.originalIndex === index)}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              formatCompanyName={formatCompanyName}
-            />
-          ))}
+          {companies.map((company, index) => {
+            const isExpanded = expandedCompanies.some(exp => exp.originalIndex === index);
+            if (isExpanded) return null; // Hide dragged cards
+            
+            return (
+              <CompactCompanyCard
+                key={index}
+                company={company}
+                index={index}
+                isDragging={draggedIndex === index}
+                isExpanded={false}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                formatCompanyName={formatCompanyName}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
@@ -411,29 +418,182 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               </span>
             </div>
             
-            {(company.uspTagline || company.tagline || company.description) && (
+            {/* Company Info Grid */}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              {company.location && (
+                <div>
+                  <div className="flex items-center gap-1 mb-1">
+                    <span className="font-semibold text-white">Location</span>
+                  </div>
+                  <div className="text-white/80">{company.location}</div>
+                </div>
+              )}
+              {company.employees && (
+                <div>
+                  <div className="flex items-center gap-1 mb-1">
+                    <span className="font-semibold text-white">Employees</span>
+                  </div>
+                  <div className="text-white/80">{company.employees}</div>
+                </div>
+              )}
+              {company.founded && (
+                <div>
+                  <div className="flex items-center gap-1 mb-1">
+                    <span className="font-semibold text-white">Founded</span>
+                  </div>
+                  <div className="text-white/80">{company.founded}</div>
+                </div>
+              )}
+              {company.companyStage && (
+                <div>
+                  <div className="flex items-center gap-1 mb-1">
+                    <span className="font-semibold text-white">Stage</span>
+                  </div>
+                  <div className="text-white/80">{company.companyStage}</div>
+                </div>
+              )}
+            </div>
+            
+            {(company.uspTagline || company.tagline || company.enhancedAbout || company.description) && (
               <p className="text-white/80 text-sm leading-relaxed">
-                {company.uspTagline || company.tagline || company.description}
+                {company.uspTagline || company.tagline || company.enhancedAbout || company.description}
               </p>
             )}
             
-            {company.features && Array.isArray(company.features) && (
+            {/* Key Features/Specifications */}
+            {((company.features && Array.isArray(company.features)) || (company.specifications && Array.isArray(company.specifications))) && (
               <div>
                 <h6 className="text-white font-medium mb-2">Key Features</h6>
                 <ul className="space-y-1">
-                  {company.features.slice(0, 4).map((feature: string, i: number) => (
-                    <li key={i} className="text-white/70 text-sm">• {feature}</li>
+                  {(company.specifications || company.features)?.slice(0, 6).map((item: string, i: number) => (
+                    <li key={i} className="text-white/70 text-sm">• {item}</li>
                   ))}
                 </ul>
               </div>
             )}
             
-            {company.pricing && (
+            {/* Customer Segments */}
+            {company.customerSegments && Array.isArray(company.customerSegments) && (
               <div>
-                <h6 className="text-white font-medium mb-1">Pricing</h6>
-                <p className="text-white/70 text-sm">{company.pricing}</p>
+                <h6 className="text-white font-medium mb-2">Customer Segments</h6>
+                <div className="flex flex-wrap gap-1">
+                  {company.customerSegments.map((segment: string, i: number) => (
+                    <span key={i} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
+                      {segment}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
+            
+            {/* Industries Served */}
+            {company.industriesServed && Array.isArray(company.industriesServed) && (
+              <div>
+                <h6 className="text-white font-medium mb-2">Industries Served</h6>
+                <div className="text-xs text-white/80">
+                  {company.industriesServed.slice(0, 5).join(', ')}
+                  {company.industriesServed.length > 5 && ` +${company.industriesServed.length - 5} more`}
+                </div>
+              </div>
+            )}
+            
+            {/* Products & Services */}
+            {company.productsServices && Array.isArray(company.productsServices) && (
+              <div>
+                <h6 className="text-white font-medium mb-2">Products & Services</h6>
+                <div className="space-y-1">
+                  {company.productsServices.slice(0, 4).map((product: string, i: number) => (
+                    <div key={i} className="text-xs text-white/80 leading-relaxed">
+                      • {product.length > 100 ? product.substring(0, 100) + '...' : product}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Pricing */}
+            {(company.pricing || (company.pricingRanges && Array.isArray(company.pricingRanges)) || (company.pricingModel && Array.isArray(company.pricingModel))) && (
+              <div>
+                <h6 className="text-white font-medium mb-2">Pricing</h6>
+                <div className="text-xs">
+                  {company.pricingRanges && Array.isArray(company.pricingRanges) && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {company.pricingRanges.map((range: string, i: number) => (
+                        <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded">
+                          {range}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {company.pricingModel && Array.isArray(company.pricingModel) && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {company.pricingModel.map((model: string, i: number) => (
+                        <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
+                          {model}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {company.pricing && (
+                    <div className="text-white/80">{company.pricing}</div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Use Cases */}
+            {company.enhancedUseCases && Array.isArray(company.enhancedUseCases) && (
+              <div>
+                <h6 className="text-white font-medium mb-2">Use Cases</h6>
+                <div className="space-y-1">
+                  {company.enhancedUseCases.slice(0, 4).map((useCase: string, i: number) => (
+                    <div key={i} className="text-xs text-white/80">• {useCase}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Top Clients */}
+            {company.topClients && Array.isArray(company.topClients) && (
+              <div>
+                <h6 className="text-white font-medium mb-2">Notable Clients</h6>
+                <div className="text-xs text-white/80">
+                  {company.topClients.slice(0, 6).join(', ')}
+                  {company.topClients.length > 6 && ` and ${company.topClients.length - 6} more`}
+                </div>
+              </div>
+            )}
+            
+            {/* Trial Available */}
+            {company.trialAvailable && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-300 font-medium text-sm">Free Trial Available</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="mt-6 pt-4 border-t border-white/10">
+            <div className="flex space-x-2">
+              <Button size="sm" className="flex-1 bg-white text-black font-medium hover:bg-gray-100">
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Chat
+              </Button>
+              <Button size="sm" className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium hover:from-green-600 hover:to-blue-600">
+                <Handshake className="w-4 h-4 mr-2" />
+                Partner
+              </Button>
+              {company.website && company.website !== "#" && (
+                <Button
+                  onClick={() => window.open(getWebsiteUrl(company.website), "_blank")}
+                  size="sm"
+                  className="bg-white text-black font-medium hover:bg-gray-100"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
