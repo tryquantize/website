@@ -211,14 +211,7 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
                   <Heart className="w-4 h-4 mr-2" />
                   Favorites
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden sm:flex text-white/70 hover:text-white hover:bg-white/10 rounded-full"
-                  onClick={() => setLocation('/admindashboard')}
-                >
-                  Admin
-                </Button>
+
                 <Button
                   size="sm"
                   variant="secondary"

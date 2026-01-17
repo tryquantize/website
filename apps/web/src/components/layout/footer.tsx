@@ -1,10 +1,18 @@
-import { Link } from "wouter";
-import { Linkedin, Twitter } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Linkedin, Twitter, Lock } from "lucide-react";
 import { QuantizeLogo } from "@/components/quantize-logo";
 import { ProductHuntBadge } from "@/components/product-hunt-badge";
+import { useAuth } from "@/lib/auth";
+import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
+import { Button } from "@/components/ui/button";
 
 
 export function Footer() {
+  const [, setLocation] = useLocation();
+  const { user, isAuthenticated } = useAuth();
+  const { currentUser } = useFirebaseAuth();
+
+  const isLoggedIn = currentUser || (isAuthenticated && user);
   return (
     <footer className="bg-black/20 backdrop-blur-md border-t border-white/10 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -89,9 +97,21 @@ export function Footer() {
             <ProductHuntBadge />
           </div>
           
-          <div className="text-center text-sm text-white/70">
-            <p>&copy; 2025 Quantize. All rights reserved.</p>
+          <div className="text-center text-sm text-white/70 relative">
+            <p>&copy; 2026 Quantize. All rights reserved.</p>
             <p className="mt-2">Made by Aditya Surana </p>
+            
+            {/* Admin Lock Icon - Bottom Right */}
+            {isLoggedIn && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute bottom-0 right-0 w-6 h-6 text-white/40 hover:text-white/70 hover:bg-white/5 rounded-full transition-all duration-300"
+                onClick={() => setLocation('/admindashboard')}
+              >
+                <Lock className="w-3 h-3" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
