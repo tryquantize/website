@@ -23,6 +23,7 @@ import Admin from "@/pages/admin";
 import Register from "@/pages/auth/register";
 import ResultsPage from "@/pages/results";
 import { AdminDashboard } from "@/pages/AdminDashboard";
+import { AdminLogin } from "@/pages/AdminLogin";
 
 import OnboardingPage from "@/pages/onboarding";
 import LoggedInHome from "@/pages/loggedinhome";
@@ -102,6 +103,7 @@ function Router() {
                   <Route path="/products" component={ProductsPage} />
 
                   <Route path="/admin" component={Admin} />
+                  <Route path="/adminlogin" component={AdminLogin} />
                   <Route path="/admindashboard" component={AdminDashboard} />
                   <Route path="/auth" component={Register} />
                   <Route path="/auth/register" component={Register} />

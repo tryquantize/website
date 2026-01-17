@@ -24,7 +24,8 @@ import {
   Save,
   X,
   MapPin,
-  TrendingUp
+  TrendingUp,
+  LogOut
 } from 'lucide-react';
 import { app } from '@/lib/firebase-init';
 import { 
@@ -92,6 +93,15 @@ export function AdminDashboard() {
       loadCompanies();
     }
   }, [activeTab]);
+
+  // Check admin authentication
+  useEffect(() => {
+    const isAdminAuth = localStorage.getItem('adminAuth');
+    if (!isAdminAuth) {
+      window.location.href = '/adminlogin';
+      return;
+    }
+  }, []);
 
   const loadRequests = async () => {
     try {
@@ -184,7 +194,15 @@ export function AdminDashboard() {
     }
   };
 
-  const updateRequestStatus = async (requestId: string, newStatus: PartnerRequest['status']) => {
+  const handleLogout = () => {
+    localStorage.removeItem('adminAuth');
+    window.location.href = '/';
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminAuth');
+    window.location.href = '/';
+  };
     try {
       const db = getFirestore(app);
       await updateDoc(doc(db, 'partnerRequests', requestId), {
@@ -341,6 +359,17 @@ export function AdminDashboard() {
                 <span className="ml-auto text-sm bg-gray-800 text-white px-2 py-1 rounded">{outreachRequests.length}</span>
               </button>
             </nav>
+          </div>
+          
+          {/* Logout Button */}
+          <div className="p-4 border-t border-gray-800">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all text-left text-red-400 hover:bg-red-900/20 hover:text-red-300"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Logout</span>
+            </button>
           </div>
         </div>
 
