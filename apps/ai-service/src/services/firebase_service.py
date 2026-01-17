@@ -211,6 +211,21 @@ class FirebaseService:
                     logger.error(f"❌ Failed to add to VC collection: {vc_error}")
                     # Don't fail the main operation if VC collection fails
             
+            # If company is interested in Ecell event, also add to Ecell collection
+            if company_data.get('ecellEventInterested', False):
+                try:
+                    ecell_ref = self.db.collection('ecell_event_interested_companies')
+                    ecell_doc_ref = ecell_ref.add({
+                        **company_data,
+                        'originalCompanyId': company_id,
+                        'ecellEventTimestamp': firestore.SERVER_TIMESTAMP
+                    })
+                    ecell_doc_id = ecell_doc_ref[1].id
+                    logger.info(f"✅ Added Ecell-interested company {company_data.get('companyName')} to Ecell collection with ID: {ecell_doc_id}")
+                except Exception as ecell_error:
+                    logger.error(f"❌ Failed to add to Ecell collection: {ecell_error}")
+                    # Don't fail the main operation if Ecell collection fails
+            
             logger.info(f"Added company {company_data.get('companyName')} to Firebase")
             
             return {

@@ -74,6 +74,8 @@ export default function AddCompanyPage() {
     idealScenarios: [] as string[],
     // VC Event Interest
     vcEventInterested: false,
+    // Ecell Event Interest
+    ecellEventInterested: false,
     // Founders
     founders: [] as Array<{ name: string; phone: string; email: string }>
   });
@@ -705,6 +707,73 @@ export default function AddCompanyPage() {
                           <strong>Pro Tip:</strong> Enter your company name and website, then use our AI Auto-fill feature to populate the rest of the form automatically!
                         </span>
                       </p>
+                    </div>
+
+                    {/* Ecell IIT BHU Event Section */}
+                    <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-xl">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span className="text-xs font-medium text-green-400 uppercase tracking-wider">Exclusive Collaboration</span>
+                        </div>
+                        
+                        <h3 className="text-lg font-semibold text-white mb-3">
+                          🎓 Founder's Meet & Greet - Ecell IIT BHU
+                        </h3>
+                        
+                        <div className="space-y-3 text-sm text-white/70 leading-relaxed">
+                          <p>
+                            We are collaborating with <strong className="text-white">Ecell IIT BHU</strong> to host an exclusive founder's meet and greet during their annual fest. This is a unique opportunity for founders to connect, share experiences, and build meaningful relationships within the startup ecosystem.
+                          </p>
+                          
+                          <p>
+                            This event is <strong className="text-white">exclusively for founders</strong> and will provide a platform for networking, knowledge sharing, and potential collaborations. Join us for an engaging session with fellow entrepreneurs and startup leaders.
+                          </p>
+                          
+                          <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                            <div className="grid grid-cols-1 gap-2 text-xs">
+                              <div>
+                                <span className="text-green-300 font-medium">📍 Location:</span>
+                                <span className="text-white ml-1">IIT BHU, Varanasi</span>
+                              </div>
+                              <div>
+                                <span className="text-green-300 font-medium">📅 Date:</span>
+                                <span className="text-white ml-1">End of January (~30th)</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs">
+                            This founder's meet and greet is part of Ecell IIT BHU's annual fest and offers a great opportunity to connect with the vibrant startup community. The event will feature informal networking, experience sharing, and collaborative discussions.
+                          </p>
+                          
+                          <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                            <p className="text-xs text-green-200">
+                              <strong>Contact for queries:</strong><br/>
+                              📞 +91 80906 72982
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 pt-2">
+                          <input
+                            type="checkbox"
+                            id="ecellEventInterested"
+                            checked={formData.ecellEventInterested}
+                            onChange={(e) => setFormData(prev => ({ ...prev, ecellEventInterested: e.target.checked }))}
+                            className="w-4 h-4 rounded border-white/30 bg-white/10 text-green-600 focus:ring-green-500 focus:ring-offset-0"
+                          />
+                          <label htmlFor="ecellEventInterested" className="text-sm text-white font-medium cursor-pointer">
+                            Yes, I'm interested
+                          </label>
+                        </div>
+                        
+                        {formData.ecellEventInterested && (
+                          <p className="text-xs text-green-400 text-center">
+                            ✓ We'll contact you with event details
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* VC Gathering Event Section */}
