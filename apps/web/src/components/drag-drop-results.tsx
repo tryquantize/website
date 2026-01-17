@@ -369,7 +369,7 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="grid grid-cols-2 gap-4 h-96 bg-black/20 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden"
+      className="grid grid-cols-2 gap-4 h-[600px] bg-black/20 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden"
     >
       {/* Website iframe */}
       <div className="bg-black/40 flex flex-col">
@@ -405,7 +405,7 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
             ✕
           </button>
         </div>
-        <div className="flex-1 p-4 overflow-y-auto">
+        <div className="flex-1 p-4 overflow-y-auto" style={{maxHeight: '520px'}}>
           <div className="space-y-4">
             <div>
               <h5 className="text-white text-lg font-semibold mb-2">
