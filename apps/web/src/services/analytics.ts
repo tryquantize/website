@@ -58,7 +58,7 @@ class AnalyticsService {
    */
   async getCompany(companyId: string): Promise<CompanyAnalytics | null> {
     try {
-      const response = await fetch(`/api/analytics/company/${companyId}`);
+      const response = await fetch(`/api/company/${companyId}`);
       
       if (!response.ok) {
         if (response.status === 404) {
