@@ -124,6 +124,7 @@ function Router() {
                   <Route path="/contact" component={ContactPage} />
                   <Route path="/pricing" component={PricingPage} />
                   <Route path="/add-company" component={AddCompanyPage} />
+                  <Route path="/esummit" component={AddCompanyPage} />
                   <Route path="/features">
                     {() => {
                       window.location.href = "/#features";
