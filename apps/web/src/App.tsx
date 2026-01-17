@@ -39,6 +39,7 @@ import AboutPage from "@/pages/about";
 import ContactPage from "@/pages/contact";
 import { PricingPage } from "@/pages/pricing";
 import AddCompanyPage from "@/pages/add-company";
+import EsummitRegistrationPage from "@/pages/esummit-registration";
 
 function Router() {
   const [location] = useLocation();
@@ -125,6 +126,7 @@ function Router() {
                   <Route path="/pricing" component={PricingPage} />
                   <Route path="/add-company" component={AddCompanyPage} />
                   <Route path="/esummit" component={AddCompanyPage} />
+                  <Route path="/esummitregistration" component={EsummitRegistrationPage} />
                   <Route path="/features">
                     {() => {
                       window.location.href = "/#features";

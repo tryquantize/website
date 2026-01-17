@@ -343,7 +343,47 @@ def enhance_text():
             "success": False
         }), 500
 
-@app.route('/auto-fill-company', methods=['POST'])
+@app.route('/ecell-companies', methods=['GET'])
+def get_ecell_companies():
+    """Get all companies interested in E-Cell event"""
+    try:
+        from services.firebase_service import FirebaseService
+        firebase_service = FirebaseService()
+        
+        if not firebase_service.db:
+            return jsonify({
+                "companies": [],
+                "success": False,
+                "error": "Firebase not initialized"
+            }), 500
+        
+        # Get companies from ecell_event_interested_companies collection
+        ecell_companies = []
+        companies_ref = firebase_service.db.collection('ecell_event_interested_companies')
+        companies = companies_ref.stream()
+        
+        for company_doc in companies:
+            company_data = company_doc.to_dict()
+            company_data['id'] = company_doc.id
+            ecell_companies.append(company_data)
+        
+        logger.info(f"Retrieved {len(ecell_companies)} E-Cell interested companies")
+        
+        return jsonify({
+            "companies": ecell_companies,
+            "success": True,
+            "count": len(ecell_companies)
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error fetching E-Cell companies: {str(e)}")
+        return jsonify({
+            "companies": [],
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/auto-fill-company', methods=['POST']))
 def auto_fill_company():
     """Auto-fill company details from website and LinkedIn"""
     try:
