@@ -30,6 +30,7 @@ import { storage } from "../services/storage";
 import { insertUserSchema, insertAiToolSchema, insertContactRequestSchema, insertSearchQuerySchema } from "../../../../packages/shared/schemas/schema";
 import { z } from "zod";
 import fetch from 'node-fetch';
+import analyticsRoutes from './analytics';
 
 // Partner request validation schema
 const partnerRequestSchema = z.object({
@@ -52,6 +53,9 @@ const partnerRequestSchema = z.object({
  * @throws {Error} If route registration fails
  */
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Register analytics routes
+  app.use('/api/analytics', analyticsRoutes);
   
   /**
    * @route POST /api/auth/register

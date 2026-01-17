@@ -22,6 +22,7 @@ import Dashboard from "@/pages/dashboard";
 import Admin from "@/pages/admin";
 import Register from "@/pages/auth/register";
 import ResultsPage from "@/pages/results";
+import { AdminDashboard } from "@/pages/AdminDashboard";
 
 import OnboardingPage from "@/pages/onboarding";
 import LoggedInHome from "@/pages/loggedinhome";
@@ -101,6 +102,7 @@ function Router() {
                   <Route path="/products" component={ProductsPage} />
                   <Route path="/dashboard" component={Dashboard} />
                   <Route path="/admin" component={Admin} />
+                  <Route path="/admindashboard" component={AdminDashboard} />
                   <Route path="/auth" component={Register} />
                   <Route path="/auth/register" component={Register} />
 
@@ -123,7 +125,7 @@ function Router() {
                   <Route component={NotFound} />
                 </Switch>
               </div>
-              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/dashboard' && location !== '/add-company' && <Footer />}
+              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/dashboard' && location !== '/add-company' && location !== '/admindashboard' && <Footer />}
             </div>
           </main>
         </div>

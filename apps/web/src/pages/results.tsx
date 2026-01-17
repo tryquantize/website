@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
 import { Component as RaycastBlueBackground } from "@/components/ui/raycast-animated-blue-background";
 import { Header } from "@/components/layout/header";
+import { CompanyOutreachForm } from "@/components/company-outreach-form";
 import { getSearchResults, clearSearchResults } from "@/lib/search-session";
 
 
@@ -136,12 +137,9 @@ export default function ResultsPage() {
   const [queryHistory, setQueryHistory] = useState<string[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
-  // SUPPLIERS SECTION STATE
-  const [showSuppliersSection, setShowSuppliersSection] = useState(true);
-  const [showSuppliersPopup, setShowSuppliersPopup] = useState(false);
-  const [supplierEmail, setSupplierEmail] = useState('');
-  const [supplierPhone, setSupplierPhone] = useState('');
-  const [isSubmittingSuppliers, setIsSubmittingSuppliers] = useState(false);
+  // COMPANY OUTREACH STATE
+  const [showCompanyOutreachSection, setShowCompanyOutreachSection] = useState(true);
+  const [showCompanyOutreachForm, setShowCompanyOutreachForm] = useState(false);
 
 
 
@@ -732,48 +730,17 @@ export default function ResultsPage() {
     setFavoritesNotification({ show: false, itemName: '' });
   };
 
-  const handleSuppliersYes = () => {
-    setShowSuppliersPopup(true);
+  const handleCompanyOutreachYes = () => {
+    setShowCompanyOutreachForm(true);
   };
 
-  const handleSuppliersNo = () => {
-    setShowSuppliersSection(false);
+  const handleCompanyOutreachNo = () => {
+    setShowCompanyOutreachSection(false);
   };
 
-  const handleSuppliersSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!supplierEmail.trim() || !supplierPhone.trim()) return;
-
-    setIsSubmittingSuppliers(true);
-
-    try {
-      // Here you would typically send the data to your API
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-
-      toast({
-        title: "Success!",
-        description: "We'll connect you with relevant Companies soon.",
-      });
-
-      setShowSuppliersPopup(false);
-      setShowSuppliersSection(false);
-      setSupplierEmail('');
-      setSupplierPhone('');
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to submit. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmittingSuppliers(false);
-    }
-  };
-
-  const handleSuppliersCancel = () => {
-    setShowSuppliersPopup(false);
-    setSupplierEmail('');
-    setSupplierPhone('');
+  const handleCompanyOutreachClose = () => {
+    setShowCompanyOutreachForm(false);
+    setShowCompanyOutreachSection(false);
   };
 
 
@@ -832,20 +799,20 @@ export default function ResultsPage() {
 
       {/* Fixed Mobile Sections - Below Header */}
       <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-black/20 backdrop-blur-xl border-b border-white/10">
-        {/* Suppliers Section */}
-        {showSuppliersSection && allCompanies.length > 0 && (
+        {/* Company Outreach Section */}
+        {showCompanyOutreachSection && allCompanies.length > 0 && (
           <div className="p-4 border-b border-white/10">
-            <h3 className="text-base font-semibold text-white mb-2">Would you like Companies to reach out to you?</h3>
-            <p className="text-white/70 text-xs mb-3">Get personalized quotes and offers directly from verified Companies</p>
+            <h3 className="text-base font-semibold text-white mb-2">Would you like companies to reach out to you?</h3>
+            <p className="text-white/70 text-xs mb-3">Get personalized offers and partnerships directly from companies in your search results</p>
             <div className="flex space-x-3">
               <button
-                onClick={handleSuppliersYes}
+                onClick={handleCompanyOutreachYes}
                 className="px-4 py-2 bg-white text-black font-medium text-sm rounded-lg hover:bg-gray-100 transition-all"
               >
                 Yes, I'm interested
               </button>
               <button
-                onClick={handleSuppliersNo}
+                onClick={handleCompanyOutreachNo}
                 className="px-4 py-2 bg-white/10 border border-white/20 text-white font-medium text-sm rounded-lg hover:bg-white/20 transition-all"
               >
                 No, thanks
@@ -1008,20 +975,20 @@ export default function ResultsPage() {
 
           </div>
 
-          {/* Desktop Suppliers Section */}
-          {showSuppliersSection && allCompanies.length > 0 && (
+          {/* Desktop Company Outreach Section */}
+          {showCompanyOutreachSection && allCompanies.length > 0 && (
             <div className="hidden md:block bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
-              <h3 className="text-lg font-semibold text-white mb-2">Would you like Companies to reach out to you?</h3>
-              <p className="text-white/70 text-sm mb-4">Get personalized quotes and offers directly from verified Companies</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Would you like companies to reach out to you?</h3>
+              <p className="text-white/70 text-sm mb-4">Get personalized offers and partnerships directly from companies in your search results</p>
               <div className="flex space-x-4">
                 <button
-                  onClick={handleSuppliersYes}
+                  onClick={handleCompanyOutreachYes}
                   className="px-6 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all"
                 >
                   Yes, I'm interested
                 </button>
                 <button
-                  onClick={handleSuppliersNo}
+                  onClick={handleCompanyOutreachNo}
                   className="px-6 py-2 bg-white/10 border border-white/20 text-white font-medium rounded-lg hover:bg-white/20 transition-all"
                 >
                   No, thanks
@@ -1153,65 +1120,13 @@ export default function ResultsPage() {
         onClose={hideFavoritesNotification}
       />
 
-      {/* Suppliers Popup */}
-      {showSuppliersPopup && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-white mb-2">
-              {contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : 'Connect with Suppliers'}
-            </h3>
-            <p className="text-white/70 text-sm mb-4">Enter your contact details to receive personalized quotes</p>
-
-            <form onSubmit={handleSuppliersSubmit} className="space-y-4">
-              <div>
-                <label className="block text-white/80 text-sm mb-2">Email Address</label>
-                <input
-                  type="email"
-                  value={supplierEmail}
-                  onChange={(e) => setSupplierEmail(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 bg-white/5 border border-white/20 text-white placeholder:text-white/50 text-sm rounded-lg focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all"
-                  placeholder="your@email.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white/80 text-sm mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  value={supplierPhone}
-                  onChange={(e) => setSupplierPhone(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 bg-white/5 border border-white/20 text-white placeholder:text-white/50 text-sm rounded-lg focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all"
-                  placeholder="+1 (555) 123-4567"
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmittingSuppliers || !supplierEmail.trim() || !supplierPhone.trim()}
-                  className="flex-1 px-4 py-2 bg-white text-black font-medium rounded-lg hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                  {isSubmittingSuppliers ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    'Submit'
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSuppliersCancel}
-                  disabled={isSubmittingSuppliers}
-                  className="flex-1 px-4 py-2 bg-white/10 border border-white/20 text-white font-medium rounded-lg hover:bg-white/20 transition-all disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Company Outreach Form */}
+      <CompanyOutreachForm
+        isOpen={showCompanyOutreachForm}
+        onClose={handleCompanyOutreachClose}
+        companies={allCompanies}
+        searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+      />
 
     </div>
   );

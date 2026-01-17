@@ -7,6 +7,7 @@ import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
 import { PartnerPopup } from "@/components/partner-popup";
 import { PartnerSuccessNotification } from "@/components/partner-success-notification";
+import { analyticsService } from "@/services/analytics";
 
 import { motion } from "framer-motion";
 import { extractCompanyContactInfo, CompanyContactInfo } from "@/utils/company-contact-utils";
@@ -172,6 +173,14 @@ export function CompanyCards({
   // Track engagement
   const trackEngagement = async (companyName: string, action: 'view' | 'click' | 'save') => {
     try {
+      // Also track in analytics service
+      const companyId = companyName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      if (action === 'save') {
+        analyticsService.trackFavourite(companyId);
+      } else if (action === 'click') {
+        analyticsService.trackClick(companyId);
+      }
+      
       await apiRequest('POST', '/api/engagement/track', {
         companyName,
         action

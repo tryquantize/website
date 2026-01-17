@@ -212,6 +212,14 @@ export function Header({ onToggleSidebar, showSidebarToggle }: HeaderProps = {})
                   Favorites
                 </Button>
                 <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden sm:flex text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+                  onClick={() => setLocation('/admindashboard')}
+                >
+                  Admin
+                </Button>
+                <Button
                   size="sm"
                   variant="secondary"
                   onClick={handleFirebaseLogout}
