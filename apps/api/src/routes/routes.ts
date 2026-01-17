@@ -54,13 +54,13 @@ const partnerRequestSchema = z.object({
  */
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Register analytics routes
-  app.use('/api/analytics', analyticsRoutes);
-  
   // Health check for analytics
   app.get('/api/analytics/health', (req, res) => {
     res.json({ status: 'ok', message: 'Analytics API is working' });
   });
+  
+  // Register analytics routes
+  app.use('/api/analytics', analyticsRoutes);
   
   /**
    * @route POST /api/auth/register
