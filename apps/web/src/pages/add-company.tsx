@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +21,12 @@ export default function AddCompanyPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isEnhancingDescription, setIsEnhancingDescription] = useState(false);
+  const [isEsummitRoute, setIsEsummitRoute] = useState(false);
+
+  // Check if accessed via /esummit route
+  useEffect(() => {
+    setIsEsummitRoute(window.location.pathname === '/esummit');
+  }, []);
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -828,87 +834,89 @@ export default function AddCompanyPage() {
                       </div>
                     </div>
 
-                    {/* VC Gathering Event Section */}
-                    <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-xl">
-                      <div className="space-y-4">
-                        {/* Event Header Image */}
-                        <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
-                          <img 
-                            src="/blr.png" 
-                            alt="Bangalore City" 
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        </div>
-                        
-                        <div className="flex items-center gap-2 mb-4">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                          <span className="text-xs font-medium text-blue-400 uppercase tracking-wider">Exclusive Opportunity</span>
-                        </div>
-                        
-                        <h3 className="text-lg font-semibold text-white mb-3">
-                          🚀 VC Gathering - Bangalore
-                        </h3>
-                        
-                        <div className="space-y-3 text-sm text-white/70 leading-relaxed">
-                          <p>
-                            We are curating a small, invitation-only gathering of <strong className="text-white">~10 deep-tech and AI startups</strong> for an in-person interaction with global VCs from <strong className="text-blue-300">Accel</strong> and a few other leading funds.
-                          </p>
+                    {!isEsummitRoute && (
+                      /* VC Gathering Event Section */
+                      <div className="p-6 bg-zinc-900/50 border border-white/10 rounded-xl">
+                        <div className="space-y-4">
+                          {/* Event Header Image */}
+                          <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
+                            <img 
+                              src="/blr.png" 
+                              alt="Bangalore City" 
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          </div>
                           
-                          <p>
-                            The participating investors are US-based global VCs, several of whom are former serial entrepreneurs with successful technology exits. They are specifically interested in <strong className="text-white">deep-tech and AI startups</strong> working on hard-to-replicate, original ideas, with strong technical depth and long-term defensibility.
-                          </p>
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span className="text-xs font-medium text-blue-400 uppercase tracking-wider">Exclusive Opportunity</span>
+                          </div>
                           
-                          <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-                            <div className="grid grid-cols-1 gap-2 text-xs">
-                              <div>
-                                <span className="text-blue-300 font-medium">📍 Location:</span>
-                                <span className="text-white ml-1">Jayanagar, Bangalore</span>
+                          <h3 className="text-lg font-semibold text-white mb-3">
+                            🚀 VC Gathering - Bangalore
+                          </h3>
+                          
+                          <div className="space-y-3 text-sm text-white/70 leading-relaxed">
+                            <p>
+                              We are curating a small, invitation-only gathering of <strong className="text-white">~10 deep-tech and AI startups</strong> for an in-person interaction with global VCs from <strong className="text-blue-300">Accel</strong> and a few other leading funds.
+                            </p>
+                            
+                            <p>
+                              The participating investors are US-based global VCs, several of whom are former serial entrepreneurs with successful technology exits. They are specifically interested in <strong className="text-white">deep-tech and AI startups</strong> working on hard-to-replicate, original ideas, with strong technical depth and long-term defensibility.
+                            </p>
+                            
+                            <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                              <div className="grid grid-cols-1 gap-2 text-xs">
+                                <div>
+                                  <span className="text-blue-300 font-medium">📍 Location:</span>
+                                  <span className="text-white ml-1">Jayanagar, Bangalore</span>
+                                </div>
+                                <div>
+                                  <span className="text-blue-300 font-medium">📅 Dates:</span>
+                                  <span className="text-white ml-1">Between March 26 and April 13, 2026</span>
+                                  <span className="text-white/60 block text-xs">(exact date to be confirmed)</span>
+                                </div>
                               </div>
-                              <div>
-                                <span className="text-blue-300 font-medium">📅 Dates:</span>
-                                <span className="text-white ml-1">Between March 26 and April 13, 2026</span>
-                                <span className="text-white/60 block text-xs">(exact date to be confirmed)</span>
-                              </div>
+                            </div>
+                            
+                            <p className="text-xs">
+                              This is not a symposium or demo day. The format is informal and conversational, focused on direct interaction, idea discussion, and relationship-building with VCs. Where there is strong alignment, conversations may naturally progress toward potential investment.
+                            </p>
+                            
+                            <p className="text-xs">
+                              Participation will be selective to ensure meaningful engagement. Startups across institutes and ecosystems are welcome. <strong className="text-white">Shortlisted teams will be contacted with further details.</strong>
+                            </p>
+                            
+                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                              <p className="text-xs text-blue-200">
+                                <strong>Contact for queries:</strong><br/>
+                                📞 +91 80906 72982
+                              </p>
                             </div>
                           </div>
                           
-                          <p className="text-xs">
-                            This is not a symposium or demo day. The format is informal and conversational, focused on direct interaction, idea discussion, and relationship-building with VCs. Where there is strong alignment, conversations may naturally progress toward potential investment.
-                          </p>
-                          
-                          <p className="text-xs">
-                            Participation will be selective to ensure meaningful engagement. Startups across institutes and ecosystems are welcome. <strong className="text-white">Shortlisted teams will be contacted with further details.</strong>
-                          </p>
-                          
-                          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                            <p className="text-xs text-blue-200">
-                              <strong>Contact for queries:</strong><br/>
-                              📞 +91 80906 72982
-                            </p>
+                          <div className="flex items-center gap-3 pt-2">
+                            <input
+                              type="checkbox"
+                              id="vcEventInterested"
+                              checked={formData.vcEventInterested}
+                              onChange={(e) => setFormData(prev => ({ ...prev, vcEventInterested: e.target.checked }))}
+                              className="w-4 h-4 rounded border-white/30 bg-white/10 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                            />
+                            <label htmlFor="vcEventInterested" className="text-sm text-white font-medium cursor-pointer">
+                              Yes, I'm interested
+                            </label>
                           </div>
+                          
+                          {formData.vcEventInterested && (
+                            <p className="text-xs text-green-400 text-center">
+                              ✓ We'll contact shortlisted teams with details
+                            </p>
+                          )}
                         </div>
-                        
-                        <div className="flex items-center gap-3 pt-2">
-                          <input
-                            type="checkbox"
-                            id="vcEventInterested"
-                            checked={formData.vcEventInterested}
-                            onChange={(e) => setFormData(prev => ({ ...prev, vcEventInterested: e.target.checked }))}
-                            className="w-4 h-4 rounded border-white/30 bg-white/10 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
-                          />
-                          <label htmlFor="vcEventInterested" className="text-sm text-white font-medium cursor-pointer">
-                            Yes, I'm interested
-                          </label>
-                        </div>
-                        
-                        {formData.vcEventInterested && (
-                          <p className="text-xs text-green-400 text-center">
-                            ✓ We'll contact shortlisted teams with details
-                          </p>
-                        )}
                       </div>
-                    </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
