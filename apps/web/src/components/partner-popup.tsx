@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Handshake } from "lucide-react";
+import { X, Handshake, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface PartnerPopupProps {
@@ -19,7 +19,7 @@ interface PartnerPopupProps {
     companyEmail?: string;
     companyWebsite?: string;
     companyLinkedIn?: string;
-  }) => void;
+  }) => Promise<void>;
 }
 
 export function PartnerPopup({ 
@@ -37,17 +37,23 @@ export function PartnerPopup({
     phone: "",
     email: ""
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.name && formData.phone && formData.email) {
-      onSubmit({
-        ...formData,
-        companyEmail,
-        companyWebsite,
-        companyLinkedIn
-      });
-      setFormData({ name: "", phone: "", email: "" });
+    if (formData.name && formData.phone && formData.email && !isSubmitting) {
+      setIsSubmitting(true);
+      try {
+        await onSubmit({
+          ...formData,
+          companyEmail,
+          companyWebsite,
+          companyLinkedIn
+        });
+        setFormData({ name: "", phone: "", email: "" });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -88,39 +94,12 @@ export function PartnerPopup({
             </div>
 
             <div className="mb-4">
-              <p className="text-white/80 text-sm mb-2">
+              <p className="text-white/80 text-sm">
                 Request partnership with <span className="font-semibold text-white">{companyName}</span>
                 {searchQuery && (
                   <span className="text-white/60"> for "{searchQuery}"</span>
                 )}
               </p>
-              
-              {/* Show available company contact information */}
-              {(companyEmail || companyWebsite || companyLinkedIn) && (
-                <div className="bg-white/5 rounded-lg p-3 mt-2">
-                  <p className="text-xs text-white/60 mb-2">Company Contact Information:</p>
-                  <div className="space-y-1 text-xs">
-                    {companyEmail && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/60">Email:</span>
-                        <span className="text-white/80">{companyEmail}</span>
-                      </div>
-                    )}
-                    {companyWebsite && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/60">Website:</span>
-                        <span className="text-white/80 truncate">{companyWebsite}</span>
-                      </div>
-                    )}
-                    {companyLinkedIn && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/60">LinkedIn:</span>
-                        <span className="text-white/80 truncate">{companyLinkedIn}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -177,9 +156,17 @@ export function PartnerPopup({
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-white text-black font-medium hover:bg-gray-100"
+                  disabled={isSubmitting}
+                  className="flex-1 bg-white text-black font-medium hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Submit Request
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Request'
+                  )}
                 </Button>
               </div>
             </form>
