@@ -15,43 +15,42 @@ interface Company {
   headquarters: string;
   founded: string;
   employees: string;
-  ecellPreferredDates: string[];
   founders: Array<{ name: string; phone: string; email: string }>;
   painPoint: string;
   createdAt: any;
 }
 
-export default function EsummitRegistrationPage() {
+export default function VcRegistrationPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<string>('all');
-  const [dateStats, setDateStats] = useState<Record<string, number>>({});
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [categoryStats, setCategoryStats] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    fetchEcellCompanies();
+    fetchVcCompanies();
   }, []);
 
   useEffect(() => {
     filterCompanies();
-    calculateDateStats();
-  }, [companies, selectedDate]);
+    calculateCategoryStats();
+  }, [companies, selectedCategory]);
 
-  const fetchEcellCompanies = async () => {
+  const fetchVcCompanies = async () => {
     try {
-      console.log('Fetching E-Cell companies...');
+      console.log('Fetching VC companies...');
       // Use CompanyService to get all companies and filter
       const { CompanyService } = await import('@/services/company-service');
       const allCompanies = await CompanyService.getAllCompanies();
       
-      // Filter for companies with ecellEventInterested = true
-      const ecellCompanies = allCompanies.filter(company => 
-        company.ecellEventInterested === true
+      // Filter for companies with vcEventInterested = true
+      const vcCompanies = allCompanies.filter(company => 
+        company.vcEventInterested === true
       );
       
       console.log('All companies:', allCompanies.length);
-      console.log('E-Cell interested companies:', ecellCompanies);
-      setCompanies(ecellCompanies);
+      console.log('VC interested companies:', vcCompanies);
+      setCompanies(vcCompanies);
     } catch (error) {
       console.error('Error fetching companies:', error);
       setCompanies([]);
@@ -61,28 +60,26 @@ export default function EsummitRegistrationPage() {
   };
 
   const filterCompanies = () => {
-    if (selectedDate === 'all') {
+    if (selectedCategory === 'all') {
       setFilteredCompanies(companies);
     } else {
       setFilteredCompanies(
         companies.filter(company => 
-          company.ecellPreferredDates?.includes(selectedDate)
+          company.category?.toLowerCase().includes(selectedCategory.toLowerCase())
         )
       );
     }
   };
 
-  const calculateDateStats = () => {
+  const calculateCategoryStats = () => {
     const stats: Record<string, number> = {};
-    const dates = ['30th Jan (Friday)', '31st Jan (Saturday)', '1st Feb (Sunday)'];
     
-    dates.forEach(date => {
-      stats[date] = companies.filter(company => 
-        company.ecellPreferredDates?.includes(date)
-      ).length;
+    companies.forEach(company => {
+      const category = company.category || 'Uncategorized';
+      stats[category] = (stats[category] || 0) + 1;
     });
     
-    setDateStats(stats);
+    setCategoryStats(stats);
   };
 
   if (loading) {
@@ -98,23 +95,23 @@ export default function EsummitRegistrationPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">E-Summit '26 Registrations</h1>
-          <p className="text-white/60">Companies interested in the Founder's Meet & Greet</p>
+          <h1 className="text-4xl font-bold mb-2">VC Gathering Registrations</h1>
+          <p className="text-white/60">Companies interested in the VC Gathering - Bangalore</p>
         </div>
 
         {/* Stats & Filter */}
         <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Date Statistics */}
+          {/* Category Statistics */}
           <div className="bg-white/5 border border-white/10 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Date Preferences
+              <Building className="w-5 h-5" />
+              Company Categories
             </h3>
-            <div className="space-y-3">
-              {Object.entries(dateStats).map(([date, count]) => (
-                <div key={date} className="flex justify-between items-center">
-                  <span className="text-white/80">{date}</span>
-                  <span className="bg-green-600/20 text-green-300 px-3 py-1 rounded-full text-sm">
+            <div className="space-y-3 max-h-48 overflow-y-auto">
+              {Object.entries(categoryStats).map(([category, count]) => (
+                <div key={category} className="flex justify-between items-center">
+                  <span className="text-white/80">{category}</span>
+                  <span className="bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-sm">
                     {count} companies
                   </span>
                 </div>
@@ -126,17 +123,17 @@ export default function EsummitRegistrationPage() {
           <div className="bg-white/5 border border-white/10 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Filter className="w-5 h-5" />
-              Filter by Date
+              Filter by Category
             </h3>
-            <Select value={selectedDate} onValueChange={setSelectedDate}>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="bg-black border-white/20 text-white">
-                <SelectValue placeholder="Select date" />
+                <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent className="bg-black border-white/20 text-white">
-                <SelectItem value="all">All Dates</SelectItem>
-                <SelectItem value="30th Jan (Friday)">30th Jan (Friday)</SelectItem>
-                <SelectItem value="31st Jan (Saturday)">31st Jan (Saturday)</SelectItem>
-                <SelectItem value="1st Feb (Sunday)">1st Feb (Sunday)</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
+                {Object.keys(categoryStats).map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <div className="mt-4 text-sm text-white/60">
@@ -409,21 +406,6 @@ export default function EsummitRegistrationPage() {
                   </div>
                 </div>
               )}
-
-              {/* Preferred Dates */}
-              <div className="border-t border-white/10 pt-4">
-                <h4 className="text-sm font-medium mb-2 text-green-300">Preferred Dates:</h4>
-                <div className="flex flex-wrap gap-2">
-                  {company.ecellPreferredDates?.map((date, idx) => (
-                    <span 
-                      key={idx}
-                      className="bg-green-600/20 text-green-300 px-2 py-1 rounded text-xs"
-                    >
-                      {date}
-                    </span>
-                  ))}
-                </div>
-              </div>
             </motion.div>
           ))}
         </div>

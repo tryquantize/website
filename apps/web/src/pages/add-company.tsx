@@ -84,7 +84,9 @@ export default function AddCompanyPage() {
     ecellEventInterested: false,
     ecellPreferredDates: [] as string[],
     // Founders
-    founders: [] as Array<{ name: string; phone: string; email: string }>
+    founders: [] as Array<{ name: string; phone: string; email: string }>,
+    // Pain Point
+    painPoint: ''
   });
 
   const [newProduct, setNewProduct] = useState('');
@@ -875,7 +877,7 @@ export default function AddCompanyPage() {
                           
                           <div className="space-y-3 text-sm text-white/70 leading-relaxed">
                             <p>
-                              We are curating a small, invitation-only gathering of <strong className="text-white">~10 deep-tech and AI startups</strong> for an in-person interaction with global VCs from <strong className="text-blue-300">Accel</strong> and a few other leading funds.
+                              We are curating a small, invitation-only gathering of <strong className="text-white">~10 deep-tech and AI startups</strong> for an in-person interaction with global VCs from leading funds.
                             </p>
                             
                             <p>
@@ -1172,6 +1174,20 @@ export default function AddCompanyPage() {
                           </div>
                         ))}
                       </div>
+                    </div>
+
+                    {/* Pain Point Section */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white">
+                        What are you looking for? (Biggest pain point currently)
+                        <span className="block text-xs text-white/60 font-normal mt-1">Help us understand your current challenges and needs</span>
+                      </label>
+                      <Textarea
+                        value={formData.painPoint}
+                        onChange={(e) => handleInputChange('painPoint', e.target.value)}
+                        className="min-h-[120px] bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 resize-none rounded-xl focus:outline-none focus:ring-0"
+                        placeholder="e.g., Looking for funding, need technical co-founder, seeking market validation, scaling challenges, etc."
+                      />
                     </div>
                   </motion.div>
                 )}
