@@ -47,9 +47,9 @@ export function EcellEventNotification() {
           {/* Event Header Image */}
           <div className="relative h-20 overflow-hidden">
             <img 
-              src="/IIT BHU Varanasi.jpg" 
-              alt="IIT BHU Varanasi Campus" 
-              className="w-full h-full object-cover"
+              src="/BHLogo.png" 
+              alt="E-Cell IIT BHU Logo" 
+              className="w-full h-full object-contain bg-white/10"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           </div>
@@ -69,16 +69,16 @@ export function EcellEventNotification() {
               </div>
               
               <h3 className="text-white font-semibold text-sm leading-tight">
-                🎓 Founder's Meet & Greet - E-Cell IIT BHU
+                🎓 Founder's Meet & Greet || E-Cell IIT BHU
               </h3>
               
               <p className="text-white/80 text-xs leading-relaxed">
-                Join us for an exclusive founder's networking event during E-Summit '26 at IIT BHU, Varanasi.
+                Join us for an exclusive founder's networking event on 31st January 2026 Saturday, 8 PM onwards at GTAC Guest House, IIT BHU Varanasi.
               </p>
               
               <div className="flex items-center justify-between pt-2">
                 <div className="text-xs text-white/60">
-                  📍 IIT BHU • End of Jan
+                  📍 GTAC Guest House • 31st Jan, 8 PM
                 </div>
                 
                 <button

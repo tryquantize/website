@@ -756,9 +756,9 @@ export default function AddCompanyPage() {
                         {/* Event Header Image */}
                         <div className="relative w-full h-32 mb-4 rounded-lg overflow-hidden">
                           <img 
-                            src="/IIT BHU Varanasi.jpg" 
-                            alt="IIT BHU Varanasi Campus" 
-                            className="w-full h-full object-cover"
+                            src="/BHLogo.png" 
+                            alt="E-Cell IIT BHU Logo" 
+                            className="w-full h-full object-contain bg-white/10"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                         </div>
@@ -769,7 +769,7 @@ export default function AddCompanyPage() {
                         </div>
                         
                         <h3 className="text-lg font-semibold text-white mb-3">
-                          🎓 Founder's Meet & Greet - Ecell IIT BHU
+                          🎓 Founder's Meet & Greet || E-Cell IIT BHU
                         </h3>
                         
                         <div className="space-y-3 text-sm text-white/70 leading-relaxed">
@@ -785,11 +785,11 @@ export default function AddCompanyPage() {
                             <div className="grid grid-cols-1 gap-2 text-xs">
                               <div>
                                 <span className="text-green-300 font-medium">📍 Location:</span>
-                                <span className="text-white ml-1">IIT BHU, Varanasi</span>
+                                <span className="text-white ml-1">GTAC Guest House, IIT BHU Varanasi</span>
                               </div>
                               <div>
-                                <span className="text-green-300 font-medium">📅 Date:</span>
-                                <span className="text-white ml-1">End of January (~30th)</span>
+                                <span className="text-green-300 font-medium">📅 Date & Time:</span>
+                                <span className="text-white ml-1">31st January 2026 Saturday, 8 PM onwards</span>
                               </div>
                             </div>
                           </div>
@@ -806,30 +806,7 @@ export default function AddCompanyPage() {
                           </div>
                         </div>
                         
-                        <div className="space-y-3">
-                          <label className="text-sm font-medium text-green-300">Preferred Dates (Select all that work for you):</label>
-                          <div className="flex flex-wrap gap-2">
-                            {[
-                              '30th Jan (Friday)',
-                              '31st Jan (Saturday)', 
-                              '1st Feb (Sunday)'
-                            ].map(date => (
-                              <button
-                                key={date}
-                                type="button"
-                                onClick={() => formData.ecellPreferredDates.includes(date) ? removeEcellPreferredDate(date) : addEcellPreferredDate(date)}
-                                className={cn(
-                                  "px-4 py-2 rounded-full text-sm transition-all duration-200 border",
-                                  formData.ecellPreferredDates.includes(date)
-                                    ? "bg-green-600 border-green-600 text-white shadow-sm"
-                                    : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white"
-                                )}
-                              >
-                                {date}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+
                         
                         <div className="flex items-center gap-3 pt-2">
                           <input
@@ -1649,29 +1626,7 @@ export default function AddCompanyPage() {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-white">Company Logo</label>
-                      <div className="p-8 border-2 border-dashed border-white/10 bg-zinc-900/30 rounded-xl text-center hover:bg-zinc-900/50 hover:border-white/20 transition-all cursor-pointer relative group">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoUpload}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-2">
-                            <Plus className="w-6 h-6 text-white" />
-                          </div>
-                          <p className="text-white font-medium">Click to upload logo</p>
-                          <p className="text-white/60 text-sm">SVG, PNG, JPG (max 2MB)</p>
-                          {formData.logo && (
-                            <p className="text-green-400 text-sm mt-2 font-medium flex items-center gap-1">
-                              <Check className="w-4 h-4" /> {formData.logo.name}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+
 
                   </motion.div>
                 )}

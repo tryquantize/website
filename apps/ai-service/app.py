@@ -383,7 +383,7 @@ def get_ecell_companies():
             "error": str(e)
         }), 500
 
-@app.route('/auto-fill-company', methods=['POST']))
+@app.route('/auto-fill-company', methods=['POST'])
 def auto_fill_company():
     """Auto-fill company details from website and LinkedIn"""
     try:
