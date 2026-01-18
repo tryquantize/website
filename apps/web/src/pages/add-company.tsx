@@ -48,6 +48,8 @@ export default function AddCompanyPage() {
   const changeStep = (newStep: number) => {
     setDirection(newStep > currentStep ? 1 : -1);
     setCurrentStep(newStep);
+    // Scroll to top when changing steps
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const [formData, setFormData] = useState({

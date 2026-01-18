@@ -92,11 +92,6 @@ export function Footer() {
         </div>
 
         <div className="border-t border-white/10 mt-8 pt-8">
-          {/* Product Hunt Badge */}
-          <div className="flex justify-center mb-6">
-            <ProductHuntBadge />
-          </div>
-          
           <div className="text-center text-sm text-white/70 relative">
             <p>&copy; 2026 Quantize. All rights reserved.</p>
             <p className="mt-2">Made by Aditya Surana </p>
