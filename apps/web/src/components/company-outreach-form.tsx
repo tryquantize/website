@@ -35,41 +35,69 @@ export function CompanyOutreachForm({ isOpen, onClose, companies, searchQuery }:
 
     setIsSubmitting(true);
     try {
-      const db = getFirestore(app);
+      console.log('Starting form submission...', { formData, companies: companies.length });
       
-      // Extract company information with potential contact details
-      const companyList = companies.map(company => ({
-        name: company.name,
-        website: company.website || null,
-        linkedIn: company.linkedin_url || null,
-        // Generate potential company email from website
-        potentialEmail: company.website ? 
-          `contact@${company.website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]}` : 
-          null
-      }));
-
-      await addDoc(collection(db, 'companyOutreachRequests'), {
-        userName: formData.name,
-        userEmail: formData.email,
-        userPhone: formData.phone,
-        searchQuery,
-        companies: companyList,
-        companiesCount: companies.length,
-        timestamp: serverTimestamp(),
-        status: 'pending'
-      });
-
-      // Also submit to the new company leads system
-      await companyLeadsService.submitLead({
-        userName: formData.name,
-        userEmail: formData.email,
-        userPhone: formData.phone,
-        searchQuery,
-        searchResults: companies.map(company => ({
+      // Try Firebase first
+      try {
+        const db = getFirestore(app);
+        
+        // Extract company information with potential contact details
+        const companyList = companies.map(company => ({
           name: company.name,
-          companyName: company.name
-        }))
-      });
+          website: company.website || null,
+          linkedIn: company.linkedin_url || null,
+          // Generate potential company email from website
+          potentialEmail: company.website ? 
+            `contact@${company.website.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]}` : 
+            null
+        }));
+
+        console.log('Submitting to Firestore...');
+        await addDoc(collection(db, 'companyOutreachRequests'), {
+          userName: formData.name,
+          userEmail: formData.email,
+          userPhone: formData.phone,
+          searchQuery,
+          companies: companyList,
+          companiesCount: companies.length,
+          timestamp: serverTimestamp(),
+          status: 'pending'
+        });
+        console.log('Firestore submission successful');
+
+        // Also submit to the new company leads system
+        console.log('Submitting to company leads service...');
+        await companyLeadsService.submitLead({
+          userName: formData.name,
+          userEmail: formData.email,
+          userPhone: formData.phone,
+          searchQuery,
+          searchResults: companies.map(company => ({
+            name: company.name,
+            companyName: company.name
+          }))
+        });
+        console.log('Company leads service submission successful');
+      } catch (firebaseError) {
+        console.warn('Firebase submission failed, trying fallback...', firebaseError);
+        
+        // Fallback: Store in localStorage for later sync
+        const fallbackData = {
+          userName: formData.name,
+          userEmail: formData.email,
+          userPhone: formData.phone,
+          searchQuery,
+          companies: companies.map(c => c.name),
+          timestamp: new Date().toISOString(),
+          status: 'pending_sync'
+        };
+        
+        const existingRequests = JSON.parse(localStorage.getItem('pendingOutreachRequests') || '[]');
+        existingRequests.push(fallbackData);
+        localStorage.setItem('pendingOutreachRequests', JSON.stringify(existingRequests));
+        
+        console.log('Stored in localStorage for later sync');
+      }
 
       console.log('Company outreach request submitted successfully');
       onClose();
@@ -80,7 +108,7 @@ export function CompanyOutreachForm({ isOpen, onClose, companies, searchQuery }:
       
     } catch (error) {
       console.error('Error submitting outreach request:', error);
-      alert('Failed to submit request. Please try again.');
+      alert(`Failed to submit request: ${error.message || 'Unknown error'}. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -186,7 +214,7 @@ export function CompanyOutreachForm({ isOpen, onClose, companies, searchQuery }:
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={!formData.name || !formData.email || !formData.phone || isSubmitting}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
                 >
                   {isSubmitting ? (

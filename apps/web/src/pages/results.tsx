@@ -3,7 +3,7 @@ import { useLocation, useRoute } from "wouter";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Copy, Building2, User, Brain, Mic, MicOff, PanelLeftClose, PanelLeftOpen, Loader2, Undo, ArrowRight, Heart, RotateCcw } from "lucide-react";
+import { Search, Sparkles, Copy, Building2, User, Brain, Mic, MicOff, PanelLeftClose, PanelLeftOpen, Loader2, Undo, ArrowRight } from "lucide-react";
 import { QuantizeLogo } from "@/components/quantize-logo";
 import { UserLogo } from "@/components/user-logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -31,6 +31,7 @@ import { Header } from "@/components/layout/header";
 import { CompanyOutreachForm } from "@/components/company-outreach-form";
 import { DragDropResults } from "@/components/drag-drop-results";
 import { getSearchResults, clearSearchResults } from "@/lib/search-session";
+import { MobileDesktopPrompt } from "@/components/mobile-desktop-prompt";
 
 
 
@@ -124,8 +125,6 @@ export default function ResultsPage() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [favoritesNotification, setFavoritesNotification] = useState({ show: false, itemName: '' });
-  const [tinderMode, setTinderMode] = useState(false);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [embeddedWebsite, setEmbeddedWebsite] = useState<{url: string, title: string} | null>(null);
   const [embeddedWebsites, setEmbeddedWebsites] = useState<Array<{id: string, url: string, title: string}>>([]);
 
@@ -789,7 +788,7 @@ export default function ResultsPage() {
     <div className="min-h-screen relative overflow-y-auto">
       {/* Raycast Animation Background */}
       <div className="fixed inset-0 w-full h-full z-0">
-        {tinderMode ? <RaycastBlueBackground /> : <RaycastBackground />}
+        <RaycastBackground />
       </div>
 
       {/* Header with toggle button */}
@@ -802,7 +801,7 @@ export default function ResultsPage() {
       <div className="md:hidden fixed top-16 left-0 right-0 z-40 bg-black/20 backdrop-blur-xl border-b border-white/10">
         {/* Company Outreach Section */}
         {showCompanyOutreachSection && allCompanies.length > 0 && (
-          <div className="p-4 border-b border-white/10">
+          <div className="p-4">
             <h3 className="text-base font-semibold text-white mb-2">Would you like companies to reach out to you?</h3>
             <p className="text-white/70 text-xs mb-3">Get personalized offers and partnerships directly from companies in your search results</p>
             <div className="flex space-x-3">
@@ -818,46 +817,6 @@ export default function ResultsPage() {
               >
                 No, thanks
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* Tinder Mode Toggle */}
-        {allCompanies.length > 0 && (
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={() => {
-                    setTinderMode(!tinderMode);
-                    if (!tinderMode) {
-                      setCurrentCardIndex(0);
-                    }
-                  }}
-                  variant={tinderMode ? "default" : "outline"}
-                  size="sm"
-                  className={`${tinderMode ? 'bg-pink-500 hover:bg-pink-600' : 'border-white/20 text-white hover:bg-white/10'} transition-all`}
-                >
-                  <Heart className="w-3 h-3 mr-2" />
-                  Tinder Mode {tinderMode ? 'ON' : 'OFF'}
-                </Button>
-                {tinderMode && (
-                  <Button
-                    onClick={() => setCurrentCardIndex(0)}
-                    variant="outline"
-                    size="sm"
-                    className="border-white/20 text-white hover:bg-white/10"
-                  >
-                    <RotateCcw className="w-3 h-3 mr-1" />
-                    Reset
-                  </Button>
-                )}
-              </div>
-              {tinderMode && (
-                <div className="text-white/60 text-xs">
-                  {currentCardIndex + 1} / {allCompanies.length}
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -895,7 +854,7 @@ export default function ResultsPage() {
 
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} flex flex-col h-screen`} style={{ marginTop: typeof window !== 'undefined' && window.innerWidth < 768 && (showCompanyOutreachSection || allCompanies.length > 0) ? '120px' : '0' }}>
+      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} flex flex-col h-screen`} style={{ marginTop: typeof window !== 'undefined' && window.innerWidth < 768 && showCompanyOutreachSection ? '60px' : '0' }}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
           <div className="space-y-4">
             {contentItems.map((item) => (
@@ -998,45 +957,6 @@ export default function ResultsPage() {
             </div>
           )}
 
-          {/* Desktop Tinder Mode Toggle */}
-          {allCompanies.length > 0 && (
-            <div className="hidden md:block bg-black/20 backdrop-blur-xl p-4 md:p-6 border border-white/10 mx-2 md:mx-0 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Button
-                    onClick={() => {
-                      setTinderMode(!tinderMode);
-                      if (!tinderMode) {
-                        setCurrentCardIndex(0);
-                      }
-                    }}
-                    variant={tinderMode ? "default" : "outline"}
-                    className={`${tinderMode ? 'bg-pink-500 hover:bg-pink-600' : 'border-white/20 text-white hover:bg-white/10'} transition-all`}
-                  >
-                    <Heart className="w-4 h-4 mr-2" />
-                    Tinder Mode {tinderMode ? 'ON' : 'OFF'}
-                  </Button>
-                  {tinderMode && (
-                    <Button
-                      onClick={() => setCurrentCardIndex(0)}
-                      variant="outline"
-                      size="sm"
-                      className="border-white/20 text-white hover:bg-white/10"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-1" />
-                      Reset
-                    </Button>
-                  )}
-                </div>
-                {tinderMode && (
-                  <div className="text-white/60 text-sm">
-                    {currentCardIndex + 1} / {allCompanies.length}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
 
 
 
@@ -1072,6 +992,8 @@ export default function ResultsPage() {
         searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
       />
 
+      {/* Mobile Desktop Prompt */}
+      <MobileDesktopPrompt />
     </div>
   );
 } 
