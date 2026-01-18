@@ -138,7 +138,7 @@ function Router() {
                   <Route component={NotFound} />
                 </Switch>
               </div>
-              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/add-company' && location !== '/admindashboard' && !location.startsWith('/admindashboard/') && location !== '/adminlogin' && !location.startsWith('/company-login/') && <Footer />}
+              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/add-company' && location !== '/esummit' && location !== '/admindashboard' && !location.startsWith('/admindashboard/') && location !== '/adminlogin' && !location.startsWith('/company-login/') && <Footer />}
             </div>
           </main>
         </div>
