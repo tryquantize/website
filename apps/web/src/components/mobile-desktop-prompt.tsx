@@ -13,14 +13,7 @@ export function MobileDesktopPrompt({ onDismiss }: MobileDesktopPromptProps) {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Check if user has already dismissed this prompt
-    const dismissed = localStorage.getItem('desktop-prompt-dismissed');
-    if (dismissed) {
-      setIsDismissed(true);
-      return;
-    }
-
-    // Show prompt only on mobile devices
+    // Show prompt only on mobile devices (don't check localStorage)
     if (isMobile) {
       setIsVisible(true);
     }
@@ -29,7 +22,6 @@ export function MobileDesktopPrompt({ onDismiss }: MobileDesktopPromptProps) {
   const handleDismiss = () => {
     setIsVisible(false);
     setIsDismissed(true);
-    localStorage.setItem('desktop-prompt-dismissed', 'true');
     onDismiss?.();
   };
 
