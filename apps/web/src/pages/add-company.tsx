@@ -581,6 +581,16 @@ export default function AddCompanyPage() {
         return;
       }
 
+      // Check if accessed via /esummit route and E-Cell interest is required
+      if (isEsummitRoute && !formData.ecellEventInterested) {
+        toast({
+          title: 'E-Cell Event Interest Required',
+          description: 'Please select "Yes, I\'m interested" for the E-Cell event to continue.',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       setIsSubmitting(true);
 
       const { logo, ...submissionData } = formData;
