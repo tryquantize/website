@@ -1048,7 +1048,10 @@ export default function ResultsPage() {
           {/* Cards - New Drag & Drop Layout */}
           {allCompanies.length > 0 && (
             <div className="mt-6 h-full">
-              <DragDropResults companies={allCompanies} />
+              <DragDropResults 
+                companies={allCompanies} 
+                searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+              />
             </div>
           )}
         </NotificationProvider>

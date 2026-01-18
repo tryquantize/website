@@ -5,6 +5,11 @@ import { useFavorites } from "@/contexts/favorites-context";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PartnerPopup } from "@/components/partner-popup";
+import { PartnerSuccessNotification } from "@/components/partner-success-notification";
+import { app } from "@/lib/firebase-init";
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import "@/styles/company-card.css";
 
 interface Company {
@@ -15,6 +20,24 @@ interface Company {
   logoUrl?: string;
   tagline?: string;
   uspTagline?: string;
+  features?: string[];
+  specifications?: string[];
+  location?: string;
+  employees?: string;
+  founded?: string;
+  companyStage?: string;
+  industriesServed?: string[];
+  pricingRanges?: string[];
+  pricingModel?: string[];
+  pricing?: string;
+  productsServices?: string[];
+  topClients?: string[];
+  enhancedAbout?: string;
+  enhancedUseCases?: string[];
+  trialAvailable?: boolean;
+  customerSegments?: string[];
+  deploymentType?: string[];
+  idealScenarios?: string[];
   [key: string]: any;
 }
 
@@ -26,12 +49,69 @@ interface ExpandedCompany {
 
 interface DragDropResultsProps {
   companies: Company[];
+  searchQuery?: string;
 }
 
-export function DragDropResults({ companies }: DragDropResultsProps) {
+export function DragDropResults({ companies, searchQuery }: DragDropResultsProps) {
   const [expandedCompanies, setExpandedCompanies] = useState<ExpandedCompany[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [partnerPopup, setPartnerPopup] = useState<{isOpen: boolean, companyName: string, companyEmail?: string, companyWebsite?: string, companyLinkedIn?: string}>({isOpen: false, companyName: ""});
+  const [showSuccessNotification, setShowSuccessNotification] = useState<{isVisible: boolean, companyName: string}>({isVisible: false, companyName: ""});
+
+  const handlePartnerSubmit = async (formData: {
+    name: string;
+    phone: string;
+    email: string;
+    companyEmail?: string;
+    companyWebsite?: string;
+    companyLinkedIn?: string;
+  }) => {
+    try {
+      console.log('Submitting partner request to Firestore:', {
+        userName: formData.name,
+        userEmail: formData.email,
+        userPhone: formData.phone,
+        companyName: partnerPopup.companyName,
+        companyEmail: formData.companyEmail,
+        companyWebsite: formData.companyWebsite,
+        companyLinkedIn: formData.companyLinkedIn,
+        searchQuery
+      });
+      
+      // Store directly in Firestore
+      const db = getFirestore(app);
+      const docRef = await addDoc(collection(db, 'partnerRequests'), {
+        userName: formData.name,
+        userEmail: formData.email,
+        userPhone: formData.phone,
+        companyName: partnerPopup.companyName,
+        companyEmail: formData.companyEmail || null,
+        companyWebsite: formData.companyWebsite || null,
+        companyLinkedIn: formData.companyLinkedIn || null,
+        searchQuery: searchQuery || null,
+        timestamp: serverTimestamp(),
+        status: 'pending'
+      });
+      
+      console.log('Partner request stored in Firestore with ID:', docRef.id);
+      
+      // Close popup
+      setPartnerPopup({isOpen: false, companyName: ""});
+      
+      // Show success notification
+      setShowSuccessNotification({isVisible: true, companyName: partnerPopup.companyName});
+      
+      // Hide notification after 4 seconds
+      setTimeout(() => {
+        setShowSuccessNotification({isVisible: false, companyName: ""});
+      }, 4000);
+      
+    } catch (error) {
+      console.error('Firestore error:', error);
+      alert('Failed to submit partner request. Please try again.');
+    }
+  };
 
   const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -145,6 +225,10 @@ export function DragDropResults({ companies }: DragDropResultsProps) {
                     onRemove={handleRemoveExpanded}
                     formatCompanyName={formatCompanyName}
                     getWebsiteUrl={getWebsiteUrl}
+                    searchQuery={searchQuery}
+                    onPartnerRequest={(companyName, companyEmail, companyWebsite, companyLinkedIn) => {
+                      setPartnerPopup({isOpen: true, companyName, companyEmail, companyWebsite, companyLinkedIn});
+                    }}
                   />
                 ))}
               </AnimatePresence>
@@ -182,6 +266,24 @@ export function DragDropResults({ companies }: DragDropResultsProps) {
           })}
         </div>
       </div>
+      
+      {/* Partner Popup */}
+      <PartnerPopup
+        isOpen={partnerPopup.isOpen}
+        onClose={() => setPartnerPopup({isOpen: false, companyName: ""})}
+        companyName={partnerPopup.companyName}
+        companyEmail={partnerPopup.companyEmail}
+        companyWebsite={partnerPopup.companyWebsite}
+        companyLinkedIn={partnerPopup.companyLinkedIn}
+        searchQuery={searchQuery}
+        onSubmit={handlePartnerSubmit}
+      />
+      
+      {/* Success Notification */}
+      <PartnerSuccessNotification
+        isVisible={showSuccessNotification.isVisible}
+        companyName={showSuccessNotification.companyName}
+      />
     </div>
   );
 }
@@ -358,11 +460,91 @@ interface ExpandedPairProps {
   onRemove: (id: string) => void;
   formatCompanyName: (name: string) => string;
   getWebsiteUrl: (website: string) => string;
+  searchQuery?: string;
+  onPartnerRequest: (companyName: string, companyEmail?: string, companyWebsite?: string, companyLinkedIn?: string) => void;
 }
 
-function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsiteUrl }: ExpandedPairProps) {
+function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsiteUrl, searchQuery, onPartnerRequest }: ExpandedPairProps) {
   const { company } = expanded;
   const websiteUrl = getWebsiteUrl(company.website);
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { currentUser } = useFirebaseAuth();
+  const { showFavoritesNotification } = useNotification();
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState<Array<{text: string, isUser: boolean}>>([]);
+  const [inputValue, setInputValue] = useState("");
+
+  // Helper function to check if a field has meaningful data
+  const hasData = (value: any): boolean => {
+    if (!value) return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'string') {
+      const cleaned = value.toLowerCase().trim();
+      return cleaned !== '' && cleaned !== 'n/a' && cleaned !== 'not applicable' && cleaned !== 'null' && cleaned !== 'undefined';
+    }
+    return true;
+  };
+
+  // Helper function to check if pricing data is meaningful
+  const hasMeaningfulPricing = (company: Company): boolean => {
+    const placeholderTexts = [
+      'contact for pricing',
+      'contact us for pricing', 
+      'pricing available on request',
+      'custom pricing',
+      'quote available',
+      'request quote',
+      'call for pricing',
+      'pricing on request'
+    ];
+    
+    if (hasData(company.pricingRanges) || hasData(company.pricingModel)) {
+      return true;
+    }
+    
+    if (hasData(company.pricing)) {
+      const pricingText = company.pricing!.toLowerCase().trim();
+      return !placeholderTexts.some(placeholder => pricingText.includes(placeholder));
+    }
+    
+    return false;
+  };
+
+  const handleChatClick = () => {
+    setChatOpen(true);
+    if (messages.length === 0) {
+      setMessages([{text: `Hi! I'm here to help you learn more about ${company.name}. What would you like to know?`, isUser: false}]);
+    }
+  };
+
+  const handleSendMessage = () => {
+    const message = inputValue.trim();
+    if (!message) return;
+
+    setMessages(prev => [
+      ...prev,
+      {text: message, isUser: true},
+      {text: `Thanks for your message about ${company.name}. Our team will get back to you soon!`, isUser: false}
+    ]);
+    setInputValue("");
+  };
+
+  const handleCallClick = () => {
+    if ((company as any).phoneNumber) {
+      window.open(`tel:${(company as any).phoneNumber}`, '_self');
+    } else {
+      alert(`No phone number available for ${company.name}`);
+    }
+  };
+
+  const handlePartnerClick = () => {
+    onPartnerRequest(
+      company.name,
+      (company as any).email || (company as any).companyEmail,
+      company.website,
+      (company as any).linkedin_url || (company as any).linkedinUrl
+    );
+  };
 
   return (
     <motion.div
@@ -398,202 +580,330 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
       <div className="bg-black/40 flex flex-col">
         <div className="bg-black/60 px-4 py-2 border-b border-white/10 flex items-center justify-between">
           <h6 className="text-white text-sm font-medium">Company Details</h6>
-          <button
-            onClick={() => onRemove(expanded.id)}
-            className="text-white/60 hover:text-white transition-colors"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="flex-1 p-4 overflow-y-auto" style={{maxHeight: '520px'}}>
-          <div className="space-y-4">
-            <div>
-              <h5 className="text-white text-lg font-semibold mb-2">
-                {formatCompanyName(company.name)}
-              </h5>
-              <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full text-xs">
-                {company.category}
-              </span>
-            </div>
-            
-            {/* Company Info Grid */}
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              {company.location && (
-                <div>
-                  <div className="flex items-center gap-1 mb-1">
-                    <span className="font-semibold text-white">Location</span>
-                  </div>
-                  <div className="text-white/80">{company.location}</div>
-                </div>
-              )}
-              {company.employees && (
-                <div>
-                  <div className="flex items-center gap-1 mb-1">
-                    <span className="font-semibold text-white">Employees</span>
-                  </div>
-                  <div className="text-white/80">{company.employees}</div>
-                </div>
-              )}
-              {company.founded && (
-                <div>
-                  <div className="flex items-center gap-1 mb-1">
-                    <span className="font-semibold text-white">Founded</span>
-                  </div>
-                  <div className="text-white/80">{company.founded}</div>
-                </div>
-              )}
-              {company.companyStage && (
-                <div>
-                  <div className="flex items-center gap-1 mb-1">
-                    <span className="font-semibold text-white">Stage</span>
-                  </div>
-                  <div className="text-white/80">{company.companyStage}</div>
-                </div>
-              )}
-            </div>
-            
-            {(company.uspTagline || company.tagline || company.enhancedAbout || company.description) && (
-              <p className="text-white/80 text-sm leading-relaxed">
-                {company.uspTagline || company.tagline || company.enhancedAbout || company.description}
-              </p>
+          <div className="flex items-center gap-2">
+            {currentUser && (
+              <Button
+                onClick={() => {
+                  const companyId = `company_${expanded.originalIndex}_${company.name}`;
+                  if (isFavorite(companyId)) {
+                    removeFromFavorites(companyId);
+                  } else {
+                    addToFavorites({
+                      id: companyId,
+                      type: 'company',
+                      name: company.name,
+                      description: company.description,
+                      features: company.features || [],
+                      pricing: company.pricing || '',
+                      website: company.website,
+                      category: company.category
+                    }, showFavoritesNotification);
+                  }
+                }}
+                size="sm"
+                variant="ghost"
+                className="p-1 h-auto"
+              >
+                <Heart className={`w-4 h-4 ${isFavorite(`company_${expanded.originalIndex}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+              </Button>
             )}
-            
-            {/* Key Features/Specifications */}
-            {((company.features && Array.isArray(company.features)) || (company.specifications && Array.isArray(company.specifications))) && (
-              <div>
-                <h6 className="text-white font-medium mb-2">Key Features</h6>
-                <ul className="space-y-1">
-                  {(company.specifications || company.features)?.slice(0, 6).map((item: string, i: number) => (
-                    <li key={i} className="text-white/70 text-sm">• {item}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            {/* Customer Segments */}
-            {company.customerSegments && Array.isArray(company.customerSegments) && (
-              <div>
-                <h6 className="text-white font-medium mb-2">Customer Segments</h6>
-                <div className="flex flex-wrap gap-1">
-                  {company.customerSegments.map((segment: string, i: number) => (
-                    <span key={i} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
-                      {segment}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Industries Served */}
-            {company.industriesServed && Array.isArray(company.industriesServed) && (
-              <div>
-                <h6 className="text-white font-medium mb-2">Industries Served</h6>
-                <div className="text-xs text-white/80">
-                  {company.industriesServed.slice(0, 5).join(', ')}
-                  {company.industriesServed.length > 5 && ` +${company.industriesServed.length - 5} more`}
-                </div>
-              </div>
-            )}
-            
-            {/* Products & Services */}
-            {company.productsServices && Array.isArray(company.productsServices) && (
-              <div>
-                <h6 className="text-white font-medium mb-2">Products & Services</h6>
-                <div className="space-y-1">
-                  {company.productsServices.slice(0, 4).map((product: string, i: number) => (
-                    <div key={i} className="text-xs text-white/80 leading-relaxed">
-                      • {product.length > 100 ? product.substring(0, 100) + '...' : product}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Pricing */}
-            {(company.pricing || (company.pricingRanges && Array.isArray(company.pricingRanges)) || (company.pricingModel && Array.isArray(company.pricingModel))) && (
-              <div>
-                <h6 className="text-white font-medium mb-2">Pricing</h6>
-                <div className="text-xs">
-                  {company.pricingRanges && Array.isArray(company.pricingRanges) && (
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {company.pricingRanges.map((range: string, i: number) => (
-                        <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded">
-                          {range}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {company.pricingModel && Array.isArray(company.pricingModel) && (
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {company.pricingModel.map((model: string, i: number) => (
-                        <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
-                          {model}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {company.pricing && (
-                    <div className="text-white/80">{company.pricing}</div>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {/* Use Cases */}
-            {company.enhancedUseCases && Array.isArray(company.enhancedUseCases) && (
-              <div>
-                <h6 className="text-white font-medium mb-2">Use Cases</h6>
-                <div className="space-y-1">
-                  {company.enhancedUseCases.slice(0, 4).map((useCase: string, i: number) => (
-                    <div key={i} className="text-xs text-white/80">• {useCase}</div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Top Clients */}
-            {company.topClients && Array.isArray(company.topClients) && (
-              <div>
-                <h6 className="text-white font-medium mb-2">Notable Clients</h6>
-                <div className="text-xs text-white/80">
-                  {company.topClients.slice(0, 6).join(', ')}
-                  {company.topClients.length > 6 && ` and ${company.topClients.length - 6} more`}
-                </div>
-              </div>
-            )}
-            
-            {/* Trial Available */}
-            {company.trialAvailable && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-green-300 font-medium text-sm">Free Trial Available</span>
-              </div>
-            )}
+            <button
+              onClick={() => onRemove(expanded.id)}
+              className="text-white/60 hover:text-white transition-colors"
+            >
+              ✕
+            </button>
           </div>
-          
-          {/* Action Buttons */}
-          <div className="mt-6 pt-4 border-t border-white/10">
+        </div>
+        
+        {chatOpen ? (
+          <div className="flex-1 p-4 flex flex-col">
+            <div className="flex items-center justify-between mb-3">
+              <h5 className="text-white text-base font-medium">{formatCompanyName(company.name)}</h5>
+              <Button
+                onClick={() => setChatOpen(false)}
+                size="sm"
+                variant="outline"
+                className="border-white/20 text-white/80 hover:bg-white/10 text-xs"
+              >
+                Back
+              </Button>
+            </div>
+            
+            <div className="bg-black/20 rounded-lg p-3 flex-1 overflow-y-auto space-y-2 mb-3">
+              {messages.map((msg, msgIndex) => (
+                <div key={msgIndex} className={`text-xs ${msg.isUser ? 'text-right' : 'text-left'}`}>
+                  <span className={`inline-block px-2 py-1 rounded ${msg.isUser ? 'bg-blue-600 text-white' : 'bg-white/10 text-white/80'}`}>
+                    {msg.text}
+                  </span>
+                </div>
+              ))}
+            </div>
+            
             <div className="flex space-x-2">
-              <Button size="sm" className="flex-1 bg-white text-black font-medium hover:bg-gray-100">
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Chat
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder="Type your message..."
+                className="flex-1 h-8 text-xs bg-white/5 border-white/20 text-white"
+              />
+              <Button
+                onClick={handleSendMessage}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Send
               </Button>
-              <Button size="sm" className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium hover:from-green-600 hover:to-blue-600">
-                <Handshake className="w-4 h-4 mr-2" />
-                Partner
-              </Button>
-              {company.website && company.website !== "#" && (
-                <Button
-                  onClick={() => window.open(getWebsiteUrl(company.website), "_blank")}
-                  size="sm"
-                  className="bg-white text-black font-medium hover:bg-gray-100"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </Button>
-              )}
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex-1 p-4 overflow-y-auto" style={{maxHeight: '520px'}}>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden" style={{
+                  background: company.logoUrl ? "transparent" : "linear-gradient(225deg, #171c2c 0%, #121624 100%)",
+                  boxShadow: "0 4px 8px -1px rgba(0, 0, 0, 0.2), inset 1px 1px 3px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.4)"
+                }}>
+                  {company.logoUrl ? (
+                    <img src={company.logoUrl} alt={`${company.name} logo`} className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 className="w-6 h-6 text-white" />
+                  )}
+                </div>
+                <div>
+                  <h5 className="text-white text-lg font-semibold mb-1">
+                    {formatCompanyName(company.name)}
+                  </h5>
+                  <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full text-xs">
+                    {company.category}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Company Info Grid */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                {hasData(company.location) && (
+                  <div>
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="font-semibold text-white">Location</span>
+                    </div>
+                    <div className="text-white/80">{company.location}</div>
+                  </div>
+                )}
+                {hasData(company.employees) && (
+                  <div>
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="font-semibold text-white">Employees</span>
+                    </div>
+                    <div className="text-white/80">{company.employees}</div>
+                  </div>
+                )}
+                {hasData(company.founded) && (
+                  <div>
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="font-semibold text-white">Founded</span>
+                    </div>
+                    <div className="text-white/80">{company.founded}</div>
+                  </div>
+                )}
+                {hasData(company.companyStage) && (
+                  <div>
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="font-semibold text-white">Stage</span>
+                    </div>
+                    <div className="text-white/80">{company.companyStage}</div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Description/Tagline */}
+              {(hasData(company.uspTagline) || hasData(company.tagline) || hasData(company.enhancedAbout) || hasData(company.description)) && (
+                <p className="text-white/80 text-sm leading-relaxed">
+                  {company.uspTagline || company.tagline || company.enhancedAbout || company.description}
+                </p>
+              )}
+              
+              {/* Customer Segments */}
+              {hasData(company.customerSegments) && (
+                <div>
+                  <h6 className="text-white font-medium mb-2">Customer Segments</h6>
+                  <div className="flex flex-wrap gap-1">
+                    {company.customerSegments!.map((segment: string, i: number) => (
+                      <span key={i} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
+                        {segment}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Deployment Type */}
+              {hasData(company.deploymentType) && (
+                <div>
+                  <h6 className="text-white font-medium mb-2">Deployment</h6>
+                  <div className="flex flex-wrap gap-1">
+                    {company.deploymentType!.map((type: string, i: number) => (
+                      <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">
+                        {type}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Ideal Scenarios */}
+              {hasData(company.idealScenarios) && (
+                <div>
+                  <h6 className="text-white font-medium mb-2">Ideal For</h6>
+                  <div className="flex flex-wrap gap-1">
+                    {company.idealScenarios!.map((scenario: string, i: number) => (
+                      <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">
+                        {scenario}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Industries Served */}
+              {hasData(company.industriesServed) && (
+                <div>
+                  <h6 className="text-white font-medium mb-2">Industries Served</h6>
+                  <div className="text-xs text-white/80">
+                    {company.industriesServed!.slice(0, 5).join(', ')}
+                    {company.industriesServed!.length > 5 && ` +${company.industriesServed!.length - 5} more`}
+                  </div>
+                </div>
+              )}
+              
+              {/* Key Features/Specifications */}
+              {(hasData(company.features) || hasData(company.specifications)) && (
+                <div>
+                  <h6 className="text-white font-medium mb-2">Key Features</h6>
+                  <ul className="space-y-1">
+                    {(company.specifications || company.features)?.slice(0, 6).map((item: string, i: number) => (
+                      <li key={i} className="text-white/70 text-sm">• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {/* Products & Services */}
+              {hasData(company.productsServices) && (
+                <div>
+                  <h6 className="text-white font-medium mb-2">Products & Services</h6>
+                  <div className="space-y-1">
+                    {company.productsServices!.slice(0, 4).map((product: string, i: number) => (
+                      <div key={i} className="text-xs text-white/80 leading-relaxed">
+                        • {product.length > 100 ? product.substring(0, 100) + '...' : product}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Pricing */}
+              {hasMeaningfulPricing(company) && (
+                <div>
+                  <h6 className="text-white font-medium mb-2">Pricing</h6>
+                  <div className="text-xs">
+                    {hasData(company.pricingRanges) && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {company.pricingRanges!.map((range: string, i: number) => (
+                          <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded">
+                            {range}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {hasData(company.pricingModel) && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {company.pricingModel!.map((model: string, i: number) => (
+                          <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
+                            {model}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {hasData(company.pricing) && !hasData(company.pricingRanges) && !hasData(company.pricingModel) && (
+                      <div className="text-white/80">{company.pricing}</div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Use Cases */}
+              {hasData(company.enhancedUseCases) && (
+                <div>
+                  <h6 className="text-white font-medium mb-2">Use Cases</h6>
+                  <div className="space-y-1">
+                    {company.enhancedUseCases!.slice(0, 4).map((useCase: string, i: number) => (
+                      <div key={i} className="text-xs text-white/80">• {useCase}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Top Clients */}
+              {hasData(company.topClients) && (
+                <div>
+                  <h6 className="text-white font-medium mb-2">Notable Clients</h6>
+                  <div className="text-xs text-white/80">
+                    {company.topClients!.slice(0, 6).join(', ')}
+                    {company.topClients!.length > 6 && ` and ${company.topClients!.length - 6} more`}
+                  </div>
+                </div>
+              )}
+              
+              {/* Trial Available */}
+              {company.trialAvailable && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-green-300 font-medium text-sm">Free Trial Available</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="mt-6 pt-4 border-t border-white/10">
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={handleChatClick}
+                  size="sm" 
+                  className="flex-1 bg-white text-black font-medium hover:bg-gray-100"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Chat
+                </Button>
+                <Button 
+                  onClick={handleCallClick}
+                  size="sm" 
+                  className="flex-1 bg-white text-black font-medium hover:bg-gray-100"
+                >
+                  📞 Call
+                </Button>
+                <Button 
+                  onClick={handlePartnerClick}
+                  size="sm" 
+                  className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium hover:from-green-600 hover:to-blue-600"
+                >
+                  <Handshake className="w-4 h-4 mr-2" />
+                  Partner
+                </Button>
+                {company.website && company.website !== "#" && (
+                  <Button
+                    onClick={() => window.open(getWebsiteUrl(company.website), "_blank")}
+                    size="sm"
+                    className="bg-white text-black font-medium hover:bg-gray-100"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );
