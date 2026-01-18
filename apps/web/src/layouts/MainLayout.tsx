@@ -13,10 +13,8 @@ export default function MainLayout({ children, showJoinUs }: MainLayoutProps) {
     <div className="relative min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 pt-24 md:pt-32">{children}</main>
-      {/* Hide footer on mobile for add-company pages */}
-      <div className={isAddCompanyPage ? "hidden md:block" : ""}>
-        <Footer />
-      </div>
+      {/* Hide footer completely for add-company pages */}
+      {!isAddCompanyPage && <Footer />}
     </div>
   );
 }
