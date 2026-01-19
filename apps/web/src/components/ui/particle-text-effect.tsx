@@ -239,11 +239,11 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
 
           // Faster speeds for "Apple-like" snappy feel
           // Increased multiplier for even more snap
-          const speedMultiplier = isMobile ? 3.5 : 2.5
+          const speedMultiplier = isMobile ? 4.5 : 2.5
           particle.maxSpeed = (Math.random() * 6 + 4) * speedMultiplier
-          particle.maxForce = particle.maxSpeed * 0.2 // Stronger steering force for snappiness
+          particle.maxForce = particle.maxSpeed * 0.25 // Stronger steering force for snappiness
           particle.particleSize = Math.random() * 3 + 2
-          particle.colorBlendRate = (Math.random() * 0.05 + 0.02) * (isMobile ? 2 : 1)
+          particle.colorBlendRate = (Math.random() * 0.05 + 0.02) * (isMobile ? 3 : 1)
 
           particles.push(particle)
         }
@@ -298,7 +298,7 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
 
     // Auto-advance words
     frameCountRef.current++
-    if (frameCountRef.current % 120 === 0) { // Much faster switching (was 270)
+    if (frameCountRef.current % 90 === 0) { // Even faster switching for mobile
       wordIndexRef.current = (wordIndexRef.current + 1) % words.length
       nextWord(words[wordIndexRef.current], canvas)
     }
