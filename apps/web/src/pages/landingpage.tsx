@@ -36,7 +36,7 @@ export default function LandingPage() {
   
   // Default websites to display on page load (limit to 4-6 for performance)
   const defaultWebsites = [
-    { id: 'clarus', url: 'https://clarus.so', title: 'Clarus' },
+    { id: 'veriad', url: 'https://veriad.ai', title: 'Veriad.ai' },
     { id: 'openfoundry', url: 'https://openfoundry.ai', title: 'OpenFoundry' },
     { id: 'smallest', url: 'https://smallest.ai', title: 'Smallest.ai' },
     { id: 'raycaster', url: 'https://www.raycaster.ai', title: 'Raycaster' }
@@ -132,6 +132,37 @@ export default function LandingPage() {
 
       {/* Content Sections - no background, pure Raycast */}
       <div className="relative z-10">
+        {/* YouTube Video Section - Above Featured Companies */}
+        <section className="my-24 sm:my-32 md:my-40">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            viewport={{ once: true, amount: 0.3 }}
+          >
+            <SectionBadge>WATCH NOW</SectionBadge>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#f5f5f7] mb-6 tracking-tight">How to onboard your company</h2>
+            <p className="text-[#86868b] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">Learn how to get your company listed on Quantize</p>
+          </motion.div>
+          <motion.div
+            className="relative w-full max-w-4xl mx-auto aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20 shadow-2xl"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            viewport={{ once: true, amount: 0.3 }}
+          >
+            <iframe
+              className="w-full h-full"
+              src="https://www.youtube.com/embed/S1EsLX6QwKg"
+              title="How to onboard your company"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </motion.div>
+        </section>
+
         {/* Website Embed Section - Full width with vertical padding */}
         <div className="w-full px-0 py-32">
           <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 mb-4">

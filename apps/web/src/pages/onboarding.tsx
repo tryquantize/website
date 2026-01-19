@@ -209,9 +209,21 @@ export default function OnboardingPage() {
       if (!valid) return;
     }
     setStep(Math.min(step + 1, 7));
+    
+    // Scroll to top on mobile when moving to next section
+    if (window.innerWidth < 768) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
-  const prevStep = () => setStep(Math.max(step - 1, 0));
+  const prevStep = () => {
+    setStep(Math.max(step - 1, 0));
+    
+    // Scroll to top on mobile when moving to previous section
+    if (window.innerWidth < 768) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const onSubmit = async (data: OnboardingFormData) => {
     if (!currentUser) {
