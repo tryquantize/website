@@ -48,19 +48,25 @@ export default function AddCompanyPage() {
   const changeStep = (newStep: number) => {
     setDirection(newStep > currentStep ? 1 : -1);
     setCurrentStep(newStep);
-    // Scroll to top when changing steps - enhanced for mobile
-    setTimeout(() => {
-      // Try multiple scroll targets for mobile compatibility
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Force scroll to top immediately for mobile
+    const scrollToTop = () => {
+      // Scroll the main scrollable container
+      const container = document.querySelector('.lg\\:overflow-y-auto');
+      if (container) {
+        container.scrollTop = 0;
+      }
+      
+      // Also scroll window and body for mobile browsers
+      window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-      
-      // Also scroll the form container if it exists
-      const scrollContainer = scrollContainerRef.current;
-      if (scrollContainer) {
-        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }, 150);
+    };
+    
+    // Execute immediately and after animation
+    scrollToTop();
+    setTimeout(scrollToTop, 50);
+    setTimeout(scrollToTop, 200);
   };
 
   const [formData, setFormData] = useState({
