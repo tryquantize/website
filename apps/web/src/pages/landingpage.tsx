@@ -164,7 +164,7 @@ export default function LandingPage() {
         </section>
 
         {/* Website Embed Section - Full width with vertical padding */}
-        <div className="w-full px-0 py-32">
+        <div className="w-full px-0 md:px-0 py-32">
           <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 mb-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold text-white">Featured Companies ({allWebsites.length})</h2>
@@ -193,11 +193,13 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-          <MultiWebsiteEmbed
-            websites={currentWebsites}
-            onClose={closeWebsiteEmbed}
-            height="600px"
-          />
+          <div className="px-4 md:px-0">
+            <MultiWebsiteEmbed
+              websites={currentWebsites}
+              onClose={closeWebsiteEmbed}
+              height="600px"
+            />
+          </div>
         </div>
         
         <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pb-0">
