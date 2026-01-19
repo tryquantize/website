@@ -172,6 +172,31 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pb-0">
 
 
+          {/* YouTube Video Section */}
+          <section className="my-24 sm:my-32 md:my-40">
+            <div className="text-center mb-12">
+              <SectionBadge>WATCH NOW</SectionBadge>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#f5f5f7] mb-6 tracking-tight">See Quantize in Action</h2>
+              <p className="text-[#86868b] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">Watch our latest demo and discover the power of AI-driven search</p>
+            </div>
+            <motion.div
+              className="relative w-full max-w-4xl mx-auto aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20 shadow-2xl"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              viewport={{ once: true, amount: 0.3 }}
+            >
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/SaKxRnUkdjU"
+                title="Quantize Demo"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </motion.div>
+          </section>
+
           {/* Video Section - Full Width */}
           <section className="my-24 sm:my-32 md:my-40 relative -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-12">
             <div className="text-center mb-20 px-4 sm:px-6 md:px-8 lg:px-12">
