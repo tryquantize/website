@@ -142,8 +142,8 @@ export default function LandingPage() {
             viewport={{ once: true, amount: 0.3 }}
           >
             <SectionBadge>WATCH NOW</SectionBadge>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#f5f5f7] mb-6 tracking-tight">How to onboard your company</h2>
-            <p className="text-[#86868b] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">Learn how to get your company listed on Quantize</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#f5f5f7] mb-6 tracking-tight">See Quantize in Action</h2>
+            <p className="text-[#86868b] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">Watch our latest demo and discover the power of AI-driven search</p>
           </motion.div>
           <motion.div
             className="relative w-full max-w-4xl mx-auto aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20 shadow-2xl"
@@ -207,8 +207,8 @@ export default function LandingPage() {
           <section className="my-24 sm:my-32 md:my-40">
             <div className="text-center mb-12">
               <SectionBadge>WATCH NOW</SectionBadge>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#f5f5f7] mb-6 tracking-tight">See Quantize in Action</h2>
-              <p className="text-[#86868b] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">Watch our latest demo and discover the power of AI-driven search</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#f5f5f7] mb-6 tracking-tight">How to onboard your company</h2>
+              <p className="text-[#86868b] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">Learn how to get your company listed on Quantize</p>
             </div>
             <motion.div
               className="relative w-full max-w-4xl mx-auto aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-white/12 to-white/8 backdrop-blur-2xl border border-white/20 shadow-2xl"
