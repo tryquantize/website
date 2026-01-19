@@ -50,8 +50,17 @@ export default function AddCompanyPage() {
     setCurrentStep(newStep);
     // Scroll to top when changing steps - enhanced for mobile
     setTimeout(() => {
+      // Try multiple scroll targets for mobile compatibility
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      
+      // Also scroll the form container if it exists
+      const scrollContainer = scrollContainerRef.current;
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 150);
   };
 
   const [formData, setFormData] = useState({
