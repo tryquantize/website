@@ -7,9 +7,37 @@ export interface Company {
   id: string;
   companyName: string;
   website: string;
+  linkedinPage?: string;
+  pitchDeckUrl?: string;
   description?: string;
   category?: string;
   logo?: string;
+  phoneNumber?: string;
+  email?: string;
+  founded?: string;
+  headquarters?: string;
+  products?: string[];
+  employees?: string;
+  industriesServed?: string[];
+  pricingRanges?: string[];
+  pricingModel?: string[];
+  features?: string;
+  useCases?: string;
+  testimonialPage?: string;
+  companyStage?: string;
+  topClients?: string[];
+  tagline?: string;
+  trialAvailable?: boolean;
+  customerSegments?: string[];
+  uspTagline?: string;
+  deploymentType?: string[];
+  idealScenarios?: string[];
+  vcEventInterested?: boolean;
+  ecellEventInterested?: boolean;
+  ecellPreferredDates?: string[];
+  founders?: Array<{ name: string; phone: string; email: string }>;
+  painPoint?: string;
+  createdAt?: any;
 }
 
 export class CompanyService {

@@ -8,6 +8,8 @@ interface Company {
   id: string;
   companyName: string;
   website: string;
+  linkedinPage?: string;
+  pitchDeckUrl?: string;
   email: string;
   phoneNumber: string;
   description: string;
@@ -19,6 +21,21 @@ interface Company {
   founders: Array<{ name: string; phone: string; email: string }>;
   painPoint: string;
   createdAt: any;
+  products?: string[];
+  companyStage?: string;
+  tagline?: string;
+  uspTagline?: string;
+  customerSegments?: string[];
+  deploymentType?: string[];
+  idealScenarios?: string[];
+  industriesServed?: string[];
+  pricingModel?: string[];
+  pricingRanges?: string[];
+  trialAvailable?: boolean;
+  topClients?: string[];
+  testimonialPage?: string;
+  features?: string;
+  useCases?: string;
 }
 
 export default function EsummitRegistrationPage() {
@@ -193,6 +210,19 @@ export default function EsummitRegistrationPage() {
                     {company.website}
                   </a>
                 </div>
+                {company.pitchDeckUrl && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Globe className="w-4 h-4 text-white/40" />
+                    <a 
+                      href={company.pitchDeckUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-purple-400 hover:text-purple-300 transition-colors truncate"
+                    >
+                      Pitch Deck
+                    </a>
+                  </div>
+                )}
               </div>
 
               {/* Contact Information */}

@@ -65,6 +65,7 @@ export default function AddCompanyPage() {
     companyName: '',
     website: '',
     linkedinPage: '',
+    pitchDeckUrl: '',
     phoneNumber: '',
     email: '',
     founded: '',
@@ -432,7 +433,7 @@ export default function AddCompanyPage() {
   };
 
   const steps = [
-    { title: 'Basic Info', fields: ['companyName', 'website', 'linkedinPage'] },
+    { title: 'Basic Info', fields: ['companyName', 'website', 'linkedinPage', 'pitchDeckUrl'] },
     { title: 'Company Details', fields: ['phoneNumber', 'email', 'founded', 'headquarters', 'category', 'employees', 'tagline', 'uspTagline'] },
     { title: 'Products & Description', fields: ['products', 'description'] },
     { title: 'Features & Use Cases', fields: ['features', 'useCases'] },
@@ -442,10 +443,10 @@ export default function AddCompanyPage() {
   ];
 
   const handleAutoFill = async () => {
-    if (!formData.companyName || !formData.website) {
+    if (!formData.companyName) {
       toast({
         title: 'Missing Information',
-        description: 'Please enter company name and website before auto-filling.',
+        description: 'Please enter company name before auto-filling.',
         variant: 'destructive'
       });
       return;
@@ -459,7 +460,7 @@ export default function AddCompanyPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           companyName: formData.companyName,
-          website: formData.website,
+          website: formData.website || '',
           linkedinPage: formData.linkedinPage || ''
         })
       });
@@ -563,10 +564,10 @@ export default function AddCompanyPage() {
     e.preventDefault();
 
     try {
-      if (!formData.companyName || !formData.website || !formData.description || !formData.category) {
+      if (!formData.companyName || !formData.description || !formData.category) {
         toast({
           title: 'Missing Required Fields',
-          description: 'Please fill in company name, website, description, and category.',
+          description: 'Please fill in company name, description, and category.',
           variant: 'destructive'
         });
         return;
@@ -658,7 +659,7 @@ export default function AddCompanyPage() {
   const isStepComplete = (stepIdx: number) => {
     switch (stepIdx) {
       case 0: // Basic Info
-        return !!formData.companyName && !!formData.website;
+        return !!formData.companyName;
       case 1: // Company Details
         return !!formData.category && !!formData.email;
       case 2: // Products
@@ -947,9 +948,8 @@ export default function AddCompanyPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-white">Website <span className="text-red-400">*</span></label>
+                        <label className="text-sm font-medium text-white">Website</label>
                         <Input
-                          required
                           type="url"
                           value={formData.website}
                           onChange={(e) => handleInputChange('website', e.target.value)}
@@ -968,10 +968,21 @@ export default function AddCompanyPage() {
                           placeholder="https://linkedin.com/company/yourcompany"
                         />
                       </div>
+
+                      <div className="md:col-span-2 space-y-2">
+                        <label className="text-sm font-medium text-white">Pitch Deck URL</label>
+                        <Input
+                          type="url"
+                          value={formData.pitchDeckUrl}
+                          onChange={(e) => handleInputChange('pitchDeckUrl', e.target.value)}
+                          className="h-14 bg-zinc-900/50 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 transition-colors duration-200 rounded-xl focus:outline-none focus:ring-0"
+                          placeholder="https://drive.google.com/your-pitch-deck or https://docsend.com/your-deck"
+                        />
+                      </div>
                     </div>
 
-                    {/* Auto-fill Button */}
-                    {formData.companyName && formData.website && (
+                    {/* Auto-fill Button - Always visible */}
+                    {formData.companyName && (
                       <div className="flex flex-col items-center gap-4 pt-4">
                         <Button
                           type="button"
