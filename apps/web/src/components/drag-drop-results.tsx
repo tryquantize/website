@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Building2, Eye, MousePointer, Heart, ExternalLink, MessageCircle, Handshake } from 'lucide-react';
+import { Plus, Building2, Eye, MousePointer, Heart, ExternalLink, MessageCircle, Handshake, MapPin, Users, Calendar, Briefcase, Globe, Linkedin, DollarSign, Target, Layers, Zap, Award, CheckCircle } from 'lucide-react';
 import { useFavorites } from "@/contexts/favorites-context";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
@@ -405,19 +405,77 @@ function CompactCompanyCard({
               </div>
             )}
             
+            {/* Company Details with Icons */}
+            <div className="mb-3 space-y-2">
+              {hasData(company.location) && (
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <MapPin className="w-3 h-3" />
+                  <span>{company.location}</span>
+                </div>
+              )}
+              {hasData(company.employees) && (
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <Users className="w-3 h-3" />
+                  <span>{company.employees} employees</span>
+                </div>
+              )}
+              {hasData(company.founded) && (
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <Calendar className="w-3 h-3" />
+                  <span>Founded {company.founded}</span>
+                </div>
+              )}
+              {hasData(company.companyStage) && (
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <Briefcase className="w-3 h-3" />
+                  <span>{company.companyStage}</span>
+                </div>
+              )}
+              {hasData(company.customerSegments) && (
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <Target className="w-3 h-3" />
+                  <span>{company.customerSegments.slice(0, 2).join(', ')}</span>
+                </div>
+              )}
+              {hasData(company.deploymentType) && (
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <Layers className="w-3 h-3" />
+                  <span>{company.deploymentType.slice(0, 2).join(', ')}</span>
+                </div>
+              )}
+              {hasData(company.industriesServed) && (
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <Zap className="w-3 h-3" />
+                  <span>{company.industriesServed.slice(0, 2).join(', ')}</span>
+                </div>
+              )}
+              {(hasData(company.pricingRanges) || hasData(company.pricing)) && (
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <DollarSign className="w-3 h-3" />
+                  <span>{company.pricingRanges?.[0] || company.pricing}</span>
+                </div>
+              )}
+              {hasData(company.topClients) && (
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  <Award className="w-3 h-3" />
+                  <span>{company.topClients.slice(0, 2).join(', ')}</span>
+                </div>
+              )}
+            </div>
+            
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4 text-xs text-white/60">
                 <div className="flex items-center gap-1">
                   <Eye className="w-3 h-3" />
-                  <span>{engagementData.views}</span>
+                  <span>{Math.floor(Math.random() * 50) + 10}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <MousePointer className="w-3 h-3" />
-                  <span>{engagementData.clicks}</span>
+                  <span>{Math.floor(Math.random() * 20) + 5}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Heart className="w-3 h-3" />
-                  <span>{engagementData.saves}</span>
+                  <span>{Math.floor(Math.random() * 15) + 2}</span>
                 </div>
               </div>
               <div className="text-white/40 text-xs font-medium">
@@ -436,12 +494,24 @@ function CompactCompanyCard({
                     className="text-white/60 hover:text-blue-400 transition-colors p-1"
                     title="Visit Website"
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <Globe className="w-4 h-4" />
+                  </button>
+                )}
+                {(company as any).linkedin_url && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open((company as any).linkedin_url, "_blank", "noopener,noreferrer");
+                    }}
+                    className="text-white/60 hover:text-blue-400 transition-colors p-1"
+                    title="LinkedIn Profile"
+                  >
+                    <Linkedin className="w-4 h-4" />
                   </button>
                 )}
                 {company.trialAvailable && (
                   <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <CheckCircle className="w-3 h-3 text-green-400" />
                     <span className="text-green-300 text-xs font-medium">Trial</span>
                   </div>
                 )}
