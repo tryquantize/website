@@ -420,9 +420,6 @@ function CompactCompanyCard({
                   <span>{Math.floor(Math.random() * 15) + 2}</span>
                 </div>
               </div>
-              <div className="text-white/40 text-xs font-medium">
-                Drag to explore →
-              </div>
             </div>
             
             <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/10">
@@ -437,8 +434,21 @@ function CompactCompanyCard({
                 {(hasData(company.pricingRanges) || hasData(company.pricing)) && <DollarSign className="w-3 h-3 text-white/60" />}
                 {hasData(company.topClients) && <Award className="w-3 h-3 text-white/60" />}
                 {company.website && company.website !== "#" && <Globe className="w-3 h-3 text-white/60" />}
-                {(company as any).linkedin_url && <Linkedin className="w-3 h-3 text-white/60" />}
                 {company.trialAvailable && <CheckCircle className="w-3 h-3 text-green-400" />}
+              </div>
+              <div className="flex items-center gap-2">
+                {(company as any).linkedin_url && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open((company as any).linkedin_url, "_blank", "noopener,noreferrer");
+                    }}
+                    className="text-white/60 hover:text-blue-400 transition-colors p-1"
+                    title="LinkedIn Profile"
+                  >
+                    <Linkedin className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -467,6 +477,7 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
   const [chatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{text: string, isUser: boolean}>>([]);
   const [inputValue, setInputValue] = useState("");
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   // Helper function to check if a field has meaningful data
   const hasData = (value: any): boolean => {
@@ -680,6 +691,7 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
                 {hasData(company.location) && (
                   <div>
                     <div className="flex items-center gap-1 mb-1">
+                      <MapPin className="w-3 h-3 text-white/60" />
                       <span className="font-semibold text-white">Location</span>
                     </div>
                     <div className="text-white/80">{company.location}</div>
@@ -688,6 +700,7 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
                 {hasData(company.employees) && (
                   <div>
                     <div className="flex items-center gap-1 mb-1">
+                      <Users className="w-3 h-3 text-white/60" />
                       <span className="font-semibold text-white">Employees</span>
                     </div>
                     <div className="text-white/80">{company.employees}</div>
@@ -696,6 +709,7 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
                 {hasData(company.founded) && (
                   <div>
                     <div className="flex items-center gap-1 mb-1">
+                      <Calendar className="w-3 h-3 text-white/60" />
                       <span className="font-semibold text-white">Founded</span>
                     </div>
                     <div className="text-white/80">{company.founded}</div>
@@ -704,6 +718,7 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
                 {hasData(company.companyStage) && (
                   <div>
                     <div className="flex items-center gap-1 mb-1">
+                      <Briefcase className="w-3 h-3 text-white/60" />
                       <span className="font-semibold text-white">Stage</span>
                     </div>
                     <div className="text-white/80">{company.companyStage}</div>
@@ -721,7 +736,10 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               {/* Customer Segments */}
               {hasData(company.customerSegments) && (
                 <div>
-                  <h6 className="text-white font-medium mb-2">Customer Segments</h6>
+                  <h6 className="text-white font-medium mb-2 flex items-center gap-2">
+                    <Target className="w-4 h-4 text-white/60" />
+                    Customer Segments
+                  </h6>
                   <div className="flex flex-wrap gap-1">
                     {company.customerSegments!.map((segment: string, i: number) => (
                       <span key={i} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded text-xs">
@@ -735,7 +753,10 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               {/* Deployment Type */}
               {hasData(company.deploymentType) && (
                 <div>
-                  <h6 className="text-white font-medium mb-2">Deployment</h6>
+                  <h6 className="text-white font-medium mb-2 flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-white/60" />
+                    Deployment
+                  </h6>
                   <div className="flex flex-wrap gap-1">
                     {company.deploymentType!.map((type: string, i: number) => (
                       <span key={i} className="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs">
@@ -749,7 +770,10 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               {/* Ideal Scenarios */}
               {hasData(company.idealScenarios) && (
                 <div>
-                  <h6 className="text-white font-medium mb-2">Ideal For</h6>
+                  <h6 className="text-white font-medium mb-2 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-white/60" />
+                    Ideal For
+                  </h6>
                   <div className="flex flex-wrap gap-1">
                     {company.idealScenarios!.map((scenario: string, i: number) => (
                       <span key={i} className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">
@@ -763,7 +787,10 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               {/* Industries Served */}
               {hasData(company.industriesServed) && (
                 <div>
-                  <h6 className="text-white font-medium mb-2">Industries Served</h6>
+                  <h6 className="text-white font-medium mb-2 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-white/60" />
+                    Industries Served
+                  </h6>
                   <div className="text-xs text-white/80">
                     {company.industriesServed!.slice(0, 5).join(', ')}
                     {company.industriesServed!.length > 5 && ` +${company.industriesServed!.length - 5} more`}
@@ -774,7 +801,10 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               {/* Key Features/Specifications */}
               {(hasData(company.features) || hasData(company.specifications)) && (
                 <div>
-                  <h6 className="text-white font-medium mb-2">Key Features</h6>
+                  <h6 className="text-white font-medium mb-2 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-white/60" />
+                    Key Features
+                  </h6>
                   <ul className="space-y-1">
                     {(company.specifications || company.features)?.slice(0, 6).map((item: string, i: number) => (
                       <li key={i} className="text-white/70 text-sm">• {item}</li>
@@ -786,7 +816,10 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               {/* Products & Services */}
               {hasData(company.productsServices) && (
                 <div>
-                  <h6 className="text-white font-medium mb-2">Products & Services</h6>
+                  <h6 className="text-white font-medium mb-2 flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-white/60" />
+                    Products & Services
+                  </h6>
                   <div className="space-y-1">
                     {company.productsServices!.slice(0, 4).map((product: string, i: number) => (
                       <div key={i} className="text-xs text-white/80 leading-relaxed">
@@ -800,7 +833,10 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               {/* Pricing */}
               {hasMeaningfulPricing(company) && (
                 <div>
-                  <h6 className="text-white font-medium mb-2">Pricing</h6>
+                  <h6 className="text-white font-medium mb-2 flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-white/60" />
+                    Pricing
+                  </h6>
                   <div className="text-xs">
                     {hasData(company.pricingRanges) && (
                       <div className="flex flex-wrap gap-1 mb-2">
@@ -830,7 +866,10 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               {/* Use Cases */}
               {hasData(company.enhancedUseCases) && (
                 <div>
-                  <h6 className="text-white font-medium mb-2">Use Cases</h6>
+                  <h6 className="text-white font-medium mb-2 flex items-center gap-2">
+                    <Target className="w-4 h-4 text-white/60" />
+                    Use Cases
+                  </h6>
                   <div className="space-y-1">
                     {company.enhancedUseCases!.slice(0, 4).map((useCase: string, i: number) => (
                       <div key={i} className="text-xs text-white/80">• {useCase}</div>
@@ -842,7 +881,10 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
               {/* Top Clients */}
               {hasData(company.topClients) && (
                 <div>
-                  <h6 className="text-white font-medium mb-2">Notable Clients</h6>
+                  <h6 className="text-white font-medium mb-2 flex items-center gap-2">
+                    <Award className="w-4 h-4 text-white/60" />
+                    Notable Clients
+                  </h6>
                   <div className="text-xs text-white/80">
                     {company.topClients!.slice(0, 6).join(', ')}
                     {company.topClients!.length > 6 && ` and ${company.topClients!.length - 6} more`}
@@ -861,7 +903,43 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
             
             {/* Action Buttons */}
             <div className="mt-6 pt-4 border-t border-white/10">
-              <div className="flex space-x-2">
+              {/* About Company Dropdown */}
+              <div className="mb-4">
+                <Button
+                  onClick={() => setAboutOpen(!aboutOpen)}
+                  size="sm"
+                  variant="outline"
+                  className="w-full border-white/20 text-white hover:bg-white/10"
+                >
+                  About Company {aboutOpen ? '▲' : '▼'}
+                </Button>
+                {aboutOpen && (
+                  <div className="mt-2 p-3 bg-black/20 rounded-lg border border-white/10 max-h-40 overflow-y-auto">
+                    <div className="space-y-2 text-xs">
+                      {hasData(company.location) && (
+                        <div><span className="text-white/60">Location:</span> <span className="text-white/80">{company.location}</span></div>
+                      )}
+                      {hasData(company.employees) && (
+                        <div><span className="text-white/60">Employees:</span> <span className="text-white/80">{company.employees}</span></div>
+                      )}
+                      {hasData(company.founded) && (
+                        <div><span className="text-white/60">Founded:</span> <span className="text-white/80">{company.founded}</span></div>
+                      )}
+                      {hasData(company.companyStage) && (
+                        <div><span className="text-white/60">Stage:</span> <span className="text-white/80">{company.companyStage}</span></div>
+                      )}
+                      {hasData(company.customerSegments) && (
+                        <div><span className="text-white/60">Customer Segments:</span> <span className="text-white/80">{company.customerSegments.join(', ')}</span></div>
+                      )}
+                      {hasData(company.industriesServed) && (
+                        <div><span className="text-white/60">Industries:</span> <span className="text-white/80">{company.industriesServed.slice(0, 3).join(', ')}</span></div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex space-x-2 mb-3">
                 <Button 
                   onClick={handleChatClick}
                   size="sm" 
@@ -895,6 +973,13 @@ function ExpandedCompanyPair({ expanded, onRemove, formatCompanyName, getWebsite
                   </Button>
                 )}
               </div>
+              
+              <Button
+                size="sm"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium"
+              >
+                Deep Research
+              </Button>
             </div>
           </div>
         )}
