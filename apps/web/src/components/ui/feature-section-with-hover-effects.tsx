@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { GlowCard } from "@/components/ui/spotlight-card";
+import { GlowingShadow } from "@/components/ui/glowing-shadow";
 import {
   IconAdjustmentsBolt,
   IconCloud,
@@ -81,12 +81,8 @@ const Feature = ({
 }) => {
   return (
     <div className="p-2">
-      <GlowCard
-        glowColor="purple"
-        customSize={true}
-        className="w-full h-full group/feature"
-      >
-        <div className="flex flex-col py-10 px-6 h-full">
+      <GlowingShadow>
+        <div className="flex flex-col py-10 px-6 h-full w-full group/feature">
           <div className="mb-4 relative z-10">
             <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-md group-hover/feature:bg-gray-100 transition-colors duration-200">
               <div className="text-black">{icon}</div>
@@ -102,7 +98,7 @@ const Feature = ({
             {description}
           </p>
         </div>
-      </GlowCard>
+      </GlowingShadow>
     </div>
   );
 };

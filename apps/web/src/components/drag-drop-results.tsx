@@ -10,7 +10,7 @@ import { PartnerPopup } from "@/components/partner-popup";
 import { PartnerSuccessNotification } from "@/components/partner-success-notification";
 import { app } from "@/lib/firebase-init";
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { GlowCard } from "@/components/ui/spotlight-card";
+import { GlowingShadow } from "@/components/ui/glowing-shadow";
 
 interface Company {
   name: string;
@@ -335,12 +335,8 @@ function CompactCompanyCard({
       onDragEnd={onDragEnd}
       style={{ cursor: 'grab' }}
     >
-      <GlowCard
-        glowColor="blue"
-        customSize={true}
-        className="w-full h-auto"
-      >
-        <div className="space-y-3 h-full flex flex-col p-4">
+      <GlowingShadow>
+        <div className="space-y-3 h-full flex flex-col p-4 w-full">
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-4">
               <motion.div
@@ -457,7 +453,7 @@ function CompactCompanyCard({
             </div>
           </div>
         </div>
-      </GlowCard>
+      </GlowingShadow>
     </motion.div>
   );
 }

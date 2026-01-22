@@ -18,7 +18,7 @@ import {
   Brain,
   Database,
 } from "lucide-react";
-import { GlowCard } from "@/components/ui/spotlight-card";
+import { GlowingShadow } from "@/components/ui/glowing-shadow";
 import { motion, useScroll, useTransform, useInView, useSpring } from "framer-motion";
 
 export default function AboutUsSection() {
@@ -441,12 +441,8 @@ function StatCounter({ icon, value, label, suffix, delay }: StatCounterProps) {
       }}
       whileHover={{ y: -5, transition: { duration: 0.2 } }}
     >
-      <GlowCard
-        glowColor="blue"
-        customSize={true}
-        className="w-full h-auto group hover:bg-white/10 transition-colors duration-300"
-      >
-        <div className="flex flex-col items-center text-center p-6">
+      <GlowingShadow>
+        <div className="flex flex-col items-center text-center p-6 w-full h-full">
           <motion.div
             className="w-14 h-14 rounded-full bg-white flex items-center justify-center mb-4 text-black group-hover:bg-gray-100 transition-colors duration-300 shadow-md"
             whileHover={{ rotate: 360, transition: { duration: 0.8 } }}
@@ -460,7 +456,7 @@ function StatCounter({ icon, value, label, suffix, delay }: StatCounterProps) {
           <p className="text-white/70 text-sm mt-1">{label}</p>
           <motion.div className="w-10 h-0.5 bg-white mt-3 group-hover:w-16 transition-all duration-300" />
         </div>
-      </GlowCard>
+      </GlowingShadow>
     </motion.div>
   );
 }
