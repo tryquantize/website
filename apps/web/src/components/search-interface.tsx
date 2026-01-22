@@ -239,13 +239,13 @@ export function SearchInterface({ onSearchResults }: SearchInterfaceProps) {
   };
 
   const quickSuggestions = [
-    "AI-powered lead generation for B2B sales",
-    "Automated video editing for short-form content",
-    "AI email assistant for busy professionals",
-    "Voice-based AI receptionist for local businesses",
-    "Predictive analytics for e-commerce growth",
+    "AI Voice agents for fintech",
+    "AI Interviewer for recruitment",
     "Content creation tools for marketing",
     "Customer service automation",
+    "AI-powered lead generation for B2B sales",
+    "Voice-based AI receptionist for local businesses",
+    "Automated video editing for short-form content",
   ];
 
 

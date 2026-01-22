@@ -10,7 +10,7 @@ import { PartnerPopup } from "@/components/partner-popup";
 import { PartnerSuccessNotification } from "@/components/partner-success-notification";
 import { app } from "@/lib/firebase-init";
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import "@/styles/company-card.css";
+import { GlowCard } from "@/components/ui/spotlight-card";
 
 interface Company {
   name: string;
@@ -325,7 +325,7 @@ function CompactCompanyCard({
 
   return (
     <motion.div
-      className={`gradient-company-card mobile-card w-full transition-all duration-200 ${
+      className={`transition-all duration-200 ${
         isDragging ? 'opacity-50 scale-95' : ''
       } ${isExpanded ? 'ring-2 ring-blue-500/50' : ''}`}
       whileHover={{ scale: 1.02 }}
@@ -335,7 +335,11 @@ function CompactCompanyCard({
       onDragEnd={onDragEnd}
       style={{ cursor: 'grab' }}
     >
-      <div className="gradient-company-card-info">
+      <GlowCard
+        glowColor="blue"
+        customSize={true}
+        className="w-full h-auto"
+      >
         <div className="space-y-3 h-full flex flex-col p-4">
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-4">
@@ -453,7 +457,7 @@ function CompactCompanyCard({
             </div>
           </div>
         </div>
-      </div>
+      </GlowCard>
     </motion.div>
   );
 }

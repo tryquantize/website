@@ -25,8 +25,7 @@ import { FavoritesNotification } from "@/components/favorites-notification";
 import { NotificationProvider } from "@/contexts/notification-context";
 import { enhancePrompt } from "@/lib/promptEnhancer";
 import { useToast } from "@/hooks/use-toast";
-import { Component as RaycastBackground } from "@/components/ui/raycast-animated-background";
-import { Component as RaycastBlueBackground } from "@/components/ui/raycast-animated-blue-background";
+import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { Header } from "@/components/layout/header";
 import { CompanyOutreachForm } from "@/components/company-outreach-form";
 import { DragDropResults } from "@/components/drag-drop-results";
@@ -786,9 +785,16 @@ export default function ResultsPage() {
 
   return (
     <div className="min-h-screen relative overflow-y-auto">
-      {/* Raycast Animation Background */}
+      {/* FlickeringGrid Background */}
       <div className="fixed inset-0 w-full h-full z-0">
-        <RaycastBackground />
+        <FlickeringGrid
+          className="z-0 absolute inset-0 size-full"
+          squareSize={4}
+          gridGap={6}
+          color="#3B82F6"
+          maxOpacity={0.2}
+          flickerChance={0.1}
+        />
       </div>
 
       {/* Header with toggle button */}
