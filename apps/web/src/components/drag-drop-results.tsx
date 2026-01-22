@@ -405,64 +405,6 @@ function CompactCompanyCard({
               </div>
             )}
             
-            {/* Company Details with Icons */}
-            <div className="mb-3 space-y-2">
-              {hasData(company.location) && (
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <MapPin className="w-3 h-3" />
-                  <span>{company.location}</span>
-                </div>
-              )}
-              {hasData(company.employees) && (
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <Users className="w-3 h-3" />
-                  <span>{company.employees} employees</span>
-                </div>
-              )}
-              {hasData(company.founded) && (
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <Calendar className="w-3 h-3" />
-                  <span>Founded {company.founded}</span>
-                </div>
-              )}
-              {hasData(company.companyStage) && (
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <Briefcase className="w-3 h-3" />
-                  <span>{company.companyStage}</span>
-                </div>
-              )}
-              {hasData(company.customerSegments) && (
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <Target className="w-3 h-3" />
-                  <span>{company.customerSegments.slice(0, 2).join(', ')}</span>
-                </div>
-              )}
-              {hasData(company.deploymentType) && (
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <Layers className="w-3 h-3" />
-                  <span>{company.deploymentType.slice(0, 2).join(', ')}</span>
-                </div>
-              )}
-              {hasData(company.industriesServed) && (
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <Zap className="w-3 h-3" />
-                  <span>{company.industriesServed.slice(0, 2).join(', ')}</span>
-                </div>
-              )}
-              {(hasData(company.pricingRanges) || hasData(company.pricing)) && (
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <DollarSign className="w-3 h-3" />
-                  <span>{company.pricingRanges?.[0] || company.pricing}</span>
-                </div>
-              )}
-              {hasData(company.topClients) && (
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  <Award className="w-3 h-3" />
-                  <span>{company.topClients.slice(0, 2).join(', ')}</span>
-                </div>
-              )}
-            </div>
-            
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4 text-xs text-white/60">
                 <div className="flex items-center gap-1">
@@ -484,37 +426,19 @@ function CompactCompanyCard({
             </div>
             
             <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/10">
-              <div className="flex items-center gap-3">
-                {company.website && company.website !== "#" && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(company.website, "_blank", "noopener,noreferrer");
-                    }}
-                    className="text-white/60 hover:text-blue-400 transition-colors p-1"
-                    title="Visit Website"
-                  >
-                    <Globe className="w-4 h-4" />
-                  </button>
-                )}
-                {(company as any).linkedin_url && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open((company as any).linkedin_url, "_blank", "noopener,noreferrer");
-                    }}
-                    className="text-white/60 hover:text-blue-400 transition-colors p-1"
-                    title="LinkedIn Profile"
-                  >
-                    <Linkedin className="w-4 h-4" />
-                  </button>
-                )}
-                {company.trialAvailable && (
-                  <div className="flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3 text-green-400" />
-                    <span className="text-green-300 text-xs font-medium">Trial</span>
-                  </div>
-                )}
+              <div className="flex items-center gap-2">
+                {hasData(company.location) && <MapPin className="w-3 h-3 text-white/60" />}
+                {hasData(company.employees) && <Users className="w-3 h-3 text-white/60" />}
+                {hasData(company.founded) && <Calendar className="w-3 h-3 text-white/60" />}
+                {hasData(company.companyStage) && <Briefcase className="w-3 h-3 text-white/60" />}
+                {hasData(company.customerSegments) && <Target className="w-3 h-3 text-white/60" />}
+                {hasData(company.deploymentType) && <Layers className="w-3 h-3 text-white/60" />}
+                {hasData(company.industriesServed) && <Zap className="w-3 h-3 text-white/60" />}
+                {(hasData(company.pricingRanges) || hasData(company.pricing)) && <DollarSign className="w-3 h-3 text-white/60" />}
+                {hasData(company.topClients) && <Award className="w-3 h-3 text-white/60" />}
+                {company.website && company.website !== "#" && <Globe className="w-3 h-3 text-white/60" />}
+                {(company as any).linkedin_url && <Linkedin className="w-3 h-3 text-white/60" />}
+                {company.trialAvailable && <CheckCircle className="w-3 h-3 text-green-400" />}
               </div>
             </div>
           </div>
