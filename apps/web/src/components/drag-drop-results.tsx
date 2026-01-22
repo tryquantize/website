@@ -335,12 +335,12 @@ function CompactCompanyCard({
       onDragEnd={onDragEnd}
       style={{ cursor: 'grab' }}
     >
-      <GlowingShadow>
-        <div className="space-y-3 h-full flex flex-col p-4 w-full">
+      <GlowingShadow size="sm" className="w-full">
+        <div className="space-y-2 h-full flex flex-col p-3 w-full">
           <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <motion.div
-                className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
                 style={{
                   background: company.logoUrl ? "transparent" : "linear-gradient(225deg, #171c2c 0%, #121624 100%)",
                   boxShadow: "0 4px 8px -1px rgba(0, 0, 0, 0.2), inset 1px 1px 3px rgba(255, 255, 255, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.4)"
@@ -350,105 +350,66 @@ function CompactCompanyCard({
                 {company.logoUrl ? (
                   <img src={company.logoUrl} alt={`${company.name} logo`} className="w-full h-full object-cover" />
                 ) : (
-                  <Building2 className="w-7 h-7 text-white" />
+                  <Building2 className="w-5 h-5 text-white" />
                 )}
               </motion.div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <h5 className="text-white text-xl font-semibold truncate">{formatCompanyName(company.name)}</h5>
-                  </div>
-                </div>
-                <span className="text-sm bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full font-medium">{company.category}</span>
+                <h5 className="text-white text-sm font-semibold truncate">{formatCompanyName(company.name)}</h5>
+                <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full font-medium">{company.category}</span>
               </div>
             </div>
             {currentUser && (
-              <div className="flex space-x-1">
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const companyId = `company_${index}_${company.name}`;
-                    if (isFavorite(companyId)) {
-                      removeFromFavorites(companyId);
-                    } else {
-                      addToFavorites({
-                        id: companyId,
-                        type: 'company',
-                        name: company.name,
-                        description: company.description,
-                        features: company.features || [],
-                        pricing: company.pricing || '',
-                        website: company.website,
-                        category: company.category
-                      }, showFavoritesNotification);
-                    }
-                  }}
-                  size="sm"
-                  variant="ghost"
-                  className="p-1 h-auto"
-                >
-                  <Heart className={`w-4 h-4 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
-                </Button>
-              </div>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const companyId = `company_${index}_${company.name}`;
+                  if (isFavorite(companyId)) {
+                    removeFromFavorites(companyId);
+                  } else {
+                    addToFavorites({
+                      id: companyId,
+                      type: 'company',
+                      name: company.name,
+                      description: company.description,
+                      features: company.features || [],
+                      pricing: company.pricing || '',
+                      website: company.website,
+                      category: company.category
+                    }, showFavoritesNotification);
+                  }
+                }}
+                size="sm"
+                variant="ghost"
+                className="p-1 h-auto"
+              >
+                <Heart className={`w-3 h-3 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+              </Button>
             )}
           </div>
 
           <div className="flex-1 flex flex-col justify-between">
             {(hasData(company.uspTagline) || hasData(company.tagline)) && (
-              <div className="mb-4">
-                <p className="text-sm text-white/80 leading-relaxed">
+              <div className="mb-2">
+                <p className="text-xs text-white/80 leading-relaxed line-clamp-2">
                   {company.uspTagline ? 
-                    (company.uspTagline.length > 140 ? company.uspTagline.substring(0, 140) + '...' : company.uspTagline) :
-                    (company.tagline && company.tagline.length > 140 ? company.tagline.substring(0, 140) + '...' : company.tagline)
+                    (company.uspTagline.length > 80 ? company.uspTagline.substring(0, 80) + '...' : company.uspTagline) :
+                    (company.tagline && company.tagline.length > 80 ? company.tagline.substring(0, 80) + '...' : company.tagline)
                   }
                 </p>
               </div>
             )}
             
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-4 text-xs text-white/60">
-                <div className="flex items-center gap-1">
-                  <Eye className="w-3 h-3" />
-                  <span>{Math.floor(Math.random() * 50) + 10}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MousePointer className="w-3 h-3" />
-                  <span>{Math.floor(Math.random() * 20) + 5}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Heart className="w-3 h-3" />
-                  <span>{Math.floor(Math.random() * 15) + 2}</span>
-                </div>
-              </div>
-            </div>
-            
             <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/10">
-              <div className="flex items-center gap-2">
-                {hasData(company.location) && <MapPin className="w-3 h-3 text-white/60" />}
-                {hasData(company.employees) && <Users className="w-3 h-3 text-white/60" />}
-                {hasData(company.founded) && <Calendar className="w-3 h-3 text-white/60" />}
-                {hasData(company.companyStage) && <Briefcase className="w-3 h-3 text-white/60" />}
-                {hasData(company.customerSegments) && <Target className="w-3 h-3 text-white/60" />}
-                {hasData(company.deploymentType) && <Layers className="w-3 h-3 text-white/60" />}
-                {hasData(company.industriesServed) && <Zap className="w-3 h-3 text-white/60" />}
-                {(hasData(company.pricingRanges) || hasData(company.pricing)) && <DollarSign className="w-3 h-3 text-white/60" />}
-                {hasData(company.topClients) && <Award className="w-3 h-3 text-white/60" />}
-                {company.website && company.website !== "#" && <Globe className="w-3 h-3 text-white/60" />}
-                {company.trialAvailable && <CheckCircle className="w-3 h-3 text-green-400" />}
+              <div className="flex items-center gap-1">
+                {hasData(company.location) && <MapPin className="w-2.5 h-2.5 text-white/60" />}
+                {hasData(company.employees) && <Users className="w-2.5 h-2.5 text-white/60" />}
+                {hasData(company.founded) && <Calendar className="w-2.5 h-2.5 text-white/60" />}
+                {hasData(company.companyStage) && <Briefcase className="w-2.5 h-2.5 text-white/60" />}
+                {company.trialAvailable && <CheckCircle className="w-2.5 h-2.5 text-green-400" />}
               </div>
-              <div className="flex items-center gap-2">
-                {(company as any).linkedin_url && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open((company as any).linkedin_url, "_blank", "noopener,noreferrer");
-                    }}
-                    className="text-white/60 hover:text-blue-400 transition-colors p-1"
-                    title="LinkedIn Profile"
-                  >
-                    <Linkedin className="w-4 h-4" />
-                  </button>
-                )}
+              <div className="flex items-center gap-1 text-xs text-white/60">
+                <Eye className="w-2.5 h-2.5" />
+                <span>{Math.floor(Math.random() * 50) + 10}</span>
               </div>
             </div>
           </div>

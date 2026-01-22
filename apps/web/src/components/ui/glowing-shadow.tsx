@@ -4,9 +4,11 @@ import { useEffect, type ReactNode } from "react"
 
 interface GlowingShadowButtonProps {
   children: ReactNode
+  className?: string
+  size?: 'sm' | 'md' | 'lg'
 }
 
-export function GlowingShadow({ children }: GlowingShadowButtonProps) {
+export function GlowingShadow({ children, className = '', size = 'md' }: GlowingShadowButtonProps) {
    
   return (
     <>
@@ -70,8 +72,8 @@ export function GlowingShadow({ children }: GlowingShadowButtonProps) {
         .glow-container {
           --card-color: hsl(260deg 100% 3%);
           --text-color: hsl(260deg 10% 55%);
-          --card-radius: 3.6vw;
-          --card-width: 35vw;
+          --card-radius: ${size === 'sm' ? '2vw' : size === 'lg' ? '4vw' : '3.6vw'};
+          --card-width: ${size === 'sm' ? '20vw' : size === 'lg' ? '40vw' : '35vw'};
           --border-width: 3px;
           --bg-size: 1;
           --hue: 0;
@@ -87,8 +89,8 @@ export function GlowingShadow({ children }: GlowingShadowButtonProps) {
           --glow-rotate-unit: 1deg;
 
           width: var(--card-width);
-          width: min(480px, var(--card-width));
-          aspect-ratio: 1.5/1;
+          width: min(${size === 'sm' ? '280px' : size === 'lg' ? '600px' : '480px'}, var(--card-width));
+          aspect-ratio: ${size === 'sm' ? '1.2/1' : '1.5/1'};
           color: white;
           margin: auto;
           display: flex;
@@ -283,7 +285,7 @@ export function GlowingShadow({ children }: GlowingShadowButtonProps) {
         }
       `}</style>
 
-      <div className="glow-container" role="button">
+      <div className={`glow-container ${className}`} role="button">
         <span className="glow"></span>
         <div className="glow-content">{children}</div>
       </div>
