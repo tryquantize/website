@@ -983,7 +983,7 @@ export default function ResultsPage() {
           )}
           {/* Mobile: Show only DragDropResults when companies exist */}
           {allCompanies.length > 0 && (
-            <div className="md:hidden h-full pb-80">
+            <div className="md:hidden h-full">
               <DragDropResults 
                 companies={allCompanies} 
                 searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
@@ -1018,7 +1018,7 @@ export default function ResultsPage() {
       />
 
       {/* Mobile Desktop Prompt */}
-      <MobileDesktopPrompt />
+      {/* <MobileDesktopPrompt /> */}
     </div>
   );
 } 

@@ -360,7 +360,7 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
       {/* Welcome Message - Mobile optimized */}
       <div className={`text-center transition-all duration-1000 ease-out mb-4 xs:mb-6 ${isTransitioning ? 'opacity-0 scale-90 -translate-y-12 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'
         }`}>
-        <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight px-2" style={{ fontFamily: 'Instrument Serif, serif' }}>
+        <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight px-2" style={{ fontFamily: 'Instrument Serif, serif' }}>
           <span className="text-white">{greeting}, what are you looking for today?</span>
         </h1>
       </div>
@@ -370,10 +370,10 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
         ? 'opacity-0 scale-90 pointer-events-none'
         : 'transform translate-y-0 opacity-100 scale-100'
         }`}>
-        <div className={`relative rounded-[16px] xs:rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[88px] xs:h-[94px] sm:h-[90px] md:h-[100px] lg:h-[110px] ${isSearching ? 'transform scale-95' : 'transform scale-100'
+        <div className={`relative rounded-[16px] xs:rounded-[20px] sm:rounded-[24px] md:rounded-[28px] border border-white/15 bg-white/5 backdrop-blur-2xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-visible transition-all duration-1500 ease-out h-[100px] xs:h-[110px] sm:h-[110px] md:h-[120px] lg:h-[130px] ${isSearching ? 'transform scale-95' : 'transform scale-100'
           }`}>
           {/* Search input area - mobile optimized */}
-          <div className="relative px-3 xs:px-4 sm:px-6 flex items-center h-[53px] xs:h-[55px] sm:h-[55px] md:h-[60px]">
+          <div className="relative px-3 xs:px-4 sm:px-6 flex items-center h-[60px] xs:h-[65px] sm:h-[65px] md:h-[70px]">
             {/* Undo button (only show if there's history) - Mobile optimized */}
             {queryHistory.length > 0 && currentHistoryIndex >= 0 && (
               <TooltipProvider>
@@ -443,13 +443,13 @@ export function LoggedInSearchInterface({ onSearchResults }: LoggedInSearchInter
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isEnhancing}
-              className="h-10 xs:h-11 sm:h-12 md:h-14 w-full border-0 bg-transparent shadow-none text-sm xs:text-base sm:text-lg md:text-xl placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-16 xs:pr-20 sm:pr-24 md:pr-28 flex items-center disabled:opacity-70"
+              className="h-12 xs:h-14 sm:h-16 md:h-18 w-full border-0 bg-transparent shadow-none text-base xs:text-lg sm:text-xl md:text-2xl placeholder:text-white/70 text-white focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none pr-16 xs:pr-20 sm:pr-24 md:pr-28 flex items-center disabled:opacity-70"
               data-testid="search-input"
             />
           </div>
 
           {/* Bottom row - Icons - mobile optimized */}
-          <div className="relative border-t border-white/10 px-3 xs:px-4 sm:px-6 py-1 h-[33px] xs:h-[35px] sm:h-[34px] md:h-[36px]">
+          <div className="relative border-t border-white/10 px-3 xs:px-4 sm:px-6 py-1 h-[38px] xs:h-[43px] sm:h-[43px] md:h-[48px]">
             <div className="flex items-center justify-between">
               {/* Left - Brain icon, model name, and Location selector - Mobile optimized */}
               <div className="relative flex items-center space-x-1.5 sm:space-x-2">

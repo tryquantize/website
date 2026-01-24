@@ -118,8 +118,8 @@ function MobileLayout({
 
   return (
     <div className="md:hidden flex flex-col h-screen overflow-hidden">
-      {/* Expanded Companies Area - Top */}
-      <div className="flex-1 overflow-hidden">
+      {/* Expanded Companies Area - Above compact cards */}
+      <div className="flex-1 overflow-hidden" style={{ maxHeight: 'calc(100vh - 320px)' }}>
         {expandedCompanies.length > 0 ? (
           <div className="h-full overflow-x-auto">
             <div className="flex space-x-4 p-4 h-full" style={{ width: `${expandedCompanies.length * 100}vw` }}>
@@ -182,14 +182,14 @@ function MobileLayout({
       {/* Fixed Bottom Section */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/30 backdrop-blur-xl border-t border-white/10">
         {/* Compact Cards Row */}
-        <div className="p-2 border-b border-white/10">
-          <div className="flex space-x-2 overflow-x-auto pb-1">
+        <div className="p-3 border-b border-white/10">
+          <div className="flex space-x-3 overflow-x-auto pb-2">
             {companies.map((company, index) => {
               const isExpanded = expandedCompanies.some(exp => exp.originalIndex === index);
               if (isExpanded) return null;
               
               return (
-                <div key={index} className="flex-shrink-0 w-32">
+                <div key={index} className="flex-shrink-0 w-40">
                   <MobileCompactCard
                     company={company}
                     index={index}
@@ -414,19 +414,19 @@ function MobileCompactCard({
       style={{ cursor: 'grab' }}
     >
       <GlowingShadow size="sm" className="w-full">
-        <div className="p-2 h-20 flex flex-col justify-between">
+        <div className="p-2.5 h-28 flex flex-col justify-between">
           <div className="flex items-start justify-between mb-1">
             <div className="flex items-center space-x-2 flex-1 min-w-0">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600">
                 {company.logoUrl ? (
                   <img src={company.logoUrl} alt={`${company.name} logo`} className="w-full h-full object-cover rounded-full" />
                 ) : (
-                  <Building2 className="w-3 h-3 text-white" />
+                  <Building2 className="w-3.5 h-3.5 text-white" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <h5 className="text-white text-xs font-semibold truncate leading-tight">{formatCompanyName(company.name)}</h5>
-                <span className="text-xs bg-blue-500/20 text-blue-300 px-1 py-0.5 rounded text-xs leading-none">{company.category}</span>
+                <span className="text-xs bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded text-xs leading-none">{company.category}</span>
               </div>
             </div>
             {currentUser && (
@@ -458,24 +458,50 @@ function MobileCompactCard({
             )}
           </div>
           
-          {/* Company info in compact form */}
-          <div className="text-xs text-white/80 leading-tight">
-            {(company.uspTagline || company.tagline) && (
-              <p className="truncate mb-1">
-                {(company.uspTagline || company.tagline)?.substring(0, 40)}...
+          {/* Company tagline/description */}
+          {(hasData(company.uspTagline) || hasData(company.tagline) || hasData(company.description)) && (
+            <div className="mb-1">
+              <p className="text-xs text-white/80 leading-tight line-clamp-2">
+                {(company.uspTagline || company.tagline || company.description)?.substring(0, 60)}...
               </p>
+            </div>
+          )}
+          
+          {/* Company details grid */}
+          <div className="grid grid-cols-2 gap-1 text-xs text-white/70 mb-1">
+            {hasData(company.location) && (
+              <div className="flex items-center gap-1 truncate">
+                <MapPin className="w-2.5 h-2.5 text-white/60 flex-shrink-0" />
+                <span className="truncate">{company.location}</span>
+              </div>
+            )}
+            {hasData(company.employees) && (
+              <div className="flex items-center gap-1 truncate">
+                <Users className="w-2.5 h-2.5 text-white/60 flex-shrink-0" />
+                <span className="truncate">{company.employees}</span>
+              </div>
+            )}
+            {hasData(company.pricing) && (
+              <div className="flex items-center gap-1 truncate">
+                <DollarSign className="w-2.5 h-2.5 text-white/60 flex-shrink-0" />
+                <span className="truncate">{company.pricing}</span>
+              </div>
+            )}
+            {hasData(company.founded) && (
+              <div className="flex items-center gap-1 truncate">
+                <Calendar className="w-2.5 h-2.5 text-white/60 flex-shrink-0" />
+                <span className="truncate">{company.founded}</span>
+              </div>
             )}
           </div>
           
           <div className="flex items-center justify-between text-xs text-white/60">
             <div className="flex items-center gap-1">
-              {company.location && <MapPin className="w-2 h-2" />}
-              {company.employees && <Users className="w-2 h-2" />}
-              {company.pricing && <DollarSign className="w-2 h-2" />}
-              {company.trialAvailable && <CheckCircle className="w-2 h-2 text-green-400" />}
+              {company.trialAvailable && <CheckCircle className="w-2.5 h-2.5 text-green-400" />}
+              {hasData(company.features) && <Award className="w-2.5 h-2.5 text-yellow-400" />}
             </div>
             <div className="flex items-center gap-1">
-              <Eye className="w-2 h-2" />
+              <Eye className="w-2.5 h-2.5" />
               <span className="text-xs">{Math.floor(Math.random() * 50) + 10}</span>
             </div>
           </div>
