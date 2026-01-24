@@ -828,9 +828,9 @@ export default function ResultsPage() {
         )}
       </div>
 
-      {/* Fixed Sidebar */}
+      {/* Fixed Sidebar - Hidden on Mobile */}
       {showSidebar && (
-        <div className={`${typeof window !== 'undefined' && window.innerWidth < 768 && !mobileSidebarOpen ? 'hidden' : ''}`}>
+        <div className={`hidden md:block ${typeof window !== 'undefined' && window.innerWidth < 768 && !mobileSidebarOpen ? 'hidden' : ''}`}>
           <ConversationSidebar
             onNewConversation={handleNewConversation}
             onSelectConversation={handleSelectConversation}
@@ -860,9 +860,10 @@ export default function ResultsPage() {
 
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} flex flex-col h-screen`} style={{ marginTop: typeof window !== 'undefined' && window.innerWidth < 768 && showCompanyOutreachSection ? '60px' : '0' }}>
+      <div className={`transition-all duration-300 ${showSidebar && typeof window !== 'undefined' && window.innerWidth >= 768 ? (sidebarMinimized ? 'ml-12' : 'ml-80') : 'ml-0'} flex flex-col h-screen md:block`} style={{ marginTop: typeof window !== 'undefined' && window.innerWidth < 768 && showCompanyOutreachSection ? '60px' : '0' }}>
         <NotificationProvider showFavoritesNotification={showFavoritesNotification}>
-          <div className="space-y-4">
+          {/* Desktop Content */}
+          <div className="hidden md:block space-y-4">
             {contentItems.map((item) => (
               <div key={item.id}>
 
@@ -978,6 +979,22 @@ export default function ResultsPage() {
                 companies={allCompanies} 
                 searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
               />
+            </div>
+          )}
+          {/* Mobile: Show only DragDropResults when companies exist */}
+          {allCompanies.length > 0 && (
+            <div className="md:hidden h-full">
+              <DragDropResults 
+                companies={allCompanies} 
+                searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+              />
+            </div>
+          )}
+
+          {/* Mobile: Show welcome message when no companies */}
+          {allCompanies.length === 0 && !isInitialLoading && (
+            <div className="md:hidden flex items-center justify-center h-full">
+              <NewConversationState firstName={firstName} />
             </div>
           )}
         </NotificationProvider>

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Building2, Eye, MousePointer, Heart, ExternalLink, MessageCircle, Handshake, MapPin, Users, Calendar, Briefcase, Globe, Linkedin, DollarSign, Target, Layers, Zap, Award, CheckCircle } from 'lucide-react';
+import { Plus, Building2, Eye, MousePointer, Heart, ExternalLink, MessageCircle, Handshake, MapPin, Users, Calendar, Briefcase, Globe, Linkedin, DollarSign, Target, Layers, Zap, Award, CheckCircle, Search, Sparkles, Brain, User, Package, ChevronUp } from 'lucide-react';
 import { useFavorites } from "@/contexts/favorites-context";
 import { useFirebaseAuth } from "@/contexts/firebase-auth-context";
 import { useNotification } from "@/contexts/notification-context";
@@ -11,6 +11,7 @@ import { PartnerSuccessNotification } from "@/components/partner-success-notific
 import { app } from "@/lib/firebase-init";
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { GlowingShadow } from "@/components/ui/glowing-shadow";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Company {
   name: string;
@@ -50,6 +51,562 @@ interface ExpandedCompany {
 interface DragDropResultsProps {
   companies: Company[];
   searchQuery?: string;
+}
+
+// Mobile Layout Component
+interface MobileLayoutProps {
+  companies: Company[];
+  expandedCompanies: ExpandedCompany[];
+  draggedIndex: number | null;
+  isDragOver: boolean;
+  searchQuery?: string;
+  onDragStart: (e: React.DragEvent, index: number) => void;
+  onDragEnd: () => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onRemoveExpanded: (id: string) => void;
+  formatCompanyName: (name: string) => string;
+  getWebsiteUrl: (website: string) => string;
+  onPartnerRequest: (companyName: string, companyEmail?: string, companyWebsite?: string, companyLinkedIn?: string) => void;
+}
+
+function MobileLayout({
+  companies,
+  expandedCompanies,
+  draggedIndex,
+  isDragOver,
+  searchQuery,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onRemoveExpanded,
+  formatCompanyName,
+  getWebsiteUrl,
+  onPartnerRequest
+}: MobileLayoutProps) {
+  const [showResultsSummary, setShowResultsSummary] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+
+  const toggleType = (id: string) => {
+    setSelectedTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchInput.trim()) return;
+    console.log('Mobile search:', searchInput);
+  };
+
+  return (
+    <div className="md:hidden flex flex-col h-screen">
+      {/* Expanded Companies Area - Top */}
+      <div className="flex-1 overflow-hidden">
+        {expandedCompanies.length > 0 ? (
+          <div className="h-full overflow-x-auto">
+            <div className="flex space-x-4 p-4 h-full" style={{ width: `${expandedCompanies.length * 100}vw` }}>
+              <AnimatePresence>
+                {expandedCompanies.map((expanded) => (
+                  <div key={expanded.id} className="w-screen flex-shrink-0">
+                    <MobileExpandedCompany
+                      expanded={expanded}
+                      onRemove={onRemoveExpanded}
+                      formatCompanyName={formatCompanyName}
+                      getWebsiteUrl={getWebsiteUrl}
+                      searchQuery={searchQuery}
+                      onPartnerRequest={onPartnerRequest}
+                    />
+                  </div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`h-full border-2 border-dashed rounded-lg m-4 transition-all duration-300 relative ${
+              isDragOver 
+                ? 'border-blue-400 bg-blue-500/10' 
+                : 'border-white/20 bg-black/5'
+            }`}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+          >
+            {draggedIndex !== null ? (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg p-6 text-center">
+                  <Plus className="w-8 h-8 text-blue-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Drop to expand
+                  </h3>
+                  <p className="text-white/60 text-sm">
+                    View company details with website
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center px-4">
+                  <Plus className="w-12 h-12 text-white/40 mx-auto mb-3" />
+                  <h3 className="text-xl font-semibold text-white/60 mb-2">
+                    Drag companies to explore
+                  </h3>
+                  <p className="text-white/40 text-sm">
+                    Drag cards from below to view details
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Compact Cards Row - Above Search */}
+      <div className="bg-black/20 backdrop-blur-xl border-t border-white/10 p-3">
+        <div className="flex space-x-3 overflow-x-auto pb-2">
+          {companies.map((company, index) => {
+            const isExpanded = expandedCompanies.some(exp => exp.originalIndex === index);
+            if (isExpanded) return null;
+            
+            return (
+              <div key={index} className="flex-shrink-0 w-48">
+                <MobileCompactCard
+                  company={company}
+                  index={index}
+                  isDragging={draggedIndex === index}
+                  onDragStart={onDragStart}
+                  onDragEnd={onDragEnd}
+                  formatCompanyName={formatCompanyName}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Bottom Search Interface */}
+      <div className="bg-black/30 backdrop-blur-xl border-t border-white/10 p-4">
+        {/* Results Summary Button */}
+        <div className="mb-3 flex justify-center">
+          <Button
+            onClick={() => setShowResultsSummary(!showResultsSummary)}
+            size="sm"
+            variant="outline"
+            className="border-white/20 text-white/80 hover:bg-white/10 text-xs px-3 py-1"
+          >
+            <ChevronUp className={`w-3 h-3 mr-1 transition-transform ${showResultsSummary ? 'rotate-180' : ''}`} />
+            Results Summary
+          </Button>
+        </div>
+
+        {/* Results Summary Panel */}
+        {showResultsSummary && (
+          <div className="mb-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg p-3">
+            <div className="text-white/90 text-sm leading-relaxed">
+              <p className="mb-2">Found {companies.length} companies matching your search.</p>
+              <p className="text-white/70 text-xs">
+                {searchQuery && `Search: "${searchQuery}"`}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Search Form */}
+        <form onSubmit={handleSearch} className="space-y-3">
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Ask a follow-up or new question..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/60 pr-12"
+            />
+            <Button
+              type="submit"
+              size="sm"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Search className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Filter Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        webSearchEnabled ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/60'
+                      }`}
+                    >
+                      <Globe className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Web Search</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="p-2 rounded-lg bg-white/10 text-white/60"
+                    >
+                      <Brain className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>AI Model</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => toggleType('company')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        selectedTypes.has('company') ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-white/60'
+                      }`}
+                    >
+                      <Building2 className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Companies</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => toggleType('freelancer')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        selectedTypes.has('freelancer') ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-white/60'
+                      }`}
+                    >
+                      <User className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Freelancers</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => toggleType('product')}
+                      className={`p-2 rounded-lg transition-colors ${
+                        selectedTypes.has('product') ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-white/60'
+                      }`}
+                    >
+                      <Package className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Products</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Mobile Compact Card Component
+interface MobileCompactCardProps {
+  company: Company;
+  index: number;
+  isDragging: boolean;
+  onDragStart: (e: React.DragEvent, index: number) => void;
+  onDragEnd: () => void;
+  formatCompanyName: (name: string) => string;
+}
+
+function MobileCompactCard({ 
+  company, 
+  index, 
+  isDragging, 
+  onDragStart, 
+  onDragEnd,
+  formatCompanyName 
+}: MobileCompactCardProps) {
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { currentUser } = useFirebaseAuth();
+  const { showFavoritesNotification } = useNotification();
+
+  return (
+    <motion.div
+      className={`transition-all duration-200 ${
+        isDragging ? 'opacity-50 scale-95' : ''
+      }`}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      draggable
+      onDragStart={(e) => onDragStart(e, index)}
+      onDragEnd={onDragEnd}
+      style={{ cursor: 'grab' }}
+    >
+      <GlowingShadow size="sm" className="w-full">
+        <div className="p-3 h-24 flex flex-col justify-between">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center space-x-2 flex-1 min-w-0">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600">
+                {company.logoUrl ? (
+                  <img src={company.logoUrl} alt={`${company.name} logo`} className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <Building2 className="w-4 h-4 text-white" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h5 className="text-white text-xs font-semibold truncate">{formatCompanyName(company.name)}</h5>
+                <span className="text-xs bg-blue-500/20 text-blue-300 px-1 py-0.5 rounded text-xs">{company.category}</span>
+              </div>
+            </div>
+            {currentUser && (
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const companyId = `company_${index}_${company.name}`;
+                  if (isFavorite(companyId)) {
+                    removeFromFavorites(companyId);
+                  } else {
+                    addToFavorites({
+                      id: companyId,
+                      type: 'company',
+                      name: company.name,
+                      description: company.description,
+                      features: company.features || [],
+                      pricing: company.pricing || '',
+                      website: company.website,
+                      category: company.category
+                    }, showFavoritesNotification);
+                  }
+                }}
+                size="sm"
+                variant="ghost"
+                className="p-1 h-auto"
+              >
+                <Heart className={`w-3 h-3 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex items-center justify-between text-xs text-white/60">
+            <div className="flex items-center gap-1">
+              {company.location && <MapPin className="w-2.5 h-2.5" />}
+              {company.employees && <Users className="w-2.5 h-2.5" />}
+              {company.trialAvailable && <CheckCircle className="w-2.5 h-2.5 text-green-400" />}
+            </div>
+            <div className="flex items-center gap-1">
+              <Eye className="w-2.5 h-2.5" />
+              <span>{Math.floor(Math.random() * 50) + 10}</span>
+            </div>
+          </div>
+        </div>
+      </GlowingShadow>
+    </motion.div>
+  );
+}
+
+// Mobile Expanded Company Component
+interface MobileExpandedCompanyProps {
+  expanded: ExpandedCompany;
+  onRemove: (id: string) => void;
+  formatCompanyName: (name: string) => string;
+  getWebsiteUrl: (website: string) => string;
+  searchQuery?: string;
+  onPartnerRequest: (companyName: string, companyEmail?: string, companyWebsite?: string, companyLinkedIn?: string) => void;
+}
+
+function MobileExpandedCompany({ expanded, onRemove, formatCompanyName, getWebsiteUrl, searchQuery, onPartnerRequest }: MobileExpandedCompanyProps) {
+  const { company } = expanded;
+  const websiteUrl = getWebsiteUrl(company.website);
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const { currentUser } = useFirebaseAuth();
+  const { showFavoritesNotification } = useNotification();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      className="h-full bg-black/20 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden flex flex-col"
+    >
+      {/* Header */}
+      <div className="bg-black/60 px-4 py-3 border-b border-white/10 flex items-center justify-between">
+        <h6 className="text-white text-sm font-medium truncate">
+          {formatCompanyName(company.name)}
+        </h6>
+        <div className="flex items-center gap-2">
+          {currentUser && (
+            <Button
+              onClick={() => {
+                const companyId = `company_${expanded.originalIndex}_${company.name}`;
+                if (isFavorite(companyId)) {
+                  removeFromFavorites(companyId);
+                } else {
+                  addToFavorites({
+                    id: companyId,
+                    type: 'company',
+                    name: company.name,
+                    description: company.description,
+                    features: company.features || [],
+                    pricing: company.pricing || '',
+                    website: company.website,
+                    category: company.category
+                  }, showFavoritesNotification);
+                }
+              }}
+              size="sm"
+              variant="ghost"
+              className="p-1 h-auto"
+            >
+              <Heart className={`w-4 h-4 ${isFavorite(`company_${expanded.originalIndex}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+            </Button>
+          )}
+          <button
+            onClick={() => onRemove(expanded.id)}
+            className="text-white/60 hover:text-white transition-colors text-lg"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      {/* Content - Split View */}
+      <div className="flex-1 flex flex-col">
+        {/* Website iframe - Top Half */}
+        <div className="h-1/2 bg-black/40">
+          {websiteUrl ? (
+            <iframe
+              src={websiteUrl}
+              className="w-full h-full border-0"
+              title={`${company.name} website`}
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-white/60">
+              No website available
+            </div>
+          )}
+        </div>
+
+        {/* Company Details - Bottom Half */}
+        <div className="h-1/2 bg-black/40 p-4 overflow-y-auto">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+                {company.logoUrl ? (
+                  <img src={company.logoUrl} alt={`${company.name} logo`} className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <Building2 className="w-5 h-5 text-white" />
+                )}
+              </div>
+              <div>
+                <h5 className="text-white text-base font-semibold">
+                  {formatCompanyName(company.name)}
+                </h5>
+                <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full text-xs">
+                  {company.category}
+                </span>
+              </div>
+            </div>
+            
+            {(company.uspTagline || company.tagline || company.description) && (
+              <p className="text-white/80 text-sm leading-relaxed">
+                {company.uspTagline || company.tagline || company.description}
+              </p>
+            )}
+            
+            {/* Quick Info Grid */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {company.location && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-white/60" />
+                  <span className="text-white/80">{company.location}</span>
+                </div>
+              )}
+              {company.employees && (
+                <div className="flex items-center gap-1">
+                  <Users className="w-3 h-3 text-white/60" />
+                  <span className="text-white/80">{company.employees}</span>
+                </div>
+              )}
+              {company.founded && (
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-white/60" />
+                  <span className="text-white/80">{company.founded}</span>
+                </div>
+              )}
+              {company.pricing && (
+                <div className="flex items-center gap-1">
+                  <DollarSign className="w-3 h-3 text-white/60" />
+                  <span className="text-white/80">{company.pricing}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex space-x-2 pt-2">
+              <Button 
+                size="sm" 
+                className="flex-1 bg-white text-black font-medium hover:bg-gray-100"
+              >
+                <MessageCircle className="w-3 h-3 mr-1" />
+                Chat
+              </Button>
+              <Button 
+                onClick={() => onPartnerRequest(
+                  company.name,
+                  (company as any).email,
+                  company.website,
+                  (company as any).linkedin_url
+                )}
+                size="sm" 
+                className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium"
+              >
+                <Handshake className="w-3 h-3 mr-1" />
+                Partner
+              </Button>
+              {company.website && company.website !== "#" && (
+                <Button
+                  onClick={() => window.open(getWebsiteUrl(company.website), "_blank")}
+                  size="sm"
+                  className="bg-white text-black font-medium hover:bg-gray-100"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
 export function DragDropResults({ companies, searchQuery }: DragDropResultsProps) {
@@ -174,98 +731,121 @@ export function DragDropResults({ companies, searchQuery }: DragDropResultsProps
   };
 
   return (
-    <div className="flex h-full min-h-[calc(100vh-200px)]">
-      {/* Center/Left Area - Exploration Canvas */}
-      <div className="flex-1 p-6">
-        <div
-          className={`h-full border-2 border-dashed rounded-lg transition-all duration-300 relative ${
-            isDragOver 
-              ? 'border-blue-400 bg-blue-500/10' 
-              : 'border-white/20 bg-black/5'
-          }`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          {/* Drop Zone Indicator - Only show when dragging AND no expanded companies */}
-          {draggedIndex !== null && expandedCompanies.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg p-8 text-center">
-                <Plus className="w-12 h-12 text-blue-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  Drop here to expand
-                </h3>
-                <p className="text-white/60">
-                  Release to view company details with website
-                </p>
+    <>
+      {/* Desktop Layout */}
+      <div className="hidden md:flex h-full min-h-[calc(100vh-200px)]">
+        {/* Center/Left Area - Exploration Canvas */}
+        <div className="flex-1 p-6">
+          <div
+            className={`h-full border-2 border-dashed rounded-lg transition-all duration-300 relative ${
+              isDragOver 
+                ? 'border-blue-400 bg-blue-500/10' 
+                : 'border-white/20 bg-black/5'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {/* Drop Zone Indicator - Only show when dragging AND no expanded companies */}
+            {draggedIndex !== null && expandedCompanies.length === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg p-8 text-center">
+                  <Plus className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    Drop here to expand
+                  </h3>
+                  <p className="text-white/60">
+                    Release to view company details with website
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
-          {expandedCompanies.length === 0 ? (
-            <div className={`flex items-center justify-center h-full transition-all duration-300 ${
-              draggedIndex !== null ? 'blur-sm' : ''
-            }`}>
-              <div className="text-center">
-                <Plus className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                <h3 className="text-2xl font-semibold text-white/60 mb-2">
-                  Drag companies here to explore
-                </h3>
-                <p className="text-white/40 max-w-md">
-                  Drag company cards from the right sidebar to view their details alongside their websites
-                </p>
+            )}
+            {expandedCompanies.length === 0 ? (
+              <div className={`flex items-center justify-center h-full transition-all duration-300 ${
+                draggedIndex !== null ? 'blur-sm' : ''
+              }`}>
+                <div className="text-center">
+                  <Plus className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                  <h3 className="text-2xl font-semibold text-white/60 mb-2">
+                    Drag companies here to explore
+                  </h3>
+                  <p className="text-white/40 max-w-md">
+                    Drag company cards from the right sidebar to view their details alongside their websites
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="p-4 space-y-6 h-full overflow-y-auto">
-              <AnimatePresence>
-                {expandedCompanies.map((expanded) => (
-                  <ExpandedCompanyPair
-                    key={expanded.id}
-                    expanded={expanded}
-                    onRemove={handleRemoveExpanded}
-                    formatCompanyName={formatCompanyName}
-                    getWebsiteUrl={getWebsiteUrl}
-                    searchQuery={searchQuery}
-                    onPartnerRequest={(companyName, companyEmail, companyWebsite, companyLinkedIn) => {
-                      setPartnerPopup({isOpen: true, companyName, companyEmail, companyWebsite, companyLinkedIn});
-                    }}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          )}
+            ) : (
+              <div className="p-4 space-y-6 h-full overflow-y-auto">
+                <AnimatePresence>
+                  {expandedCompanies.map((expanded) => (
+                    <ExpandedCompanyPair
+                      key={expanded.id}
+                      expanded={expanded}
+                      onRemove={handleRemoveExpanded}
+                      formatCompanyName={formatCompanyName}
+                      getWebsiteUrl={getWebsiteUrl}
+                      searchQuery={searchQuery}
+                      onPartnerRequest={(companyName, companyEmail, companyWebsite, companyLinkedIn) => {
+                        setPartnerPopup({isOpen: true, companyName, companyEmail, companyWebsite, companyLinkedIn});
+                      }}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Sidebar - Company Cards Queue */}
+        <div className="w-80 bg-black/20 backdrop-blur-xl border-l border-white/10 flex flex-col">
+          <div className="p-4 border-b border-white/10">
+            <h4 className="text-white font-semibold mb-1">
+              Companies ({companies.length - expandedCompanies.length}/{companies.length})
+            </h4>
+            <p className="text-white/60 text-sm">Drag cards to explore with websites</p>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {companies.map((company, index) => {
+              const isExpanded = expandedCompanies.some(exp => exp.originalIndex === index);
+              if (isExpanded) return null; // Hide dragged cards
+              
+              return (
+                <CompactCompanyCard
+                  key={index}
+                  company={company}
+                  index={index}
+                  isDragging={draggedIndex === index}
+                  isExpanded={false}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  formatCompanyName={formatCompanyName}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Right Sidebar - Company Cards Queue */}
-      <div className="w-80 bg-black/20 backdrop-blur-xl border-l border-white/10 flex flex-col">
-        <div className="p-4 border-b border-white/10">
-          <h4 className="text-white font-semibold mb-1">
-            Companies ({companies.length - expandedCompanies.length}/{companies.length})
-          </h4>
-          <p className="text-white/60 text-sm">Drag cards to explore with websites</p>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {companies.map((company, index) => {
-            const isExpanded = expandedCompanies.some(exp => exp.originalIndex === index);
-            if (isExpanded) return null; // Hide dragged cards
-            
-            return (
-              <CompactCompanyCard
-                key={index}
-                company={company}
-                index={index}
-                isDragging={draggedIndex === index}
-                isExpanded={false}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                formatCompanyName={formatCompanyName}
-              />
-            );
-          })}
-        </div>
-      </div>
+      {/* Mobile Layout */}
+      <MobileLayout
+        companies={companies}
+        expandedCompanies={expandedCompanies}
+        draggedIndex={draggedIndex}
+        isDragOver={isDragOver}
+        searchQuery={searchQuery}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onRemoveExpanded={handleRemoveExpanded}
+        formatCompanyName={formatCompanyName}
+        getWebsiteUrl={getWebsiteUrl}
+        onPartnerRequest={(companyName, companyEmail, companyWebsite, companyLinkedIn) => {
+          setPartnerPopup({isOpen: true, companyName, companyEmail, companyWebsite, companyLinkedIn});
+        }}
+      />
       
       {/* Partner Popup */}
       <PartnerPopup
