@@ -983,10 +983,12 @@ export default function ResultsPage() {
           )}
           {/* Mobile: Show only DragDropResults when companies exist */}
           {allCompanies.length > 0 && (
-            <div className="md:hidden h-full">
+            <div className="md:hidden h-full pb-80">
               <DragDropResults 
                 companies={allCompanies} 
                 searchQuery={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.query : ''}
+                aiResponse={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.aiResponse : ''}
+                citations={contentItems.length > 0 && contentItems[0]?.type === 'result' ? contentItems[0].data.citations || [] : []}
               />
             </div>
           )}

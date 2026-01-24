@@ -51,6 +51,8 @@ interface ExpandedCompany {
 interface DragDropResultsProps {
   companies: Company[];
   searchQuery?: string;
+  aiResponse?: string;
+  citations?: Array<{id: number, title: string, url: string}>;
 }
 
 // Mobile Layout Component
@@ -60,6 +62,8 @@ interface MobileLayoutProps {
   draggedIndex: number | null;
   isDragOver: boolean;
   searchQuery?: string;
+  aiResponse?: string;
+  citations?: Array<{id: number, title: string, url: string}>;
   onDragStart: (e: React.DragEvent, index: number) => void;
   onDragEnd: () => void;
   onDragOver: (e: React.DragEvent) => void;
@@ -77,6 +81,8 @@ function MobileLayout({
   draggedIndex,
   isDragOver,
   searchQuery,
+  aiResponse,
+  citations,
   onDragStart,
   onDragEnd,
   onDragOver,
@@ -111,7 +117,7 @@ function MobileLayout({
   };
 
   return (
-    <div className="md:hidden flex flex-col h-screen">
+    <div className="md:hidden flex flex-col h-screen overflow-hidden">
       {/* Expanded Companies Area - Top */}
       <div className="flex-1 overflow-hidden">
         {expandedCompanies.length > 0 ? (
@@ -173,164 +179,191 @@ function MobileLayout({
         )}
       </div>
 
-      {/* Compact Cards Row - Above Search */}
-      <div className="bg-black/20 backdrop-blur-xl border-t border-white/10 p-3">
-        <div className="flex space-x-3 overflow-x-auto pb-2">
-          {companies.map((company, index) => {
-            const isExpanded = expandedCompanies.some(exp => exp.originalIndex === index);
-            if (isExpanded) return null;
-            
-            return (
-              <div key={index} className="flex-shrink-0 w-48">
-                <MobileCompactCard
-                  company={company}
-                  index={index}
-                  isDragging={draggedIndex === index}
-                  onDragStart={onDragStart}
-                  onDragEnd={onDragEnd}
-                  formatCompanyName={formatCompanyName}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Bottom Search Interface */}
-      <div className="bg-black/30 backdrop-blur-xl border-t border-white/10 p-4">
-        {/* Results Summary Button */}
-        <div className="mb-3 flex justify-center">
-          <Button
-            onClick={() => setShowResultsSummary(!showResultsSummary)}
-            size="sm"
-            variant="outline"
-            className="border-white/20 text-white/80 hover:bg-white/10 text-xs px-3 py-1"
-          >
-            <ChevronUp className={`w-3 h-3 mr-1 transition-transform ${showResultsSummary ? 'rotate-180' : ''}`} />
-            Results Summary
-          </Button>
-        </div>
-
-        {/* Results Summary Panel */}
-        {showResultsSummary && (
-          <div className="mb-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg p-3">
-            <div className="text-white/90 text-sm leading-relaxed">
-              <p className="mb-2">Found {companies.length} companies matching your search.</p>
-              <p className="text-white/70 text-xs">
-                {searchQuery && `Search: "${searchQuery}"`}
-              </p>
-            </div>
+      {/* Fixed Bottom Section */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/30 backdrop-blur-xl border-t border-white/10">
+        {/* Compact Cards Row */}
+        <div className="p-2 border-b border-white/10">
+          <div className="flex space-x-2 overflow-x-auto pb-1">
+            {companies.map((company, index) => {
+              const isExpanded = expandedCompanies.some(exp => exp.originalIndex === index);
+              if (isExpanded) return null;
+              
+              return (
+                <div key={index} className="flex-shrink-0 w-32">
+                  <MobileCompactCard
+                    company={company}
+                    index={index}
+                    isDragging={draggedIndex === index}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
+                    formatCompanyName={formatCompanyName}
+                  />
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
 
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="space-y-3">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Ask a follow-up or new question..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/60 pr-12"
-            />
+        {/* Search Interface */}
+        <div className="p-4">
+          {/* Results Summary Button */}
+          <div className="mb-3 flex justify-center">
             <Button
-              type="submit"
+              onClick={() => setShowResultsSummary(!showResultsSummary)}
               size="sm"
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white"
+              variant="outline"
+              className="border-white/20 text-white/80 hover:bg-white/10 text-xs px-3 py-1"
             >
-              <Search className="w-4 h-4" />
+              <ChevronUp className={`w-3 h-3 mr-1 transition-transform ${showResultsSummary ? 'rotate-180' : ''}`} />
+              Results Summary
             </Button>
           </div>
 
-          {/* Filter Row */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        webSearchEnabled ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/60'
-                      }`}
-                    >
-                      <Globe className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Web Search</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+          {/* Results Summary Panel */}
+          {showResultsSummary && (
+            <div className="mb-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg p-3 max-h-40 overflow-y-auto">
+              <div className="text-white/90 text-sm leading-relaxed">
+                {aiResponse ? (
+                  <div className="space-y-2">
+                    <p className="text-white/90">{aiResponse}</p>
+                    {citations && citations.length > 0 && (
+                      <div className="text-xs text-white/70">
+                        <p className="mb-1">Sources:</p>
+                        {citations.map((citation, index) => (
+                          <a 
+                            key={index}
+                            href={citation.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 underline mr-2"
+                          >
+                            [{citation.id}] {citation.title}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <p className="mb-2">Found {companies.length} companies matching your search.</p>
+                    <p className="text-white/70 text-xs">
+                      {searchQuery && `Search: "${searchQuery}"`}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="p-2 rounded-lg bg-white/10 text-white/60"
-                    >
-                      <Brain className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>AI Model</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+          {/* Search Form */}
+          <form onSubmit={handleSearch} className="space-y-3">
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Ask a follow-up or new question..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="h-12 bg-white/5 border-white/20 text-white placeholder:text-white/60 pr-12"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => toggleType('company')}
-                      className={`p-2 rounded-lg transition-colors ${
-                        selectedTypes.has('company') ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-white/60'
-                      }`}
-                    >
-                      <Building2 className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Companies</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            {/* Filter Row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          webSearchEnabled ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/60'
+                        }`}
+                      >
+                        <Globe className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Web Search</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => toggleType('freelancer')}
-                      className={`p-2 rounded-lg transition-colors ${
-                        selectedTypes.has('freelancer') ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-white/60'
-                      }`}
-                    >
-                      <User className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Freelancers</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="p-2 rounded-lg bg-white/10 text-white/60"
+                      >
+                        <Brain className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>AI Model</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => toggleType('product')}
-                      className={`p-2 rounded-lg transition-colors ${
-                        selectedTypes.has('product') ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-white/60'
-                      }`}
-                    >
-                      <Package className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Products</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <div className="flex items-center space-x-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => toggleType('company')}
+                        className={`p-2 rounded-lg transition-colors ${
+                          selectedTypes.has('company') ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-white/60'
+                        }`}
+                      >
+                        <Building2 className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Companies</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => toggleType('freelancer')}
+                        className={`p-2 rounded-lg transition-colors ${
+                          selectedTypes.has('freelancer') ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-white/60'
+                        }`}
+                      >
+                        <User className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Freelancers</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => toggleType('product')}
+                        className={`p-2 rounded-lg transition-colors ${
+                          selectedTypes.has('product') ? 'bg-yellow-500/20 text-yellow-400' : 'bg-white/10 text-white/60'
+                        }`}
+                      >
+                        <Package className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Products</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );
@@ -358,6 +391,16 @@ function MobileCompactCard({
   const { currentUser } = useFirebaseAuth();
   const { showFavoritesNotification } = useNotification();
 
+  const hasData = (value: any): boolean => {
+    if (!value) return false;
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'string') {
+      const cleaned = value.toLowerCase().trim();
+      return cleaned !== '' && cleaned !== 'n/a' && cleaned !== 'not applicable';
+    }
+    return true;
+  };
+
   return (
     <motion.div
       className={`transition-all duration-200 ${
@@ -371,19 +414,19 @@ function MobileCompactCard({
       style={{ cursor: 'grab' }}
     >
       <GlowingShadow size="sm" className="w-full">
-        <div className="p-3 h-24 flex flex-col justify-between">
-          <div className="flex items-start justify-between mb-2">
+        <div className="p-2 h-20 flex flex-col justify-between">
+          <div className="flex items-start justify-between mb-1">
             <div className="flex items-center space-x-2 flex-1 min-w-0">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600">
                 {company.logoUrl ? (
                   <img src={company.logoUrl} alt={`${company.name} logo`} className="w-full h-full object-cover rounded-full" />
                 ) : (
-                  <Building2 className="w-4 h-4 text-white" />
+                  <Building2 className="w-3 h-3 text-white" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h5 className="text-white text-xs font-semibold truncate">{formatCompanyName(company.name)}</h5>
-                <span className="text-xs bg-blue-500/20 text-blue-300 px-1 py-0.5 rounded text-xs">{company.category}</span>
+                <h5 className="text-white text-xs font-semibold truncate leading-tight">{formatCompanyName(company.name)}</h5>
+                <span className="text-xs bg-blue-500/20 text-blue-300 px-1 py-0.5 rounded text-xs leading-none">{company.category}</span>
               </div>
             </div>
             {currentUser && (
@@ -408,22 +451,32 @@ function MobileCompactCard({
                 }}
                 size="sm"
                 variant="ghost"
-                className="p-1 h-auto"
+                className="p-0.5 h-auto"
               >
-                <Heart className={`w-3 h-3 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+                <Heart className={`w-2.5 h-2.5 ${isFavorite(`company_${index}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
               </Button>
+            )}
+          </div>
+          
+          {/* Company info in compact form */}
+          <div className="text-xs text-white/80 leading-tight">
+            {(company.uspTagline || company.tagline) && (
+              <p className="truncate mb-1">
+                {(company.uspTagline || company.tagline)?.substring(0, 40)}...
+              </p>
             )}
           </div>
           
           <div className="flex items-center justify-between text-xs text-white/60">
             <div className="flex items-center gap-1">
-              {company.location && <MapPin className="w-2.5 h-2.5" />}
-              {company.employees && <Users className="w-2.5 h-2.5" />}
-              {company.trialAvailable && <CheckCircle className="w-2.5 h-2.5 text-green-400" />}
+              {company.location && <MapPin className="w-2 h-2" />}
+              {company.employees && <Users className="w-2 h-2" />}
+              {company.pricing && <DollarSign className="w-2 h-2" />}
+              {company.trialAvailable && <CheckCircle className="w-2 h-2 text-green-400" />}
             </div>
             <div className="flex items-center gap-1">
-              <Eye className="w-2.5 h-2.5" />
-              <span>{Math.floor(Math.random() * 50) + 10}</span>
+              <Eye className="w-2 h-2" />
+              <span className="text-xs">{Math.floor(Math.random() * 50) + 10}</span>
             </div>
           </div>
         </div>
@@ -454,53 +507,16 @@ function MobileExpandedCompany({ expanded, onRemove, formatCompanyName, getWebsi
       initial={{ opacity: 0, x: 100 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -100 }}
-      className="h-full bg-black/20 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden flex flex-col"
+      className="h-full bg-black/20 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden flex flex-row"
     >
-      {/* Header */}
-      <div className="bg-black/60 px-4 py-3 border-b border-white/10 flex items-center justify-between">
-        <h6 className="text-white text-sm font-medium truncate">
-          {formatCompanyName(company.name)}
-        </h6>
-        <div className="flex items-center gap-2">
-          {currentUser && (
-            <Button
-              onClick={() => {
-                const companyId = `company_${expanded.originalIndex}_${company.name}`;
-                if (isFavorite(companyId)) {
-                  removeFromFavorites(companyId);
-                } else {
-                  addToFavorites({
-                    id: companyId,
-                    type: 'company',
-                    name: company.name,
-                    description: company.description,
-                    features: company.features || [],
-                    pricing: company.pricing || '',
-                    website: company.website,
-                    category: company.category
-                  }, showFavoritesNotification);
-                }
-              }}
-              size="sm"
-              variant="ghost"
-              className="p-1 h-auto"
-            >
-              <Heart className={`w-4 h-4 ${isFavorite(`company_${expanded.originalIndex}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
-            </Button>
-          )}
-          <button
-            onClick={() => onRemove(expanded.id)}
-            className="text-white/60 hover:text-white transition-colors text-lg"
-          >
-            ✕
-          </button>
+      {/* Website iframe - Left Half */}
+      <div className="w-1/2 bg-black/40 flex flex-col">
+        <div className="bg-black/60 px-3 py-2 border-b border-white/10 flex items-center justify-between">
+          <h6 className="text-white text-xs font-medium truncate">
+            Website
+          </h6>
         </div>
-      </div>
-
-      {/* Content - Split View */}
-      <div className="flex-1 flex flex-col">
-        {/* Website iframe - Top Half */}
-        <div className="h-1/2 bg-black/40">
+        <div className="flex-1">
           {websiteUrl ? (
             <iframe
               src={websiteUrl}
@@ -509,25 +525,68 @@ function MobileExpandedCompany({ expanded, onRemove, formatCompanyName, getWebsi
               sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-white/60">
+            <div className="flex items-center justify-center h-full text-white/60 text-sm">
               No website available
             </div>
           )}
         </div>
+      </div>
 
-        {/* Company Details - Bottom Half */}
-        <div className="h-1/2 bg-black/40 p-4 overflow-y-auto">
+      {/* Company Details - Right Half */}
+      <div className="w-1/2 bg-black/40 flex flex-col">
+        <div className="bg-black/60 px-3 py-2 border-b border-white/10 flex items-center justify-between">
+          <h6 className="text-white text-xs font-medium truncate">
+            {formatCompanyName(company.name)}
+          </h6>
+          <div className="flex items-center gap-1">
+            {currentUser && (
+              <Button
+                onClick={() => {
+                  const companyId = `company_${expanded.originalIndex}_${company.name}`;
+                  if (isFavorite(companyId)) {
+                    removeFromFavorites(companyId);
+                  } else {
+                    addToFavorites({
+                      id: companyId,
+                      type: 'company',
+                      name: company.name,
+                      description: company.description,
+                      features: company.features || [],
+                      pricing: company.pricing || '',
+                      website: company.website,
+                      category: company.category
+                    }, showFavoritesNotification);
+                  }
+                }}
+                size="sm"
+                variant="ghost"
+                className="p-0.5 h-auto"
+              >
+                <Heart className={`w-3 h-3 ${isFavorite(`company_${expanded.originalIndex}_${company.name}`) ? 'text-red-500 fill-current' : 'text-white/40 hover:text-red-400'}`} />
+              </Button>
+            )}
+            <button
+              onClick={() => onRemove(expanded.id)}
+              className="text-white/60 hover:text-white transition-colors text-sm"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Company Details Content */}
+        <div className="flex-1 p-3 overflow-y-auto">
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
                 {company.logoUrl ? (
                   <img src={company.logoUrl} alt={`${company.name} logo`} className="w-full h-full object-cover rounded-full" />
                 ) : (
-                  <Building2 className="w-5 h-5 text-white" />
+                  <Building2 className="w-4 h-4 text-white" />
                 )}
               </div>
               <div>
-                <h5 className="text-white text-base font-semibold">
+                <h5 className="text-white text-sm font-semibold">
                   {formatCompanyName(company.name)}
                 </h5>
                 <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full text-xs">
@@ -537,7 +596,7 @@ function MobileExpandedCompany({ expanded, onRemove, formatCompanyName, getWebsi
             </div>
             
             {(company.uspTagline || company.tagline || company.description) && (
-              <p className="text-white/80 text-sm leading-relaxed">
+              <p className="text-white/80 text-xs leading-relaxed">
                 {company.uspTagline || company.tagline || company.description}
               </p>
             )}
@@ -547,34 +606,34 @@ function MobileExpandedCompany({ expanded, onRemove, formatCompanyName, getWebsi
               {company.location && (
                 <div className="flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-white/60" />
-                  <span className="text-white/80">{company.location}</span>
+                  <span className="text-white/80 truncate">{company.location}</span>
                 </div>
               )}
               {company.employees && (
                 <div className="flex items-center gap-1">
                   <Users className="w-3 h-3 text-white/60" />
-                  <span className="text-white/80">{company.employees}</span>
+                  <span className="text-white/80 truncate">{company.employees}</span>
                 </div>
               )}
               {company.founded && (
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3 text-white/60" />
-                  <span className="text-white/80">{company.founded}</span>
+                  <span className="text-white/80 truncate">{company.founded}</span>
                 </div>
               )}
               {company.pricing && (
                 <div className="flex items-center gap-1">
                   <DollarSign className="w-3 h-3 text-white/60" />
-                  <span className="text-white/80">{company.pricing}</span>
+                  <span className="text-white/80 truncate">{company.pricing}</span>
                 </div>
               )}
             </div>
             
             {/* Action Buttons */}
-            <div className="flex space-x-2 pt-2">
+            <div className="flex space-x-1 pt-2">
               <Button 
                 size="sm" 
-                className="flex-1 bg-white text-black font-medium hover:bg-gray-100"
+                className="flex-1 bg-white text-black font-medium hover:bg-gray-100 text-xs py-1"
               >
                 <MessageCircle className="w-3 h-3 mr-1" />
                 Chat
@@ -587,7 +646,7 @@ function MobileExpandedCompany({ expanded, onRemove, formatCompanyName, getWebsi
                   (company as any).linkedin_url
                 )}
                 size="sm" 
-                className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium"
+                className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white font-medium text-xs py-1"
               >
                 <Handshake className="w-3 h-3 mr-1" />
                 Partner
@@ -596,7 +655,7 @@ function MobileExpandedCompany({ expanded, onRemove, formatCompanyName, getWebsi
                 <Button
                   onClick={() => window.open(getWebsiteUrl(company.website), "_blank")}
                   size="sm"
-                  className="bg-white text-black font-medium hover:bg-gray-100"
+                  className="bg-white text-black font-medium hover:bg-gray-100 px-2"
                 >
                   <ExternalLink className="w-3 h-3" />
                 </Button>
@@ -609,7 +668,7 @@ function MobileExpandedCompany({ expanded, onRemove, formatCompanyName, getWebsi
   );
 }
 
-export function DragDropResults({ companies, searchQuery }: DragDropResultsProps) {
+export function DragDropResults({ companies, searchQuery, aiResponse, citations }: DragDropResultsProps) {
   const [expandedCompanies, setExpandedCompanies] = useState<ExpandedCompany[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -834,6 +893,8 @@ export function DragDropResults({ companies, searchQuery }: DragDropResultsProps
         draggedIndex={draggedIndex}
         isDragOver={isDragOver}
         searchQuery={searchQuery}
+        aiResponse={aiResponse}
+        citations={citations}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
