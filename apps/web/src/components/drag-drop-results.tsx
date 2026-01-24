@@ -864,7 +864,7 @@ export function DragDropResults({ companies, searchQuery }: DragDropResultsProps
         isVisible={showSuccessNotification.isVisible}
         companyName={showSuccessNotification.companyName}
       />
-    </div>
+    </>
   );
 }
 
