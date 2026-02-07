@@ -32,7 +32,7 @@ export function VCEventNotification() {
   };
 
   const handleJoinEvent = () => {
-    setLocation('/add-company');
+    setLocation('/vcevent');
   };
 
   if (isDismissed) return null;
@@ -81,7 +81,7 @@ export function VCEventNotification() {
               
               <div className="flex items-center justify-between pt-2">
                 <div className="text-xs text-white/60">
-                  📍 Jayanagar • Mar-Apr 2026
+                  📍 Jayanagar • April 4th, 2026
                 </div>
                 
                 <button

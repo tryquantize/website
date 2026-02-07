@@ -33,8 +33,6 @@ export interface Company {
   deploymentType?: string[];
   idealScenarios?: string[];
   vcEventInterested?: boolean;
-  ecellEventInterested?: boolean;
-  ecellPreferredDates?: string[];
   founders?: Array<{ name: string; phone: string; email: string }>;
   painPoint?: string;
   createdAt?: any;

@@ -39,7 +39,7 @@ import AboutPage from "@/pages/about";
 import ContactPage from "@/pages/contact";
 import { PricingPage } from "@/pages/pricing";
 import AddCompanyPage from "@/pages/add-company";
-import EsummitRegistrationPage from "@/pages/esummit-registration";
+
 import VcRegistrationPage from "@/pages/vc-registration";
 
 function Router() {
@@ -126,8 +126,8 @@ function Router() {
                   <Route path="/contact" component={ContactPage} />
                   <Route path="/pricing" component={PricingPage} />
                   <Route path="/add-company" component={AddCompanyPage} />
-                  <Route path="/esummit" component={AddCompanyPage} />
-                  <Route path="/esummitregistration" component={EsummitRegistrationPage} />
+                  <Route path="/vcevent" component={AddCompanyPage} />
+
                   <Route path="/vcregistration" component={VcRegistrationPage} />
                   <Route path="/features">
                     {() => {
@@ -138,7 +138,7 @@ function Router() {
                   <Route component={NotFound} />
                 </Switch>
               </div>
-              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/add-company' && location !== '/esummit' && location !== '/admindashboard' && !location.startsWith('/admindashboard/') && location !== '/adminlogin' && !location.startsWith('/company-login/') && <Footer />}
+              {location !== '/results' && !location.startsWith('/results/') && location !== '/loggedinhome' && location !== '/welcome-transition' && !location.startsWith('/search/') && location !== '/glowing-search-demo' && location !== '/home' && location !== '/add-company' && location !== '/vcevent' && location !== '/admindashboard' && !location.startsWith('/admindashboard/') && location !== '/adminlogin' && !location.startsWith('/company-login/') && <Footer />}
             </div>
           </main>
         </div>

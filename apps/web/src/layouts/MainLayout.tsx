@@ -7,7 +7,7 @@ type MainLayoutProps = PropsWithChildren<{
 }>;
 
 export default function MainLayout({ children, showJoinUs }: MainLayoutProps) {
-  const isAddCompanyPage = window.location.pathname === '/add-company' || window.location.pathname === '/esummit';
+  const isAddCompanyPage = window.location.pathname === '/add-company' || window.location.pathname === '/vcevent';
   
   return (
     <div className="relative min-h-screen flex flex-col">

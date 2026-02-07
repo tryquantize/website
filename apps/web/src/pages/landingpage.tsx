@@ -26,7 +26,6 @@ const StorySection = lazy(() => import("@/components/ui/story-section").then(mod
 import { FaqSection } from "@/components/ui/faq-section";
 import { SectionBadge } from "@/components/ui/section-badge";
 import { VCEventNotification } from "@/components/ui/vc-event-notification";
-import { EcellEventNotification } from "@/components/ui/ecell-event-notification";
 import { MultiWebsiteEmbed } from "@/components/ui/MultiWebsiteEmbed";
 
 export default function LandingPage() {
@@ -120,7 +119,6 @@ export default function LandingPage() {
     <div className="relative w-full min-h-screen bg-black overflow-hidden">
       {/* Notifications */}
       <VCEventNotification />
-      <EcellEventNotification />
       
       {/* New Geometric Background */}
       <GeometricBackground />
